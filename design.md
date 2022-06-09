@@ -6,7 +6,7 @@ The following document is a an overview/cohesive explaination of Parasite.
 ### Recommended reading
 Reading the following documents is suggested, before diving into this:
 - [ActivityPub specification](https://www.w3.org/TR/activitypub/)
-- [ActivtyStreams specification](https://www.w3.org/TR/activitystreams-vocabulary/)
+- [ActivityStreams specification](https://www.w3.org/TR/activitystreams-vocabulary/)
 - [*Reading ActivityPub*, a highly informal post explaining certain aspects of the standard.](https://tinysubversions.com/notes/reading-activitypub/)
 - [ActivityPub implimentation sheet by Mastodon](https://docs.joinmastodon.org/spec/activitypub/)
 - [W3C Security Vocab Specification](https://w3c-ccg.github.io/security-vocab/)
