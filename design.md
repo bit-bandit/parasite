@@ -44,7 +44,8 @@ Torrents - Indicated by `/t/` - Are the core of Parasite. A sample JSON payload 
 Torrent IDs are randomized. All torrents are explicitly public.
 
 ### Tags
-Tags, using the `tag` element from ActivityStreams, are used to indicate the content of the torrent in question.
+Tags, directly from the `tag` element from ActivityStreams, are used to indicate the content of the object in question. So, if a person
+wanted to tag a torrent, or list as being apart of the 'Western' tag, that would be represented as:
 
 ```json
 "tag": [
@@ -53,7 +54,9 @@ Tags, using the `tag` element from ActivityStreams, are used to indicate the con
       "name": "Western"
     }
   ]
-  ```
+```
+
+These apply to only torrents, or lists. 
 
 ## Users
 Users: `/u/:id`
@@ -75,5 +78,7 @@ list if it is already present within it.
 Voting is a two-way system, allowing for users to either **upvote**, or **downvote** an object.
 
 ## Administration
+
+### Roles
 
 ## Instance settings
