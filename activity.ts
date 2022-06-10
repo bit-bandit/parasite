@@ -49,9 +49,86 @@
 // the application we need (What purpose does sharing a post have with a
 // Torrent index, for example?)
 
-// TODO:
-//   Add types for all this shit.
-//   Impliment the `security` extension (Basically RSA signing)
+// Types for ActivityStreams.
+// A LOT of this came from a different, seperate file I wrote a while back.
+// Be aware this might be buggy as shit/noncomplaint.
+
+export interface ActivityCrypto {
+    id: string,
+    owner: string,
+    publicKeyPem: string
+}
+
+export interface ActivityLink {
+    /**
+    * Anything that can be a URL component,
+    */
+    href?: string,
+    rel?: string,
+    mediaType?: string,
+    name?: string,
+    hreflang?: string,
+    // height and width have been deliberately removed.
+}
+
+export interface ActivityObject {
+    attachment?: ActivityObject[] | ActivityLink[] | ActivityObject | ActivityLink;
+    attributedTo?: string,
+    audience?: string,
+    content?: string,
+    name?: string,
+    endTime?: string,
+    generator?: string,
+    icon?: string,
+    image?: string,
+    inReplyTo?: string,
+    location?: string,
+    preview?: string,
+    published?: string,
+    replies?: ActivityObject[],
+    startTime?: string,
+    summary?: string,
+    tag?: ActivityObject[],
+    type?: "Article" | "Audio" | "Document" | "Event" | "Image" | "Note" | "Page" | "Place" | "Profile" | "Relationship" | "Tombstone" | "Video",
+    updated?: string,
+    url?: string,
+    to?: string,
+    bto?: string,
+    cc?: string[] | string,
+    bcc?: string[] | string,
+    mediaType?: string,
+    duration?: string,
+}
+
+export interface ActivityCollection extends ActivityObject {
+  type?: "Collection" | "OrderedCollection",
+  totalItems?: Number,
+  current?: string,
+  first?: string,
+  last?: string,  
+  items?: ActivityObject[] | string[],
+}
+
+// Have to seperate this one from the others because of collision reasons...
+export interface ActivityCollectionPage extends ActivityObject {
+  type?: "CollectionPage",
+  totalItems?: Number,
+  current?: string,
+  first?: string,
+  last?: string,  
+  items?: ActivityObject[] | string[],
+  partOf?: string,
+  next?: string,  
+}
+
+export interface ActivityWrapper {
+}
+
+export interface ActivityImage extends ActivityLink {
+    height?: number,
+    width?: number,
+    preview?: string
+}
 
 // Generate the actual object with the magnet link (AKA; The 'Pub' part of ActivityPub)
 export async function genObj(params: any = {}): Promise<object> {
