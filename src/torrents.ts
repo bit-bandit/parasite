@@ -16,7 +16,7 @@ torrents.get("/t/:id", async function (ctx) {
   if (!res.err) {
     ctx.response.body = res;
     ctx.response.status = 200;
-    ctx.respone.type =
+    ctx.response.type =
       'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
   } else {
     ctx.response.body = {
@@ -24,7 +24,7 @@ torrents.get("/t/:id", async function (ctx) {
       "msg": "Torrent not found.",
     };
     ctx.response.status = 404;
-    ctx.respone.type = "application/json";
+    ctx.response.type = "application/json";
   }
 });
 
@@ -54,7 +54,7 @@ torrents.post("/t/", async function (ctx) {
       "msg": "No body provided",
     };
     ctx.response.status = 404;
-    ctx.respone.type = "application/json";
+    ctx.response.type = "application/json";
   }
 
   let raw = await ctx.request.body();
@@ -76,7 +76,7 @@ torrents.post("/t/", async function (ctx) {
       "msg": "Invalid Activity type",
     };
     ctx.response.status = 400;
-    ctx.respone.type = "application/json";
+    ctx.response.type = "application/json";
   }
 });
 
@@ -87,7 +87,7 @@ torrents.post("/t/:id", async function (ctx) {
       "msg": "No body provided",
     };
     ctx.response.status = 400;
-    ctx.respone.type = "application/json";
+    ctx.response.type = "application/json";
   }
 
   let raw = await ctx.request.body();
@@ -98,7 +98,7 @@ torrents.post("/t/:id", async function (ctx) {
       "msg": "Invalid content type",
     };
     ctx.response.status = 400;
-    ctx.respone.type = "application/json";
+    ctx.response.type = "application/json";
   }
 
   let requestJSON = await raw.value();
@@ -128,6 +128,6 @@ torrents.post("/t/:id", async function (ctx) {
         "msg": "Invalid Activity type",
       };
       ctx.response.status = 400;
-      ctx.respone.type = "application/json";
+      ctx.response.type = "application/json";
   }
 });

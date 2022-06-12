@@ -9,7 +9,7 @@ lists.get("/l/:id", async function (ctx) {
   if (!res.err) {
     ctx.response.body = res;
     ctx.response.status = 200;
-    ctx.respone.type =
+    ctx.response.type =
       'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
   } else {
     ctx.response.body = {
@@ -17,7 +17,7 @@ lists.get("/l/:id", async function (ctx) {
       "msg": "List not found.",
     };
     ctx.response.status = 404;
-    ctx.respone.type = "application/json";
+    ctx.response.type = "application/json";
   }
 });
 
@@ -27,7 +27,7 @@ lists.get("/l/:id/r", async function (ctx) {
   if (!res.err) {
     ctx.response.body = res;
     ctx.response.status = 200;
-    ctx.respone.type =
+    ctx.response.type =
       'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
   } else {
     ctx.response.body = {
@@ -35,6 +35,6 @@ lists.get("/l/:id/r", async function (ctx) {
       "msg": "List not found.",
     };
     ctx.response.status = 404;
-    ctx.respone.type = "application/json";
+    ctx.response.type = "application/json";
   }
 });

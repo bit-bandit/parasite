@@ -3,6 +3,24 @@
 import { Client } from "https://deno.land/x/postgres@v0.16.1/mod.ts";
 import { settings } from "../settings.ts";
 
+const userTableInit = `
+CREATE TABLE IF NOT EXISTS users (
+  PRIMARY KEY(id),
+  id          VARCHAR(21)   NOT NULL,
+  info        JSONB         NOT NULL,
+  pass        VARCHAR(256)  NOT NULL,
+  roles       JSONB         NOT NULL,
+  inbox       JSONB         NOT NULL,
+  outbox      JSONB         NOT NULL,
+  likes       JSONB         NOT NULL,
+  dislikes    JSONB         NOT NULL,
+  following   JSONB         NOT NULL,
+  followers   JSONB         NOT NULL,
+  logins      JSONB         NOT NULL,
+  registered  TIMESTAMP     NOT NULL
+);
+`;
+
 const torrentTableInit = `
 CREATE TABLE IF NOT EXISTS torrents (
   PRIMARY KEY(id),
@@ -11,13 +29,13 @@ CREATE TABLE IF NOT EXISTS torrents (
   uploader  VARCHAR(256)  NOT NULL,
   likes     JSONB         NOT NULL,
   dislikes  JSONB         NOT NULL,
-  replies   JSONB         NOT NULL
-  flags     JSONB         NOT NULL, 
+  replies   JSONB         NOT NULL,
+  flags     JSONB         NOT NULL
 );
 `;
 
 // Literally just copying the torrent table, here...
-let listsTableInit = `
+const listsTableInit = `
 CREATE TABLE IF NOT EXISTS lists (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
@@ -25,11 +43,12 @@ CREATE TABLE IF NOT EXISTS lists (
   uploader  VARCHAR(256)  NOT NULL,
   likes     JSONB         NOT NULL,
   dislikes  JSONB         NOT NULL,
-  replies   JSONB         NOT NULL
-  flags     JSONB         NOT NULL, 
-);`;
+  replies   JSONB         NOT NULL,
+  flags     JSONB         NOT NULL
+);
+`;
 
-let commentsTableInit = `
+const commentsTableInit = `
 CREATE TABLE IF NOT EXISTS comments (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
@@ -37,9 +56,18 @@ CREATE TABLE IF NOT EXISTS comments (
   uploader  VARCHAR(256)  NOT NULL,
   likes     JSONB         NOT NULL,
   dislikes  JSONB         NOT NULL,
-  replies   JSONB         NOT NULL
-  flags     JSONB         NOT NULL, 
-);`;
+  replies   JSONB         NOT NULL,
+  flags     JSONB         NOT NULL 
+);
+`;
+
+const tagsTableInit = `
+CREATE TABLE IF NOT EXISTS tags (
+  name     VARCHAR(37)  NOT NULL,
+  created  TIMESTAMP    NOT NULL,
+  allowed  BOOLEAN      NOT NULL
+);
+`;
 
 const client = new Client({
   user: settings.user,
@@ -157,6 +185,15 @@ export async function getCommentReplies(id: string) {
   };
 }
 
+export async function deleteTorrent(id: string) {
+  await client.connect();
+  await client.queryArray(
+    "DELETE json WHERE id = $1;",
+    [id],
+  );
+  await client.end();
+}
+
 export async function search(query: string) {
   // q = Search query
   // t = tags (comma seperated(?))
@@ -178,7 +215,7 @@ export async function search(query: string) {
   if (search.has("q")) {
     await client.connect();
     let res = await client.queryArray(
-      "SELECT json WHERE WHERE json->>'title' ILIKE $1 OR json->>'content' ILIKE $1 OR id = $1;",
+      "SELECT json WHERE json->>'title' ILIKE $1 OR json->>'content' ILIKE $1 OR id = $1;",
       [search.get("q")],
     );
     await client.end();
