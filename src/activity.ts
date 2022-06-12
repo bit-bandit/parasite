@@ -116,7 +116,7 @@ export interface ActivityObject {
   duration?: string;
 }
 
-export interface ActivityCollection extends ActivityObject {
+export interface ActivityCollection extends Omit<ActivityObject, 'type'> {
   type?: "Collection" | "OrderedCollection";
   totalItems?: Number;
   current?: string;
@@ -126,7 +126,7 @@ export interface ActivityCollection extends ActivityObject {
 }
 
 // Have to seperate this one from the others because of collision reasons...
-export interface ActivityCollectionPage extends ActivityObject {
+export interface ActivityCollectionPage extends Omit<ActivityObject, 'type'> {
   type?: "CollectionPage";
   totalItems?: Number;
   current?: string;
