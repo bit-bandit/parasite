@@ -185,6 +185,35 @@ export async function getCommentReplies(id: string) {
   };
 }
 
+// User related information
+export async function getUMetaInfo(id: string) {
+  await client.connect();
+  res = await client.queryObject(
+    "SELECT id, logins, roles FROM users WHERE id = $1",
+    [id],
+  );
+  await client.end();
+    
+}
+
+export async function getULoginInfo(id: string) {
+  await client.connect();
+  res = await client.queryObject(
+    "SELECT pass FROM users WHERE id = $1",
+    [id],
+  );
+  await client.end();
+
+  if (res.pass.length !== 0) {
+    return res;
+  }
+
+  return {
+    "err": true,
+    "msg": "User ${id} not found",
+  };
+}
+
 export async function deleteTorrent(id: string) {
   await client.connect();
   await client.queryArray(

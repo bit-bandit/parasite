@@ -38,3 +38,36 @@ lists.get("/l/:id/r", async function (ctx) {
     ctx.response.type = "application/json";
   }
 });
+
+lists.post("/l/", async function (ctx) {
+  if (!ctx.request.hasBody) {
+    ctx.response.body = {
+      "err": true,
+      "msg": "No body provided",
+    };
+    ctx.response.status = 404;
+    ctx.response.type = "application/json";
+  }
+
+  let raw = await ctx.request.body();
+
+  if (raw.type !== "json") {
+    ctx.response.body = {
+      "err": true,
+      "msg": "Invalid content type",
+    };
+    ctx.response.status = 400;
+    ctx.respone.type = "application/json";
+  }
+
+  let requestJSON = await raw.value();
+
+  if (requestJSON.type !== "Create") {
+    ctx.response.body = {
+      "err": true,
+      "msg": "Invalid Activity type",
+    };
+    ctx.response.status = 400;
+    ctx.response.type = "application/json";
+  }
+});
