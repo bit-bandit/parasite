@@ -185,6 +185,24 @@ export async function getCommentReplies(id: string) {
   };
 }
 
+export async function getUserInfo(id: string) {
+  await client.connect();
+  let res = await client.queryArray(
+    "SELECT info FROM users WHERE id = $1",
+    [id],
+  );
+  await client.end();
+
+  if (res.pass.length !== 0) {
+    return res;
+  }
+
+  return {
+    "err": true,
+    "msg": "User ${id} not found",
+  };
+}
+
 // User related information
 export async function getUMetaInfo(id: string) {
   await client.connect();
@@ -193,7 +211,15 @@ export async function getUMetaInfo(id: string) {
     [id],
   );
   await client.end();
-    
+
+  if (res.length !== 0) {
+    return res;
+  }
+
+  return {
+    "err": true,
+    "msg": "User ${id} not found",
+  };
 }
 
 export async function getULoginInfo(id: string) {
@@ -212,6 +238,29 @@ export async function getULoginInfo(id: string) {
     "err": true,
     "msg": "User ${id} not found",
   };
+}
+
+export async function ULogin(id: string, time: number) {
+  // Basically just push to the 'logins' array.
+    let newValue: number[];
+    await client.connect();
+    let initalValue = await client.queryObject(
+	"SELECT logins FROM users WHERE id = $1",
+	[id]
+    );
+    initialValue = initialValue[0][0];
+    
+    if (initialValue.length >= 10) {
+	initialValue.shift();
+    }
+
+    newValue = initialValue.push(time);
+
+    await client.queryObject(
+	"UPDATE users SET logins = $1 WHERE id = $2;",
+	[JSON.stringify(newValue), id]
+    );
+    await client.end();
 }
 
 export async function deleteTorrent(id: string) {

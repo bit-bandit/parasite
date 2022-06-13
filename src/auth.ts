@@ -4,7 +4,7 @@ import {
   decode,
   verify,
 } from "https://deno.land/x/djwt@$VERSION/mod.ts";
-import { getULoginInfo, getUMetaInfo } from "./db.ts";
+import { ULogin, getULoginInfo, getUMetaInfo } from "./db.ts";
 // This file is comprised of two sections:
 // 1. Functions used to validate users within the system.
 // 2. Routing for letting users register, or log into accounts.
@@ -42,15 +42,6 @@ auth.post("/login", async function (ctx) {
 
   let requestJSON = await raw.value();
 
-  if (requestJSON.type !== "Create") {
-    ctx.response.body = {
-      "err": true,
-      "msg": "Invalid Activity type",
-    };
-    ctx.response.status = 400;
-    ctx.response.type = "application/json";
-  }
-
   let info = await getULoginInfo(requestJSON.id);
 
   if (info.err) {
@@ -58,9 +49,11 @@ auth.post("/login", async function (ctx) {
     ctx.response.status = 404;
     ctx.response.type = "application/json";
   }
-    
+
   if (hashPass(requestJSON.password) === info.pass) {
-    // Return token
+      // Return token, and update logins
+      const t = Date.now();
+      await ULogin(requestJSON.id, t);
   } else {
     ctx.response.body = {
       "err": true,
