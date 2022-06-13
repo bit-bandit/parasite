@@ -26,6 +26,10 @@ users.get("/u/:id", async function (ctx) {
   ctx.response.type = "application/json";
 });
 
+users.post("/u/:id/", async function (ctx) {
+  // Update user information.
+});
+
 users.get("/u/:id/outbox", async function (ctx) {
   // Get information about user.
 });

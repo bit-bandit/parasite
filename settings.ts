@@ -6,7 +6,7 @@ export const settings = {
     "audio",
     "documents",
     "games",
-    "videos"
+    "videos",
   ],
   "database": {
     "type": "postgres",
@@ -15,17 +15,17 @@ export const settings = {
       "hostname": "localhost",
       "user": "postgres",
       "password": "password",
-      "port": 5432
-    }
+      "port": 5432,
+    },
   },
   "staticFileDir": "../static/",
   "siteName": "Parasite Instance",
-  "limits" : {
+  "limits": {
     "maxHourlyCreations": Infinity,
     "maxTorrents": Infinity,
     "maxComments": Infinity,
     "maxLists": Infinity,
-    "maxUsers": Infinity
+    "maxUsers": Infinity,
   },
   "allowFederation": true,
   "federationParams": {
@@ -33,6 +33,6 @@ export const settings = {
     "readAccess": true,
     "writeAccess": true,
     "maxHourlyInteractions": 5,
-    "blockedInstances": []
-  }
-}
+    "blockedInstances": [],
+  },
+};

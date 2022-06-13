@@ -79,6 +79,18 @@ const client = new Client({
   port: dbsettings.port,
 });
 
+await client.connect();
+
+await client.queryArray(`
+  ${userTableInit}
+  ${torrentTableInit}
+  ${listsTableInit}
+  ${commentsTableInit}
+  ${tagsTableInit}
+`);
+
+await client.end();
+
 async function basicDataQuery(
   msg: string,
   query: string,

@@ -4,7 +4,7 @@ import {
   decode,
   verify,
 } from "https://deno.land/x/djwt@$VERSION/mod.ts";
-import { ULogin, getULoginInfo, getUMetaInfo } from "./db.ts";
+import { getULoginInfo, getUMetaInfo, ULogin } from "./db.ts";
 // This file is comprised of two sections:
 // 1. Functions used to validate users within the system.
 // 2. Routing for letting users register, or log into accounts.
@@ -51,9 +51,9 @@ auth.post("/login", async function (ctx) {
   }
 
   if (hashPass(requestJSON.password) === info.pass) {
-      // Return token, and update logins
-      const t = Date.now();
-      await ULogin(requestJSON.id, t);
+    // Return token, and update logins
+    const t = Date.now();
+    await ULogin(requestJSON.id, t);
   } else {
     ctx.response.body = {
       "err": true,
@@ -66,4 +66,10 @@ auth.post("/login", async function (ctx) {
 
 auth.post("/register", async function (ctx) {
   // Create new user.
+  // When creating, use the resources in `static/defaults/`.
+  // Make subdirectory in static/u/ named after the user ID, with the the
+  // following files:
+  // - avatar.png
+  // - banner.png
+  // These can be updated in the future. (See POST /u/:id)  
 });
