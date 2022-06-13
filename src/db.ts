@@ -3,6 +3,8 @@
 import { Client } from "https://deno.land/x/postgres@v0.16.1/mod.ts";
 import { settings } from "../settings.ts";
 
+const dbsettings = settings.database.settings;
+
 const userTableInit = `
 CREATE TABLE IF NOT EXISTS users (
   PRIMARY KEY(id),
@@ -70,197 +72,124 @@ CREATE TABLE IF NOT EXISTS tags (
 `;
 
 const client = new Client({
-  user: settings.user,
-  database: settings.database,
-  hostname: settings.hostname,
-  password: settings.password,
-  port: settings.port,
+  user: dbsettings.user,
+  database: dbsettings.database,
+  hostname: dbsettings.hostname,
+  password: dbsettings.password,
+  port: dbsettings.port,
 });
 
-export async function getTorrentJSON(id: string) {
+async function basicDataQuery(
+  msg: string,
+  query: string,
+  ...args: string[]
+) {
   await client.connect();
-  let res = await client.queryArray(
-    "SELECT json FROM torrents WHERE id = $1",
-    [id],
-  );
+  let res = await client.queryArray(query, args);
   await client.end();
 
-  if (res.length !== 0) {
-    return res[0][0];
+  if (res.rows.length !== 0) {
+    return res.rows[0];
   }
 
-  return {
-    "err": true,
-    "msg": "No torrent with id ${id} found",
-  };
+  return { "err": true, "msg": msg };
+}
+
+export async function getTorrentJSON(id: string) {
+  return basicDataQuery(
+    "No torrent with id ${id} found",
+    "SELECT json FROM torrents WHERE id = $1",
+    id,
+  );
 }
 
 export async function getListJSON(id: string) {
-  await client.connect();
-  let res = await client.queryArray(
+  return basicDataQuery(
+    "No list with id ${id} found",
     "SELECT json FROM lists WHERE id = $1",
-    [id],
+    id,
   );
-  await client.end();
-
-  if (res.length !== 0) {
-    return res[0][0];
-  }
-
-  return {
-    "err": true,
-    "msg": "No list with id ${id} found",
-  };
 }
 
 export async function getCommentJSON(id: string) {
-  await client.connect();
-  let res = await client.queryArray(
+  return basicDataQuery(
+    "No comment with id ${id} found",
     "SELECT json FROM comments WHERE id = $1",
-    [id],
+    id,
   );
-  await client.end();
-
-  if (res.length !== 0) {
-    return res[0][0];
-  }
-
-  return {
-    "err": true,
-    "msg": "No comment with id ${id} found",
-  };
 }
 
 export async function getTorrentReplies(id: string) {
-  await client.connect();
-  let res = await client.queryArray(
+  return basicDataQuery(
+    "No replies on torrent id ${id} found",
     "SELECT replies FROM torrents WHERE id = $1",
-    [id],
+    id,
   );
-  await client.end();
-
-  if (res.length !== 0) {
-    return res[0][0];
-  }
-
-  return {
-    "err": true,
-    "msg": "No replies on torrent id ${id} found",
-  };
 }
 
 export async function getListReplies(id: string) {
-  await client.connect();
-  let res = await client.queryArray(
+  return basicDataQuery(
+    "No replies on list id ${id} found",
     "SELECT replies FROM lists WHERE id = $1",
-    [id],
+    id,
   );
-  await client.end();
-
-  if (res.length !== 0) {
-    return res[0][0];
-  }
-
-  return {
-    "err": true,
-    "msg": "No replies on list id ${id} found",
-  };
 }
 
 export async function getCommentReplies(id: string) {
-  await client.connect();
-  let res = await client.queryArray(
+  return basicDataQuery(
+    "No replies on list id ${id} found",
     "SELECT replies FROM comments WHERE id = $1",
-    [id],
+    id,
   );
-  await client.end();
-
-  if (res.length !== 0) {
-    return res[0][0];
-  }
-
-  return {
-    "err": true,
-    "msg": "No replies on list id ${id} found",
-  };
 }
 
 export async function getUserInfo(id: string) {
-  await client.connect();
-  let res = await client.queryArray(
+  return basicDataQuery(
+    "User ${id} not found",
     "SELECT info FROM users WHERE id = $1",
-    [id],
+    id,
   );
-  await client.end();
-
-  if (res.pass.length !== 0) {
-    return res;
-  }
-
-  return {
-    "err": true,
-    "msg": "User ${id} not found",
-  };
 }
 
 // User related information
 export async function getUMetaInfo(id: string) {
-  await client.connect();
-  res = await client.queryObject(
+  return basicDataQuery(
+    "User ${id} not found",
     "SELECT id, logins, roles FROM users WHERE id = $1",
-    [id],
+    id,
   );
-  await client.end();
-
-  if (res.length !== 0) {
-    return res;
-  }
-
-  return {
-    "err": true,
-    "msg": "User ${id} not found",
-  };
 }
 
 export async function getULoginInfo(id: string) {
-  await client.connect();
-  res = await client.queryObject(
+  return basicDataQuery(
+    "User ${id} not found",
     "SELECT pass FROM users WHERE id = $1",
-    [id],
+    id,
   );
-  await client.end();
-
-  if (res.pass.length !== 0) {
-    return res;
-  }
-
-  return {
-    "err": true,
-    "msg": "User ${id} not found",
-  };
 }
 
 export async function ULogin(id: string, time: number) {
   // Basically just push to the 'logins' array.
-    let newValue: number[];
-    await client.connect();
-    let initalValue = await client.queryObject(
-	"SELECT logins FROM users WHERE id = $1",
-	[id]
-    );
-    initialValue = initialValue[0][0];
-    
-    if (initialValue.length >= 10) {
-	initialValue.shift();
-    }
+  let newValue: number[];
+  await client.connect();
+  // screw it, not dealing with type shenanigans on this
+  let initialValue: any = await client.queryArray(
+    "SELECT logins FROM users WHERE id = $1",
+    [id],
+  );
+  initialValue = initialValue.rows[0];
 
-    newValue = initialValue.push(time);
+  if (initialValue.length >= 10) {
+    initialValue.shift();
+  }
 
-    await client.queryObject(
-	"UPDATE users SET logins = $1 WHERE id = $2;",
-	[JSON.stringify(newValue), id]
-    );
-    await client.end();
+  newValue = initialValue.push(time);
+
+  await client.queryObject(
+    "UPDATE users SET logins = $1 WHERE id = $2;",
+    [JSON.stringify(newValue), id],
+  );
+  await client.end();
 }
 
 export async function deleteTorrent(id: string) {
