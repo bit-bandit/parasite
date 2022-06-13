@@ -35,5 +35,4 @@ export const settings = {
     "maxHourlyInteractions": 5,
     "blockedInstances": []
   }
-  "jwtKey": "Something Secret Please Just Replace This Before You Deploy This" 
 }
