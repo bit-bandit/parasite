@@ -67,9 +67,9 @@ auth.post("/login", async function (ctx) {
 auth.post("/register", async function (ctx) {
   // Create new user.
   // When creating, use the resources in `static/defaults/`.
-  // Make subdirectory in static/u/ named after the user ID, with the the
+  // Make subdirectory in static/m/u/ named after the user ID, with the the
   // following files:
   // - avatar.png
   // - banner.png
-  // These can be updated in the future. (See POST /u/:id)  
+  // These can be updated in the future. (See POST /u/:id)
 });
