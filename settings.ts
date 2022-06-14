@@ -18,7 +18,7 @@ export const settings = {
       "port": 5432,
     },
   },
-  "staticFileDir": "../static/",
+  "staticFileDir": "./static/",
   "siteName": "Parasite Instance",
   "limits": {
     "maxHourlyCreations": Infinity,

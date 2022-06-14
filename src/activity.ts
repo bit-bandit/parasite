@@ -63,6 +63,7 @@ export interface ActivityLink {
   /**
    * Anything that can be a URL component,
    */
+  "type": string;
   href?: string;
   rel?: string;
   mediaType?: string;
@@ -72,30 +73,33 @@ export interface ActivityLink {
 }
 
 export interface ActivityObject {
+  "@context"?: string[] | string;
   attachment?:
     | ActivityObject[]
     | ActivityLink[]
     | ActivityObject
     | ActivityLink;
+  id?: string;
   attributedTo?: string;
   audience?: string;
   content?: string;
   name?: string;
   endTime?: string;
   generator?: string;
-  icon?: string;
-  image?: string;
+  icon?: string[] | string;
+  image?: ActivityImage[] | ActivityImage | string[] | string;
   inReplyTo?: string;
   location?: string;
   preview?: string;
   published?: string;
-  replies?: ActivityObject[];
+  replies?: ActivityCollection[] | ActivityObject[] | ActivityCollection;
   startTime?: string;
   summary?: string;
   tag?: ActivityObject[];
   type?:
     | "Article"
     | "Audio"
+    | "Collection"
     | "Document"
     | "Event"
     | "Image"
@@ -108,12 +112,13 @@ export interface ActivityObject {
     | "Video";
   updated?: string;
   url?: string;
-  to?: string;
+  to?: string[] | string;
   bto?: string;
   cc?: string[] | string;
   bcc?: string[] | string;
   mediaType?: string;
   duration?: string;
+  publicKey?: ActivityCrypto;
 }
 
 export interface ActivityCollection extends Omit<ActivityObject, "type"> {
@@ -125,7 +130,7 @@ export interface ActivityCollection extends Omit<ActivityObject, "type"> {
   items?: ActivityObject[] | string[];
 }
 
-// Have to seperate this one from the others because of collision reasons...
+// Have to seperate this one from the others because of collision reasons...interface ActivityCollectionPage extends Omit<ActivityObject, "type"> {
 export interface ActivityCollectionPage extends Omit<ActivityObject, "type"> {
   type?: "CollectionPage";
   totalItems?: Number;
@@ -147,7 +152,7 @@ export interface ActivityImage extends ActivityLink {
 }
 
 // Generate the actual object with the magnet link (AKA; The 'Pub' part of ActivityPub)
-export async function genObj(params: any = {}): Promise<object> {
+export function genObj(params: any = {}): Promise<object> {
   return {
     "@context": [
       "https://www.w3.org/ns/activitystreams",
@@ -165,11 +170,6 @@ export async function genObj(params: any = {}): Promise<object> {
     },
     "tag": params.tags,
     "to": ["https://www.w3.org/ns/activitystreams#Public"], // All posts are public; Sorry!
-    "publicKey": {
-      "id": params.keyID,
-      "owner": params.actor,
-      "publicKeyPem": params.keysig,
-    },
     "replies": {
       "type": "Collection",
       "totalItems": 0,
@@ -180,7 +180,7 @@ export async function genObj(params: any = {}): Promise<object> {
 // Voting. Type should be either `like` or `dislike`, since we're going by the standard.
 // We're doing some other shit with this too (See `doc/voting.md`), but we can get away
 // with it.
-export async function genVote(params: any = {}): Promise<object> {
+export function genVote(params: any = {}): Promise<object> {
   return {
     "@context": ["https://www.w3.org/ns/activitystreams"],
     "type": params.type,
@@ -194,7 +194,7 @@ export async function genVote(params: any = {}): Promise<object> {
 
 // See 4.1: Actor objects for more understandings on how to do this shit.
 
-export async function actorObj(params: any = {}): Promise<object> {
+export function actorObj(params: any = {}): Promise<ActivityObject> {
   // Notes: Image is used for user banners, icons are used for, well, icons.
   // This is because Mastodon, and Pleroma do it, so we're gonna have to
   // follow the bandwagon, there.
