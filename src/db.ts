@@ -5,6 +5,14 @@ import { settings } from "../settings.ts";
 
 const dbsettings = settings.database.settings;
 
+const client = new Client({
+  user: dbsettings.user,
+  database: dbsettings.database,
+  hostname: dbsettings.hostname,
+  password: dbsettings.password,
+  port: dbsettings.port,
+});
+
 const userTableInit = `
 CREATE TABLE IF NOT EXISTS users (
   PRIMARY KEY(id),
@@ -70,14 +78,6 @@ CREATE TABLE IF NOT EXISTS tags (
   allowed  BOOLEAN      NOT NULL
 );
 `;
-
-const client = new Client({
-  user: dbsettings.user,
-  database: dbsettings.database,
-  hostname: dbsettings.hostname,
-  password: dbsettings.password,
-  port: dbsettings.port,
-});
 
 await client.connect();
 
