@@ -11,7 +11,7 @@ router.get("/m/(.*)", async function (ctx) {
     // send the file at path ctx.params[0], relative to root settings.staticFileDir
     await ctx.send({
       path: `${ctx.params[0]}`,
-      root: `${settings.staticFileDir}/`,
+      root: `${settings.staticFileDir}`,
     });
   } catch {
     ctx.response.status = 404;
