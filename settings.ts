@@ -11,9 +11,9 @@ export const settings = {
   "database": {
     "type": "postgres",
     "settings": {
-      "database": "database",
+      "database": "parasite",
       "hostname": "localhost",
-      "user": "postgres",
+      "user": "admin",
       "password": "password",
       "port": 5432,
     },
