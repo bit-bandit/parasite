@@ -66,10 +66,33 @@ auth.post("/login", async function (ctx) {
 
 auth.post("/register", async function (ctx) {
   // Create new user.
-  // When creating, use the resources in `static/defaults/`.
+  // When creating, use the resources in `static/m/defaults/`.
   // Make subdirectory in static/m/u/ named after the user ID, with the the
   // following files:
   // - avatar.png
   // - banner.png
   // These can be updated in the future. (See POST /u/:id)
+  // await Deno.copyFile("defaults/avatar.png", "u/:id/avatar.png");
+  // Same as above for banner.
+  if (!ctx.request.hasBody) {
+    ctx.response.body = {
+      "err": true,
+      "msg": "No body provided",
+    };
+    ctx.response.status = 404;
+    ctx.response.type = "application/json";
+  }
+
+  let raw = await ctx.request.body();
+
+  if (raw.type !== "json") {
+    ctx.response.body = {
+      "err": true,
+      "msg": "Invalid content type",
+    };
+    ctx.response.status = 400;
+    ctx.respone.type = "application/json";
+  }
+
+  let requestJSON = await raw.value();
 });

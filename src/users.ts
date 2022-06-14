@@ -31,19 +31,19 @@ users.post("/u/:id/", async function (ctx) {
 });
 
 users.get("/u/:id/outbox", async function (ctx) {
-  // Get information about user.
+  // Get outbox of user.
 });
 
 users.get("/u/:id/inbox", async function (ctx) {
-  // Get information about user.
+  // Get inbox of user.
 });
 
 users.post("/u/:id/outbox", async function (ctx) {
-  // Get information about user.
+  // Send message, basically. Side effect of `POST /t/`
 });
 
 users.post("/u/:id/inbox", async function (ctx) {
-  // Get information about user.
+  // Follows of an account get message upon recieving this.
 });
 
 // WebFinger support. See https://www.rfc-editor.org/rfc/rfc7033.

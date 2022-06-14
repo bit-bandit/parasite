@@ -92,10 +92,14 @@ export interface ActivityObject {
   location?: string;
   preview?: string;
   published?: string;
-  replies?: ActivityCollection[] | ActivityObject[] | ActivityCollection;
+  replies?:
+    | ActivityCollection[]
+    | ActivityObject[]
+    | ActivityCollection
+    | string;
   startTime?: string;
   summary?: string;
-  tag?: ActivityObject[];
+  tag?: ActivityLink[] | ActivityObject[];
   type?:
     | "Article"
     | "Audio"
@@ -152,37 +156,30 @@ export interface ActivityImage extends ActivityLink {
 }
 
 // Generate the actual object with the magnet link (AKA; The 'Pub' part of ActivityPub)
-export function genObj(params: any = {}): Promise<object> {
+export function genObj(params: any = {}): ActivityObject {
   return {
-    "@context": [
-      "https://www.w3.org/ns/activitystreams",
-      "https://w3id.org/security/v1",
-    ],
+    "@context": "https://www.w3.org/ns/activitystreams",
     "id": params.id,
     "type": params.type ?? "Note", // In case we can't be shitted to write this down, keep note in.
     "published": params.published, // TODO: Figure out how the fuck ActivityStreams does dates
     "attributedTo": params.actor,
     "name": params.name,
     "content": params.content,
+    "tag": params.tags,
     "attachment": {
       "type": "Link",
       "href": params.link,
     },
-    "tag": params.tags,
     "to": ["https://www.w3.org/ns/activitystreams#Public"], // All posts are public; Sorry!
-    "replies": {
-      "type": "Collection",
-      "totalItems": 0,
-      "items": [],
-    },
+    "replies": `${params.id}/c`,
   };
 }
 // Voting. Type should be either `like` or `dislike`, since we're going by the standard.
 // We're doing some other shit with this too (See `doc/voting.md`), but we can get away
 // with it.
-export function genVote(params: any = {}): Promise<object> {
+export function genVote(params: any = {}) {
   return {
-    "@context": ["https://www.w3.org/ns/activitystreams"],
+    "@context": "https://www.w3.org/ns/activitystreams",
     "type": params.type,
     "actor": params.actor,
     "summary": `Voted: ${params.actor}`,
@@ -194,7 +191,7 @@ export function genVote(params: any = {}): Promise<object> {
 
 // See 4.1: Actor objects for more understandings on how to do this shit.
 
-export function actorObj(params: any = {}): Promise<ActivityObject> {
+export function actorObj(params: any = {}) {
   // Notes: Image is used for user banners, icons are used for, well, icons.
   // This is because Mastodon, and Pleroma do it, so we're gonna have to
   // follow the bandwagon, there.
