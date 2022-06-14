@@ -3,6 +3,12 @@
 This is the core API source code for the Parasite torrent indexer. See
 `doc/design.md` for information about how to use the thing.
 
+## Running
+
+```
+deno task run-server
+```
+
 ## License
 
 The source code used for Parasite is licensed under the 0BSD license.

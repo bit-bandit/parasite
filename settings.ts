@@ -1,5 +1,5 @@
 export const settings = {
-  "siteURL": "www.example.org",
+  "siteURL": `https://www.example.org`,
   "sitePort": 8080,
   "roles": "./roles.json",
   "allowedCategories": [

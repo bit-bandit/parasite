@@ -4,7 +4,8 @@ import {
   decode,
   verify,
 } from "https://deno.land/x/djwt@$VERSION/mod.ts";
-import { getULoginInfo, getUMetaInfo, ULogin } from "./db.ts";
+import { getULoginInfo, getUMetaInfo, UCheck, Uinit, ULogin } from "./db.ts";
+import { hashPass } from "/utils.ts";
 // This file is comprised of two sections:
 // 1. Functions used to validate users within the system.
 // 2. Routing for letting users register, or log into accounts.
@@ -37,7 +38,7 @@ auth.post("/login", async function (ctx) {
       "msg": "Invalid content type",
     };
     ctx.response.status = 400;
-    ctx.respone.type = "application/json";
+    ctx.response.type = "application/json";
   }
 
   let requestJSON = await raw.value();
@@ -95,4 +96,32 @@ auth.post("/register", async function (ctx) {
   }
 
   let requestJSON = await raw.value();
+
+  if (!requestJSON.password || !requestJSON.username) {
+    ctx.response.body = {
+      "err": true,
+      "msg": "No password or username field entered.",
+    };
+    ctx.response.status = 400;
+    ctx.response.type = "application/json";
+  }
+
+  // Check if the username is already taken.
+  const notTaken = await UCheck(requestJSON.username);
+
+  if (!notTaken) {
+    ctx.response.body = {
+      "err": true,
+      "msg": "Username already taken.",
+    };
+    ctx.response.status = 400;
+    ctx.respone.type = "application/json";
+  }
+
+  // Now we can get the actual user creation started, yes?
+  // Use default things to put into user account here..
+
+  await UInit({
+    // Add the shit here.
+  });
 });

@@ -204,6 +204,47 @@ export async function ULogin(id: string, time: number) {
   await client.end();
 }
 
+export async function UCheck(id: string) {
+  // Check users (For usage in signing up only, as of right now.)
+  // Do insensitive lookup of user ID. If an entry doesn't exist,
+  // return true, else, return false.
+  await client.connect();
+  const res = await client.queryArray(
+    "SELECT id FROM users WHERE lower(id) = $1",
+    [id.toLowerCase()],
+  );
+  await client.end();
+
+  if (res.rows.length === 0) {
+    return true;
+  }
+  return false;
+}
+
+export async function UInit(params: any = {}) {
+  await client.connect();
+  await client.queryArray(
+    `INSERT INTO users (info, pass, roles, inbox, outbox, likes, 
+       dislikes, following, followers, logins) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);`,
+    [
+      params.id,
+      params.info,
+      params.pass,
+      params.roles,
+      params.inbox,
+      params.outbox,
+      params.likes,
+      params.dislikes,
+      params.following,
+      params.followers,
+      params.logins,
+      params.registered,
+    ],
+  );
+  await client.end();
+}
+
 export async function deleteTorrent(id: string) {
   await client.connect();
   await client.queryArray(
