@@ -1,32 +1,32 @@
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 import { settings } from "../settings.ts";
 
-// Oak can't handle dynamic routing alongside sending static content over.
-// Originally, the plan was to have one `static` directory, which would send
-// its content over if the `/m/` parameter was matched.
-// Instead I have to include the `static` directory in another directory
-// called `m` in order to get the results I want without directory traversal
-// coming into play.
+let app = new Application();
+let router = new Router();
 
-// I swear to god if I ever see the fucking guy who made Oak in person I'm going to
-// [ SECTION EXPUNGED TO PREVENT LEGAL ACTION TAKEN AGAINST US ]
-app.use(async function (ctx, next) {
+// Uses a somewhat obscure feature of path-to-regexp; it supports capture groups.
+// See <https://github.com/pillarjs/path-to-regexp#unnamed-parameters>
+router.get("/m/(.*)", async function (ctx) {
   try {
+    // send the file at path ctx.params[0], relative to root settings.staticFileDir
     await ctx.send({
-	root: `${settings.staticFileDir}`,
+      path: `${ctx.params[0]}`,
+      root: `${settings.staticFileDir}/`,
     });
   } catch {
-    await next();
+    ctx.response.status = 404;
   }
 });
 
-app.addEventListener("listen", ({ hostname, port, secure }) => {
-  console.log(
-    `Listening on: ${secure ? "https://" : "http://"}${
-      hostname ??
-        "localhost"
-    }:${port}`,
-  );
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+app.addEventListener("listen", (evt) => {
+  let protocol = (evt.secure ? "https" : "http");
+  let hostname = evt.hostname ?? "localhost";
+  let port = evt.port;
+
+  console.log(`Listening on: ${protocol}://${hostname}:${port}`);
 });
 
-app.listen({ port: settings.sitePort });
+await app.listen({ port: settings.sitePort });
