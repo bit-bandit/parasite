@@ -1,12 +1,13 @@
+
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 import { settings } from "../settings.ts";
 
 let app = new Application();
-let router = new Router();
+let media = new Router();
 
 // Uses a somewhat obscure feature of path-to-regexp; it supports capture groups.
 // See <https://github.com/pillarjs/path-to-regexp#unnamed-parameters>
-router.get("/m/(.*)", async function (ctx) {
+media.get("/m/defs/(.*)", async function (ctx) {
   try {
     // send the file at path ctx.params[0], relative to root settings.staticFileDir
     await ctx.send({
@@ -18,8 +19,8 @@ router.get("/m/(.*)", async function (ctx) {
   }
 });
 
-app.use(router.routes());
-app.use(router.allowedMethods());
+app.use(media.routes());
+app.use(media.allowedMethods());
 
 app.addEventListener("listen", (evt) => {
   let protocol = (evt.secure ? "https" : "http");
