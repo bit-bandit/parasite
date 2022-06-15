@@ -234,12 +234,14 @@ export async function wrapperCreate(params: any = {}): Promise<object> {
 // And that's not even getting started on the wrappers!
 // I'm gonna die.
 
-export function genOrderedCollection(id: string): ActivityCollection {
+// With some exceptions - Namely for inboxes/outboxes - We only store items via. their
+// URLS.
+export function genOrderedCollection(id: string, items?: any[]): ActivityCollection {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": id,
     "type": "OrderedCollection",
-    "totalItems": 0,
-    "orderedItems": [],
+    "totalItems": 0 ?? items.length,
+    "orderedItems": [] ?? items,
   };
 }
