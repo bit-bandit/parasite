@@ -142,6 +142,7 @@ export interface ActivityCollectionPage extends Omit<ActivityObject, "type"> {
   first?: string;
   last?: string;
   items?: ActivityObject[] | string[];
+  orderedItems?: ActivityObject[] | string[];
   partOf?: string;
   next?: string;
 }
@@ -196,10 +197,7 @@ export function actorObj(params: any = {}) {
   // This is because Mastodon, and Pleroma do it, so we're gonna have to
   // follow the bandwagon, there.
   return {
-    "@context": [
-      "https://www.w3.org/ns/activitystreams",
-      "https://w3id.org/security/v1",
-    ],
+    "@context": "https://www.w3.org/ns/activitystreams",
     "type": "Person",
     "id": params.actor,
     "following": params.following,
@@ -213,11 +211,6 @@ export function actorObj(params: any = {}) {
       params.icon,
     ],
     "image": params.banner,
-    "publicKey": {
-      "id": params.keyID,
-      "owner": params.actor,
-      "publicKeyPem": params.keysig,
-    },
   };
 }
 
@@ -241,4 +234,12 @@ export async function wrapperCreate(params: any = {}): Promise<object> {
 // And that's not even getting started on the wrappers!
 // I'm gonna die.
 
-// actor: string, title: string, body: string, magnet: string
+export function genOrderedCollection(id: string): ActivityCollection {
+  return {
+    "@context": "https://www.w3.org/ns/activitystreams",
+    "id": id,
+    "type": "OrderedCollection",
+    "totalItems": 0,
+    "orderedItems": [],
+  };
+}
