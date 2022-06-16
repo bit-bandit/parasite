@@ -1,7 +1,7 @@
 export const settings = {
   "siteURL": `https://www.example.org`,
   "sitePort": 8080,
-  "roles": "./roles.json",
+  "defaultRole": "User"   
   "allowedCategories": [
     "audio",
     "documents",
@@ -15,7 +15,7 @@ export const settings = {
       "hostname": "localhost",
       "user": "admin",
       "password": "password",
-      "port": 5432,
+      "port": 5433,
     },
   },
   "staticFileDir": "./static/",

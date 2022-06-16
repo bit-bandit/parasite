@@ -3,15 +3,7 @@
 import { Client } from "https://deno.land/x/postgres@v0.16.1/mod.ts";
 import { settings } from "../settings.ts";
 
-const dbsettings = settings.database.settings;
-
-const client = new Client({
-  user: dbsettings.user,
-  database: dbsettings.database,
-  hostname: dbsettings.hostname,
-  password: dbsettings.password,
-  port: dbsettings.port,
-});
+const client = new Client({ settings.database.settings });
 
 const userTableInit = `
 CREATE TABLE IF NOT EXISTS users (
