@@ -237,13 +237,13 @@ export async function wrapperCreate(params: any = {}): Promise<object> {
 // With some exceptions - Namely for inboxes/outboxes - We only store items via. their
 // URLS.
 export function genOrderedCollection(id: string, items?: any[]) {
-    let l = 0;
-    
-    // This is a hack I had to do because the compiler wouldn't stop yelling at me.
-    if (items){
-	l = items.length;
-    }
-    
+  let l = 0;
+
+  // This is a hack I had to do because the compiler wouldn't stop yelling at me.
+  if (items) {
+    l = items.length;
+  }
+
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": id,

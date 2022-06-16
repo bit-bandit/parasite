@@ -1,15 +1,15 @@
 // Roles for Parasite
 interface Role {
-    name: string
-    createTorrents: boolean,
-    createLists: boolean,
-    createComments: boolean,
-    deleteOwnTorrents: boolean,
-    deleteOthersTorrents: boolean,
-    deleteOwnComments: boolean,
-    deleteOthersComments: boolean,
-    editUploads: boolean,
-    login: boolean,
+  name: string;
+  createTorrents: boolean;
+  createLists: boolean;
+  createComments: boolean;
+  deleteOwnTorrents: boolean;
+  deleteOthersTorrents: boolean;
+  deleteOwnComments: boolean;
+  deleteOthersComments: boolean;
+  editUploads: boolean;
+  login: boolean;
 }
 
 export const roles: Role[] = [
@@ -48,5 +48,5 @@ export const roles: Role[] = [
     deleteOthersComments: false,
     editUploads: false,
     login: false,
-  }
-]
+  },
+];

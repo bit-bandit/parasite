@@ -1,7 +1,7 @@
 export const settings = {
   "siteURL": `https://www.example.org`,
   "sitePort": 8080,
-  "defaultRole": "User"   
+  "defaultRole": "User",
   "allowedCategories": [
     "audio",
     "documents",

@@ -8,6 +8,7 @@ import { getULoginInfo, getUMetaInfo, UCheck, Uinit, ULogin } from "./db.ts";
 import { hashPass } from "./utils.ts";
 import { settings } from "../settings.ts";
 import { actorObj, genOrderedCollection } from "./activity.ts";
+import { roles } from '../roles.ts';
 // This file is comprised of two sections:
 // 1. Functions used to validate users within the system.
 // 2. Routing for letting users register, or log into accounts.
@@ -116,83 +117,85 @@ auth.post("/register", async function (ctx) {
     };
     ctx.response.status = 400;
     ctx.respone.type = "application/json";
+  } else {
+    // Now we can get the actual user creation started, yes?
+    // Use default things to put into user account here..
+
+    // TODO: Add some error handling here.
+    const destDir = `${settings.staticFileDir}/m/u/${requestJSON.username}`;
+    await Deno.mkdir(destDir);
+    await Deno.copyFile(
+      `${settings.staticFileDir}avatar.png`,
+      `${destDir}/avatar.png`,
+    );
+    await Deno.copyFile(
+      `${settings.staticFileDir}banner.png`,
+      `${destDir}/banner.png`,
+    );
+
+    const avatar = `${siteURL}/m/u/${requestJSON.username}/avatar.png`;
+    const banner = `${siteURL}/m/u/${requestJSON.username}/avatar.png`;
+
+    const actorInfo = actorObj({
+      "id": `${settings.siteURL}/u/${requestJSON.username}/inbox`,
+      "following": `${settings.siteURL}/u/${requestJSON.username}/following`,
+      "followers": `${settings.siteURL}/u/${requestJSON.username}/followers`,
+      "liked": `${settings.siteURL}/u/${requestJSON.username}/liked`,
+      "inbox": `${settings.siteURL}/u/${requestJSON.username}/inbox`,
+      "outbox": `${settings.siteURL}/u/${requestJSON.username}/outbox`,
+      "name": `${requestJSON.username}`,
+      "summary": "",
+      "icon": [
+        avatar,
+      ],
+      "image": banner,
+    });
+
+    const getDefaultRole = (x) => x.name === settings.defaultRole;
+
+    await UInit({
+      id: requestJSON.username,
+      info: actorInfo,
+      pass: await hashPass(requestJSON.password),
+      roles: JSON.stringify(roles[roles.findIndex(getDefaultRole)]));,
+      inbox: JSON.stringify(
+        genOrderedCollection(
+          `${settings.siteURL}/u/${requestJSON.username}/inbox`,
+        ),
+      ),
+      outbox: JSON.stringify(
+        genOrderedCollection(
+          `${settings.siteURL}/u/${requestJSON.username}/outbox`,
+        ),
+      ),
+      likes: JSON.stringify(
+        genOrderedCollection(
+          `${settings.siteURL}/u/${requestJSON.username}/likes`,
+        ),
+      ),
+      dislikes: JSON.stringify(
+        genOrderedCollection(
+          `${settings.siteURL}/u/${requestJSON.username}/dislikes`,
+        ),
+      ),
+      follwing: JSON.stringify(
+        genOrderedCollection(
+          `${settings.siteURL}/u/${requestJSON.username}/following`,
+        ),
+      ),
+      followers: JSON.stringify(
+        genOrderedCollection(
+          `${settings.siteURL}/u/${requestJSON.username}/followers`,
+        ),
+      ),
+      logins: JSON.stringify([]), // Tokens will be added next time user logs in. See `/login/`.
+      registered: Date.now(),
+    });
+
+    ctx.response.body = {
+      "msg": "User ${requestJSON.username} created",
+    };
+    ctx.response.type = "application/json";
+    ctx.response.status = 201;
   }
-
-  // Now we can get the actual user creation started, yes?
-  // Use default things to put into user account here..
-
-  // TODO: Add some error handling here.
-  const destDir = `${settings.staticFileDir}/m/u/${requestJSON.username}`;
-  await Deno.mkdir(destDir);
-  await Deno.copyFile(
-    `${settings.staticFileDir}avatar.png`,
-    `${destDir}/avatar.png`,
-  );
-  await Deno.copyFile(
-    `${settings.staticFileDir}banner.png`,
-    `${destDir}/banner.png`,
-  );
-
-  const avatar = `${siteURL}/m/u/${requestJSON.username}/avatar.png`;
-  const banner = `${siteURL}/m/u/${requestJSON.username}/avatar.png`;
-
-  const actorInfo = actorObj({
-    "id": `${settings.siteURL}/u/${requestJSON.username}/inbox`,
-    "following": `${settings.siteURL}/u/${requestJSON.username}/following`,
-    "followers": `${settings.siteURL}/u/${requestJSON.username}/followers`,
-    "liked": `${settings.siteURL}/u/${requestJSON.username}/liked`,
-    "inbox": `${settings.siteURL}/u/${requestJSON.username}/inbox`,
-    "outbox": `${settings.siteURL}/u/${requestJSON.username}/outbox`,
-    "name": `${requestJSON.username}`,
-    "summary": "",
-    "icon": [
-      avatar,
-    ],
-    "image": banner,
-  });
-
-  await UInit({
-    id: requestJSON.username,
-    info: actorInfo,
-    pass: await hashPass(requestJSON.password),
-    roles: JSON.stringify(["user"]),
-    inbox: JSON.stringify(
-      genOrderedCollection(
-        `${settings.siteURL}/u/${requestJSON.username}/inbox`,
-      ),
-    ),
-    outbox: JSON.stringify(
-      genOrderedCollection(
-        `${settings.siteURL}/u/${requestJSON.username}/outbox`,
-      ),
-    ),
-    likes: JSON.stringify(
-      genOrderedCollection(
-        `${settings.siteURL}/u/${requestJSON.username}/likes`,
-      ),
-    ),
-    dislikes: JSON.stringify(
-      genOrderedCollection(
-        `${settings.siteURL}/u/${requestJSON.username}/dislikes`,
-      ),
-    ),
-    follwing: JSON.stringify(
-      genOrderedCollection(
-        `${settings.siteURL}/u/${requestJSON.username}/following`,
-      ),
-    ),
-    followers: JSON.stringify(
-      genOrderedCollection(
-        `${settings.siteURL}/u/${requestJSON.username}/followers`,
-      ),
-    ),
-    logins: JSON.stringify([]), // Tokens will be added next time user logs in. See `/login/`.
-    registered: Date.now(),
-  });
-
-  ctx.response.body = {
-    "msg": "User ${requestJSON.username} created",
-  };
-  ctx.response.type = "application/json";
-  ctx.response.status = 201;
 });
