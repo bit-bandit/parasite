@@ -35,6 +35,7 @@ const torrentTableInit = `
 CREATE TABLE IF NOT EXISTS torrents (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
+  activity  JSONB         NOT NULL,
   json      JSONB         NOT NULL,
   uploader  VARCHAR(256)  NOT NULL,
   likes     JSONB         NOT NULL,
@@ -49,6 +50,7 @@ const listsTableInit = `
 CREATE TABLE IF NOT EXISTS lists (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
+  activity  JSONB         NOT NULL,
   json      JSONB         NOT NULL,
   uploader  VARCHAR(256)  NOT NULL,
   likes     JSONB         NOT NULL,
@@ -62,6 +64,7 @@ const commentsTableInit = `
 CREATE TABLE IF NOT EXISTS comments (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
+  activity  JSONB         NOT NULL,
   json      JSONB         NOT NULL,
   uploader  VARCHAR(256)  NOT NULL,
   likes     JSONB         NOT NULL,
