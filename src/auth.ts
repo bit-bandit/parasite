@@ -4,11 +4,11 @@ import {
   decode,
   verify,
 } from "https://deno.land/x/djwt@$VERSION/mod.ts";
-import { getULoginInfo, getUMetaInfo, UCheck, Uinit, ULogin } from "./db.ts";
-import { hashPass } from "./utils.ts";
+import { getULoginInfo, getUMetaInfo, UCheck, UInit, ULogin } from "./db.ts";
+import { hashPass, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import { actorObj, genOrderedCollection } from "./activity.ts";
-import { roles } from '../roles.ts';
+import { roles } from "../roles.ts";
 // This file is comprised of two sections:
 // 1. Functions used to validate users within the system.
 // 2. Routing for letting users register, or log into accounts.
@@ -25,23 +25,13 @@ export let auth = new Router();
 
 auth.post("/login", async function (ctx) {
   if (!ctx.request.hasBody) {
-    ctx.response.body = {
-      "err": true,
-      "msg": "No body provided",
-    };
-    ctx.response.status = 404;
-    ctx.response.type = "application/json";
+    throwAPIError(ctx, "No body provided", 404);
   }
 
   let raw = await ctx.request.body();
 
   if (raw.type !== "json") {
-    ctx.response.body = {
-      "err": true,
-      "msg": "Invalid content type",
-    };
-    ctx.response.status = 400;
-    ctx.response.type = "application/json";
+    throwAPIError(ctx, "Invalid content type", 400);
   }
 
   let requestJSON = await raw.value();
@@ -59,12 +49,7 @@ auth.post("/login", async function (ctx) {
     const t = Date.now();
     await ULogin(requestJSON.id, t);
   } else {
-    ctx.response.body = {
-      "err": true,
-      "msg": "invalid credentials",
-    };
-    ctx.response.status = 400;
-    ctx.response.type = "application/json";
+    throwAPIError(ctx, "Invalid credentials", 400);
   }
 });
 
@@ -77,46 +62,26 @@ auth.post("/register", async function (ctx) {
   // - banner.png
   // These can be updated in the future. (See POST /u/:id)
   if (!ctx.request.hasBody) {
-    ctx.response.body = {
-      "err": true,
-      "msg": "No body provided",
-    };
-    ctx.response.status = 404;
-    ctx.response.type = "application/json";
+    throwAPIError(ctx, "No body provided", 404);
   }
 
   let raw = await ctx.request.body();
 
   if (raw.type !== "json") {
-    ctx.response.body = {
-      "err": true,
-      "msg": "Invalid content type",
-    };
-    ctx.response.status = 400;
-    ctx.respone.type = "application/json";
+    throwAPIError(ctx, "Invalid content type", 400);
   }
 
   let requestJSON = await raw.value();
 
   if (!requestJSON.password || !requestJSON.username) {
-    ctx.response.body = {
-      "err": true,
-      "msg": "No password or username field entered.",
-    };
-    ctx.response.status = 400;
-    ctx.response.type = "application/json";
+    throwAPIError(ctx, "Either the username or password is missing.", 400);
   }
 
   // Check if the username is already taken.
   const notTaken = await UCheck(requestJSON.username);
 
   if (!notTaken) {
-    ctx.response.body = {
-      "err": true,
-      "msg": "Username already taken.",
-    };
-    ctx.response.status = 400;
-    ctx.respone.type = "application/json";
+    throwAPIError(ctx, "Username already taken.", 400);
   } else {
     // Now we can get the actual user creation started, yes?
     // Use default things to put into user account here..
@@ -133,16 +98,20 @@ auth.post("/register", async function (ctx) {
       `${destDir}/banner.png`,
     );
 
-    const avatar = `${siteURL}/m/u/${requestJSON.username}/avatar.png`;
-    const banner = `${siteURL}/m/u/${requestJSON.username}/avatar.png`;
+    const userStatic = `${siteURL}/m/u/${requestJSON.username}`;
+
+    const avatar = `${userStatic}/avatar.png`;
+    const banner = `${userStatic}/banner.png`;
+
+    const userAPI = `${settings.siteURL}/u/${requestJSON.username}`;
 
     const actorInfo = actorObj({
-      "id": `${settings.siteURL}/u/${requestJSON.username}/inbox`,
-      "following": `${settings.siteURL}/u/${requestJSON.username}/following`,
-      "followers": `${settings.siteURL}/u/${requestJSON.username}/followers`,
-      "liked": `${settings.siteURL}/u/${requestJSON.username}/liked`,
-      "inbox": `${settings.siteURL}/u/${requestJSON.username}/inbox`,
-      "outbox": `${settings.siteURL}/u/${requestJSON.username}/outbox`,
+      "id": `${userAPI}/inbox`,
+      "following": `${userAPI}/following`,
+      "followers": `${userAPI}/followers`,
+      "liked": `${userAPI}/liked`,
+      "inbox": `${userAPI}/inbox`,
+      "outbox": `${userAPI}/outbox`,
       "name": `${requestJSON.username}`,
       "summary": "",
       "icon": [
@@ -157,38 +126,14 @@ auth.post("/register", async function (ctx) {
       id: requestJSON.username,
       info: actorInfo,
       pass: await hashPass(requestJSON.password),
-      roles: JSON.stringify(roles[roles.findIndex(getDefaultRole)]));,
-      inbox: JSON.stringify(
-        genOrderedCollection(
-          `${settings.siteURL}/u/${requestJSON.username}/inbox`,
-        ),
-      ),
-      outbox: JSON.stringify(
-        genOrderedCollection(
-          `${settings.siteURL}/u/${requestJSON.username}/outbox`,
-        ),
-      ),
-      likes: JSON.stringify(
-        genOrderedCollection(
-          `${settings.siteURL}/u/${requestJSON.username}/likes`,
-        ),
-      ),
-      dislikes: JSON.stringify(
-        genOrderedCollection(
-          `${settings.siteURL}/u/${requestJSON.username}/dislikes`,
-        ),
-      ),
-      follwing: JSON.stringify(
-        genOrderedCollection(
-          `${settings.siteURL}/u/${requestJSON.username}/following`,
-        ),
-      ),
-      followers: JSON.stringify(
-        genOrderedCollection(
-          `${settings.siteURL}/u/${requestJSON.username}/followers`,
-        ),
-      ),
-      logins: JSON.stringify([]), // Tokens will be added next time user logs in. See `/login/`.
+      roles: roles[roles.findIndex(getDefaultRole)],
+      inbox: genOrderedCollection(`${userAPI}/inbox`),
+      outbox: genOrderedCollection(`${userAPI}/outbox`),
+      likes: genOrderedCollection(`${userAPI}/likes`),
+      dislikes: genOrderedCollection(`${userAPI}/dislikes`),
+      following: genOrderedCollection(`${userAPI}/following`),
+      followers: genOrderedCollection(`${userAPI}/followers`),
+      logins: [], // Tokens will be added next time user logs in. See `/login/`.
       registered: Date.now(),
     });
 

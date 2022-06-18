@@ -1,3 +1,5 @@
+import { Context } from "https://deno.land/x/oak/mod.ts";
+
 /**
  * Generates up to 32 universally-unique hex digits at a time to use as an ID.
  * @param {number} length A length, up to 32
@@ -30,7 +32,9 @@ export async function hashPass(pass: string, date: number) {
 
   // Convert the byte array to a hex string.
   const hash_arr = Array.from(new Uint8Array(hash_bytes));
-  const hash_hex = hash_arr.map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hash_hex = hash_arr.map((b) => b.toString(16).padStart(2, "0")).join(
+    "",
+  );
 
   return hash_hex;
 }
@@ -64,7 +68,7 @@ export function genListID(title: string) {
   // I don't think people are gonna upload >16777216 versions of the same list to the same namespace anyway
   let uuidPart = genUUID(6);
 
-  return encodeURIComponent(titlePart + '-' + uuidPart);
+  return encodeURIComponent(titlePart + "-" + uuidPart);
 }
 
 /**
@@ -74,5 +78,23 @@ export function genListID(title: string) {
  */
 export function genCommentID(inReplyTo: string) {
   let uuidPart = genUUID(4);
-  return inReplyTo + '-' + uuidPart;
+  return inReplyTo + "-" + uuidPart;
+}
+
+/**
+ * Throws a Web API usage error.
+ * @param {Context} ctx Oak context.
+ * @param {string} message Error message.
+ */
+export function throwAPIError(ctx: Context, message?: string, status?: number) {
+  message ??= "An unknown error occurred.";
+  status ??= 400;
+
+  ctx.response.body = {
+    "err": true,
+    "msg": message,
+  };
+
+  ctx.response.status = status;
+  ctx.response.type = "application/json";
 }
