@@ -5,7 +5,7 @@ import { settings } from "../settings.ts";
 
 let db_settings = settings.database.settings;
 
-const client = new Client({ db_settings });
+const client = new Client(db_settings);
 
 const userTableInit = `
 CREATE TABLE IF NOT EXISTS users (
@@ -104,7 +104,7 @@ async function basicDataQuery(
   return { "err": true, "msg": msg };
 }
 
-export async function getTorrentJSON(id: string) {
+export async function getTorrentJSON(id: string): Promise<any> {
   return basicDataQuery(
     "No torrent with id ${id} found",
     "SELECT json FROM torrents WHERE id = $1",
@@ -112,7 +112,7 @@ export async function getTorrentJSON(id: string) {
   );
 }
 
-export async function getListJSON(id: string) {
+export async function getListJSON(id: string): Promise<any> {
   return basicDataQuery(
     "No list with id ${id} found",
     "SELECT json FROM lists WHERE id = $1",
@@ -120,7 +120,7 @@ export async function getListJSON(id: string) {
   );
 }
 
-export async function getCommentJSON(id: string) {
+export async function getCommentJSON(id: string): Promise<any> {
   return basicDataQuery(
     "No comment with id ${id} found",
     "SELECT json FROM comments WHERE id = $1",
@@ -128,7 +128,7 @@ export async function getCommentJSON(id: string) {
   );
 }
 
-export async function getTorrentReplies(id: string) {
+export async function getTorrentReplies(id: string): Promise<any> {
   return basicDataQuery(
     "No replies on torrent id ${id} found",
     "SELECT replies FROM torrents WHERE id = $1",
@@ -136,7 +136,7 @@ export async function getTorrentReplies(id: string) {
   );
 }
 
-export async function getListReplies(id: string) {
+export async function getListReplies(id: string): Promise<any> {
   return basicDataQuery(
     "No replies on list id ${id} found",
     "SELECT replies FROM lists WHERE id = $1",
@@ -144,7 +144,7 @@ export async function getListReplies(id: string) {
   );
 }
 
-export async function getCommentReplies(id: string) {
+export async function getCommentReplies(id: string): Promise<any> {
   return basicDataQuery(
     "No replies on list id ${id} found",
     "SELECT replies FROM comments WHERE id = $1",
@@ -152,7 +152,7 @@ export async function getCommentReplies(id: string) {
   );
 }
 
-export async function getUserInfo(id: string) {
+export async function getUserInfo(id: string): Promise<any> {
   return basicDataQuery(
     "User ${id} not found",
     "SELECT info FROM users WHERE id = $1",
@@ -161,7 +161,7 @@ export async function getUserInfo(id: string) {
 }
 
 // User related information
-export async function getUMetaInfo(id: string) {
+export async function getUMetaInfo(id: string): Promise<any> {
   return basicDataQuery(
     "User ${id} not found",
     "SELECT id, logins, roles FROM users WHERE id = $1",
@@ -169,7 +169,7 @@ export async function getUMetaInfo(id: string) {
   );
 }
 
-export async function getULoginInfo(id: string) {
+export async function getULoginInfo(id: string): Promise<any> {
   return basicDataQuery(
     "User ${id} not found",
     "SELECT pass FROM users WHERE id = $1",
@@ -228,14 +228,14 @@ export async function UInit(params: any = {}) {
       params.id,
       params.info,
       params.pass,
-      params.roles,
-      params.inbox,
-      params.outbox,
-      params.likes,
-      params.dislikes,
-      params.following,
-      params.followers,
-      params.logins,
+      JSON.stringify(params.roles),
+      JSON.stringify(params.inbox),
+      JSON.stringify(params.outbox),
+      JSON.stringify(params.likes),
+      JSON.stringify(params.dislikes),
+      JSON.stringify(params.following),
+      JSON.stringify(params.followers),
+      JSON.stringify(params.logins),
       params.registered,
     ],
   );

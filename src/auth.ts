@@ -3,7 +3,7 @@ import {
   create,
   decode,
   verify,
-} from "https://deno.land/x/djwt@$VERSION/mod.ts";
+} from "https://deno.land/x/djwt/mod.ts";
 import { getULoginInfo, getUMetaInfo, UCheck, UInit, ULogin } from "./db.ts";
 import { hashPass, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
@@ -34,7 +34,10 @@ auth.post("/login", async function (ctx) {
     throwAPIError(ctx, "Invalid content type", 400);
   }
 
-  let requestJSON = await raw.value();
+  let requestJSON = await raw.value;
+
+  // Extract JSON from a stream of bytes. Quite clunky.
+  requestJSON = JSON.parse(new TextDecoder().decode(requestJSON));
 
   let info = await getULoginInfo(requestJSON.id);
 
@@ -44,7 +47,7 @@ auth.post("/login", async function (ctx) {
     ctx.response.type = "application/json";
   }
 
-  if (hashPass(requestJSON.password) === info.pass) {
+  if (hashPass(requestJSON.password, info.registered) === info.pass) {
     // Return token, and update logins
     const t = Date.now();
     await ULogin(requestJSON.id, t);
@@ -71,7 +74,10 @@ auth.post("/register", async function (ctx) {
     throwAPIError(ctx, "Invalid content type", 400);
   }
 
-  let requestJSON = await raw.value();
+  let requestJSON = await raw.value;
+
+  // Extract JSON from a stream of bytes. Quite clunky.
+  requestJSON = JSON.parse(new TextDecoder().decode(requestJSON));
 
   if (!requestJSON.password || !requestJSON.username) {
     throwAPIError(ctx, "Either the username or password is missing.", 400);
@@ -98,7 +104,7 @@ auth.post("/register", async function (ctx) {
       `${destDir}/banner.png`,
     );
 
-    const userStatic = `${siteURL}/m/u/${requestJSON.username}`;
+    const userStatic = `${settings.siteURL}/m/u/${requestJSON.username}`;
 
     const avatar = `${userStatic}/avatar.png`;
     const banner = `${userStatic}/banner.png`;
@@ -120,10 +126,13 @@ auth.post("/register", async function (ctx) {
       "image": banner,
     });
 
+	// pass needs this.
+	const registered = Date.now();
+
     await UInit({
       id: requestJSON.username,
       info: actorInfo,
-      pass: await hashPass(requestJSON.password),
+      pass: await hashPass(requestJSON.password, registered),
       roles: roles[settings.defaultRole],
       inbox: genOrderedCollection(`${userAPI}/inbox`),
       outbox: genOrderedCollection(`${userAPI}/outbox`),
@@ -132,7 +141,7 @@ auth.post("/register", async function (ctx) {
       following: genOrderedCollection(`${userAPI}/following`),
       followers: genOrderedCollection(`${userAPI}/followers`),
       logins: [], // Tokens will be added next time user logs in. See `/login/`.
-      registered: Date.now(),
+      registered: registered,
     });
 
     ctx.response.body = {
