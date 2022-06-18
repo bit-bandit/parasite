@@ -120,13 +120,11 @@ auth.post("/register", async function (ctx) {
       "image": banner,
     });
 
-    const getDefaultRole = (x) => x.name === settings.defaultRole;
-
     await UInit({
       id: requestJSON.username,
       info: actorInfo,
       pass: await hashPass(requestJSON.password),
-      roles: roles[roles.findIndex(getDefaultRole)],
+      roles: roles[settings.defaultRole],
       inbox: genOrderedCollection(`${userAPI}/inbox`),
       outbox: genOrderedCollection(`${userAPI}/outbox`),
       likes: genOrderedCollection(`${userAPI}/likes`),
