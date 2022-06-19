@@ -1,9 +1,5 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
-import {
-  create,
-  decode,
-  verify,
-} from "https://deno.land/x/djwt/mod.ts";
+import { create, decode, verify } from "https://deno.land/x/djwt/mod.ts";
 import { getULoginInfo, getUMetaInfo, UCheck, UInit, ULogin } from "./db.ts";
 import { hashPass, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
@@ -126,8 +122,8 @@ auth.post("/register", async function (ctx) {
       "image": banner,
     });
 
-	// pass needs this.
-	const registered = Date.now();
+    // pass needs this.
+    const registered = Date.now();
 
     await UInit({
       id: requestJSON.username,
