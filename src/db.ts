@@ -96,7 +96,7 @@ async function basicDataQuery(
   await client.connect();
   let res = await client.queryArray(query, args);
   await client.end();
-
+    
   if (res.rows.length !== 0) {
     return res.rows[0];
   }
@@ -171,8 +171,8 @@ export async function getUMetaInfo(id: string): Promise<any> {
 
 export async function getULoginInfo(id: string): Promise<any> {
   return basicDataQuery(
-    "User ${id} not found",
-    "SELECT pass FROM users WHERE id = $1",
+    `User ${id} not found`,
+    "SELECT pass, registered FROM users WHERE id = $1",
     id,
   );
 }
@@ -182,19 +182,17 @@ export async function ULogin(id: string, time: number) {
   let newValue: number[];
   await client.connect();
   // screw it, not dealing with type shenanigans on this
-  let initialValue: any = await client.queryArray(
+  let initialValue = await client.queryObject(
     "SELECT logins FROM users WHERE id = $1",
     [id],
   );
-  initialValue = initialValue.rows[0];
-
-  if (initialValue.length >= 10) {
+  if (initialValue.rows[0].logins.length >= 10) {
     initialValue.shift();
   }
+  console.log(initialValue.rows[0]);
+  newValue = initialValue.rows[0].logins.push(time);
 
-  newValue = initialValue.push(time);
-
-  await client.queryObject(
+  await client.queryArray(
     "UPDATE users SET logins = $1 WHERE id = $2;",
     [JSON.stringify(newValue), id],
   );

@@ -39,22 +39,24 @@ auth.post("/login", async function (ctx) {
 
   let requestJSON = await raw.value;
 
-  let info = await getULoginInfo(requestJSON.id);
-
+  let info = await getULoginInfo(`${requestJSON.username}`);  
+  
   if (info.err) {
     ctx.response.body = info;
     ctx.response.status = 404;
     ctx.response.type = "application/json";
   }
 
-  if (hashPass(requestJSON.password, info.registered) === info.pass) {
+  let hashed = await hashPass(requestJSON.password, info[1]) 
+    
+  if (hashed === info[0]) {
     // Return token, and update logins
     const t = Date.now();
-    await ULogin(requestJSON.id, t);
+    await ULogin(requestJSON.username, t);
 
     let jwt = await djwt.create({ typ: "JWT", alg: settings.jwt.keyAlgStr as Algorithm}, {
       user: requestJSON.id,
-      exp: djwt.getNumericDate(settings.jwt.tokenLifetime),
+      exp:x djwt.getNumericDate(settings.jwt.tokenLifetime),
     }, await getKey());
   } else {
     throwAPIError(ctx, "Invalid credentials", 400);
