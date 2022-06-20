@@ -1,5 +1,6 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
 import * as djwt from "https://deno.land/x/djwt/mod.ts";
+import { Algorithm } from "https://deno.land/x/djwt/algorithm.ts";
 import { getULoginInfo, getUMetaInfo, UCheck, UInit, ULogin } from "./db.ts";
 import { hashPass, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
@@ -15,7 +16,7 @@ import { getKey } from "./crypto.ts";
 // Exportable
 export async function isValid(user: string, token: string) {
   try {
-    let payload = await djwt.verify(token, getKey());
+    let payload = await djwt.verify(token, await getKey());
     return payload.user == user;
   } catch {
     return false;
@@ -38,9 +39,6 @@ auth.post("/login", async function (ctx) {
 
   let requestJSON = await raw.value;
 
-  // Extract JSON from a stream of bytes. Quite clunky.
-  requestJSON = JSON.parse(new TextDecoder().decode(requestJSON));
-
   let info = await getULoginInfo(requestJSON.id);
 
   if (info.err) {
@@ -54,10 +52,10 @@ auth.post("/login", async function (ctx) {
     const t = Date.now();
     await ULogin(requestJSON.id, t);
 
-    let jwt = await djwt.create({ typ: "JWT", alg: settings.jwt.keyAlgStr }, {
+    let jwt = await djwt.create({ typ: "JWT", alg: settings.jwt.keyAlgStr as Algorithm}, {
       user: requestJSON.id,
       exp: djwt.getNumericDate(settings.jwt.tokenLifetime),
-    }, getKey());
+    }, await getKey());
   } else {
     throwAPIError(ctx, "Invalid credentials", 400);
   }
@@ -82,9 +80,6 @@ auth.post("/register", async function (ctx) {
   }
 
   let requestJSON = await raw.value;
-
-  // Extract JSON from a stream of bytes. Quite clunky.
-  requestJSON = JSON.parse(new TextDecoder().decode(requestJSON));
 
   if (!requestJSON.password || !requestJSON.username) {
     throwAPIError(ctx, "Either the username or password is missing.", 400);
