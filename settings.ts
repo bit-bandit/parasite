@@ -35,4 +35,23 @@ export const settings = {
     "maxHourlyInteractions": 5,
     "blockedInstances": [],
   },
+  "jwt": {
+    // Persistent key file.
+    "keyFile": "./.keyfile.json",
+
+    // You can generally afford to keep this longer-term,
+    // but it's still good practice to cycle keys.
+    "keyLifetime": 60 * 60 * 24 * 7 * 9, // = 9 weeks, ~3 months
+
+    // Don't touch keyAlg* or keySign* if you don't know what you're doing.
+    // Make sure the algorithms match, otherwise things break.
+    "keyAlgStr": "HS512",
+    "keyAlgObj": { name: "HMAC", hash: "SHA-512" },
+    "keySignObj": { name: "HMAC" },
+
+    // Keep the token lifetime somewhat low, but not annoyingly so.
+    // Shorter lifetimes reduce the time window that tokens will work,
+    // but increase how often users have to log in.
+    "tokenLifetime": 60 * 60 * 24 * 7, // = 1 week
+  },
 };
