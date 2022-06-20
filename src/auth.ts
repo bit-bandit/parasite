@@ -84,66 +84,66 @@ auth.post("/register", async function (ctx) {
 
   if (!notTaken) {
     throwAPIError(ctx, "Username already taken.", 400);
-  } else {
-    // Now we can get the actual user creation started, yes?
-    // Use default things to put into user account here..
-
-    // TODO: Add some error handling here.
-    const destDir = `${settings.staticFileDir}/u/${requestJSON.username}`;
-    await Deno.mkdir(destDir, { recursive: true }); // auto-create `/static/u/`
-    await Deno.copyFile(
-      `${settings.staticFileDir}/defs/avatar.png`,
-      `${settings.staticFileDir}/u/avatar.png`,
-    );
-    await Deno.copyFile(
-      `${settings.staticFileDir}/defs/banner.png`,
-      `${settings.staticFileDir}/u/banner.png`,
-    );
-
-    const userStatic = `${settings.siteURL}/m/u/${requestJSON.username}`;
-
-    const avatar = `${userStatic}/avatar.png`;
-    const banner = `${userStatic}/banner.png`;
-
-    const userAPI = `${settings.siteURL}/u/${requestJSON.username}`;
-
-    const actorInfo = actorObj({
-      "id": `${userAPI}/inbox`,
-      "following": `${userAPI}/following`,
-      "followers": `${userAPI}/followers`,
-      "liked": `${userAPI}/liked`,
-      "inbox": `${userAPI}/inbox`,
-      "outbox": `${userAPI}/outbox`,
-      "name": `${requestJSON.username}`,
-      "summary": "",
-      "icon": [
-        avatar,
-      ],
-      "image": banner,
-    });
-
-    // pass needs this.
-    const registered = Date.now();
-
-    await UInit({
-      id: requestJSON.username,
-      info: actorInfo,
-      pass: await hashPass(requestJSON.password, registered),
-      roles: roles[settings.defaultRole],
-      inbox: genOrderedCollection(`${userAPI}/inbox`),
-      outbox: genOrderedCollection(`${userAPI}/outbox`),
-      likes: genOrderedCollection(`${userAPI}/likes`),
-      dislikes: genOrderedCollection(`${userAPI}/dislikes`),
-      following: genOrderedCollection(`${userAPI}/following`),
-      followers: genOrderedCollection(`${userAPI}/followers`),
-      logins: [], // Tokens will be added next time user logs in. See `/login/`.
-      registered: registered,
-    });
-
-    ctx.response.body = {
-      "msg": "User ${requestJSON.username} created",
-    };
-    ctx.response.type = "application/json";
-    ctx.response.status = 201;
   }
+  
+  // Now we can get the actual user creation started, yes?
+  // Use default things to put into user account here..
+
+  // TODO: Add some error handling here.
+  const destDir = `${settings.staticFileDir}/u/${requestJSON.username}`;
+  await Deno.mkdir(destDir, { recursive: true }); // auto-create `/static/u/`
+  await Deno.copyFile(
+    `${settings.staticFileDir}/defs/avatar.png`,
+    `${settings.staticFileDir}/u/avatar.png`,
+  );
+  await Deno.copyFile(
+    `${settings.staticFileDir}/defs/banner.png`,
+    `${settings.staticFileDir}/u/banner.png`,
+  );
+
+  const userStatic = `${settings.siteURL}/m/u/${requestJSON.username}`;
+
+  const avatar = `${userStatic}/avatar.png`;
+  const banner = `${userStatic}/banner.png`;
+
+  const userAPI = `${settings.siteURL}/u/${requestJSON.username}`;
+
+  const actorInfo = actorObj({
+    "id": `${userAPI}/inbox`,
+    "following": `${userAPI}/following`,
+    "followers": `${userAPI}/followers`,
+    "liked": `${userAPI}/liked`,
+    "inbox": `${userAPI}/inbox`,
+    "outbox": `${userAPI}/outbox`,
+    "name": `${requestJSON.username}`,
+    "summary": "",
+    "icon": [
+      avatar,
+    ],
+    "image": banner,
+  });
+
+  // pass needs this.
+  const registered = Date.now();
+
+  await UInit({
+    id: requestJSON.username,
+    info: actorInfo,
+    pass: await hashPass(requestJSON.password, registered),
+    roles: roles[settings.defaultRole],
+    inbox: genOrderedCollection(`${userAPI}/inbox`),
+    outbox: genOrderedCollection(`${userAPI}/outbox`),
+    likes: genOrderedCollection(`${userAPI}/likes`),
+    dislikes: genOrderedCollection(`${userAPI}/dislikes`),
+    following: genOrderedCollection(`${userAPI}/following`),
+    followers: genOrderedCollection(`${userAPI}/followers`),
+    logins: [], // Tokens will be added next time user logs in. See `/login/`.
+    registered: registered,
+  });
+
+  ctx.response.body = {
+    "msg": "User ${requestJSON.username} created",
+  };
+  ctx.response.type = "application/json";
+  ctx.response.status = 201;
 });
