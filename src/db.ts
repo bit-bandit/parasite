@@ -264,23 +264,27 @@ export async function addToDB(category: string, params: any = {}, id?: string) {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
     [
       params.id,
-      params.json,
-      params.activity,
+      JSON.stringify(params.json),
+      JSON.stringify(params.activity),
       params.uploader,
-      params.likes,
-      params.dislikes,
-      params.replies,
-      params.flags,
+      JSON.stringify(params.likes),
+      JSON.stringify(params.dislikes),
+      JSON.stringify(params.replies),
+      JSON.stringify(params.flags),
     ],
   );
 
   if (category === "comments") {
-    // let reps = await getCommentReplies(id);
-    // reps.orderedItems.push(params.json.id);
-    // reps.totalItems = r.orderedItems.length;
+    let reps = await getCommentReplies(id);
+
+    reps.orderedItems.push(params.json.id);
+    reps.totalItems = r.orderedItems.length;
+
     // Add to both comments and torrents(The `replies` column).
-    // 'UPDATE torrents SET replies = $1 WHERE id = $2',
-    // [JSON.stringify(reps), id]
+    await client.queryArray("UPDATE torrents SET replies = $1 WHERE id = $2", [
+      JSON.stringify(reps),
+      id,
+    ]);
   }
 
   await client.end();
