@@ -54,8 +54,8 @@ auth.post("/login", async function (ctx) {
 
 auth.post("/register", async function (ctx) {
   // Create new user.
-  // When creating, use the resources in `static/m/defaults/`.
-  // Make subdirectory in static/m/u/ named after the user ID, with the the
+  // When creating, use the resources in `static/defs/`.
+  // Make subdirectory in `static/u/` named after the user ID, with the the
   // following files:
   // - avatar.png
   // - banner.png
@@ -89,15 +89,15 @@ auth.post("/register", async function (ctx) {
     // Use default things to put into user account here..
 
     // TODO: Add some error handling here.
-    const destDir = `${settings.staticFileDir}/m/u/${requestJSON.username}`;
-    await Deno.mkdir(destDir);
+    const destDir = `${settings.staticFileDir}/u/${requestJSON.username}`;
+    await Deno.mkdir(destDir, { recursive: true }); // auto-create `/static/u/`
     await Deno.copyFile(
-      `${settings.staticFileDir}avatar.png`,
-      `${destDir}/avatar.png`,
+      `${settings.staticFileDir}/defs/avatar.png`,
+      `${settings.staticFileDir}/u/avatar.png`,
     );
     await Deno.copyFile(
-      `${settings.staticFileDir}banner.png`,
-      `${destDir}/banner.png`,
+      `${settings.staticFileDir}/defs/banner.png`,
+      `${settings.staticFileDir}/u/banner.png`,
     );
 
     const userStatic = `${settings.siteURL}/m/u/${requestJSON.username}`;
