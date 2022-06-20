@@ -85,7 +85,9 @@ auth.post("/register", async function (ctx) {
   if (!notTaken) {
     throwAPIError(ctx, "Username already taken.", 400);
   }
-  
+
+  // TODO: Implement username URL-compatibility check
+
   // Now we can get the actual user creation started, yes?
   // Use default things to put into user account here..
 

@@ -6,6 +6,9 @@ export let search = new Router();
 search.get("/s", async function (ctx) {
   let res = await search(ctx.request.url);
   if (!res.err) {
+    // TODO: Implement search queries.
+    // See issue #5.
+
     ctx.response.body = res;
     ctx.response.status = 200;
     ctx.response.type = "application/json";
