@@ -152,7 +152,7 @@ auth.post("/register", async function (ctx) {
   });
 
   ctx.response.body = {
-    "msg": "User ${requestJSON.username} created",
+    "msg": `User ${requestJSON.username} created`,
   };
   ctx.response.type = "application/json";
   ctx.response.status = 201;

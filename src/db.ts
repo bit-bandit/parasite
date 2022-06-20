@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
   following   JSONB         NOT NULL,
   followers   JSONB         NOT NULL,
   logins      JSONB         NOT NULL,
-  registered  TIMESTAMP     NOT NULL
+  registered  VARCHAR(256)  NOT NULL
 );
 `;
 
@@ -221,9 +221,9 @@ export async function UCheck(id: string) {
 export async function UInit(params: any = {}) {
   await client.connect();
   await client.queryArray(
-    `INSERT INTO users (info, pass, roles, inbox, outbox, likes, 
-       dislikes, following, followers, logins) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);`,
+    `INSERT INTO users (id, info, pass, roles, inbox, outbox, likes, 
+       dislikes, following, followers, logins, registered) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);`,
     [
       params.id,
       params.info,
@@ -246,7 +246,7 @@ export async function UInit(params: any = {}) {
 // are virtually identical, we can get away with this.
 export async function addToDB(category: string, params: any = {}, id?: string) {
   if (
-    category !== "torrents" | category !== "lists" | catagory !== "comments"
+    category !== "torrents" || category !== "lists" || catagory !== "comments"
   ) {
     throw new Error("Specified type not applicable.");
   }
