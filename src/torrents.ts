@@ -7,6 +7,7 @@
 
 import { Router } from "https://deno.land/x/oak/mod.ts";
 import { getTorrentJSON, getTorrentReplies } from "./db.ts";
+import { isValid } from "./auth.ts";
 
 export let torrents = new Router();
 

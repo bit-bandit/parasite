@@ -1,5 +1,7 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
 import { getListJSON, getListReplies } from "./db.ts";
+import { isValid } from "./auth.ts";
+x;
 
 export let lists = new Router();
 

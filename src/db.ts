@@ -29,8 +29,8 @@ const torrentTableInit = `
 CREATE TABLE IF NOT EXISTS torrents (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
-  activity  JSONB         NOT NULL,
   json      JSONB         NOT NULL,
+  activity  JSONB         NOT NULL,
   uploader  VARCHAR(256)  NOT NULL,
   likes     JSONB         NOT NULL,
   dislikes  JSONB         NOT NULL,
@@ -44,8 +44,8 @@ const listsTableInit = `
 CREATE TABLE IF NOT EXISTS lists (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
-  activity  JSONB         NOT NULL,
   json      JSONB         NOT NULL,
+  activity  JSONB         NOT NULL,
   uploader  VARCHAR(256)  NOT NULL,
   likes     JSONB         NOT NULL,
   dislikes  JSONB         NOT NULL,
@@ -58,8 +58,8 @@ const commentsTableInit = `
 CREATE TABLE IF NOT EXISTS comments (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
-  activity  JSONB         NOT NULL,
   json      JSONB         NOT NULL,
+  activity  JSONB         NOT NULL,
   uploader  VARCHAR(256)  NOT NULL,
   likes     JSONB         NOT NULL,
   dislikes  JSONB         NOT NULL,
@@ -242,10 +242,55 @@ export async function UInit(params: any = {}) {
   await client.end();
 }
 
+// Function to add to the DB. Because all the tables - Besides users -
+// are virtually identical, we can get away with this.
+export async function addToDB(category: string, params: any = {}, id?: string) {
+  if (
+    category !== "torrents" | category !== "lists" | catagory !== "comments"
+  ) {
+    throw new Error("Specified type not applicable.");
+  }
+  await client.connect();
+
+  // For comments, we're just updating a column to a table. This should
+  // really be its own function, but I'm keeping it here
+  // because why not.
+
+  // Use `getCommentReplies` to get the JSON of the comments before you update it.
+
+  // Using string literals in this case isn't the worst option.
+  await client.queryArray(
+    `INSERT INTO ${category}(id, json, activity, uploader, likes, dislikes, replies, flags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [
+      params.id,
+      params.json,
+      params.activity,
+      params.uploader,
+      params.likes,
+      params.dislikes,
+      params.replies,
+      params.flags,
+    ],
+  );
+
+  if (category === "comments") {
+    // let reps = await getCommentReplies(id);
+    // reps.orderedItems.push(params.json.id);
+    // reps.totalItems = r.orderedItems.length;
+    // Add to both comments and torrents(The `replies` column).
+    // 'UPDATE torrents SET replies = $1 WHERE id = $2',
+    // [JSON.stringify(reps), id]
+  }
+
+  await client.end();
+}
+
 export async function deleteTorrent(id: string) {
   await client.connect();
+  // TODO: Figure out how to delete replies.
   await client.queryArray(
-    "DELETE json WHERE id = $1;",
+    "DELETE * WHERE id = $1;",
     [id],
   );
   await client.end();

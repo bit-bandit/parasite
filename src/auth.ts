@@ -89,15 +89,17 @@ auth.post("/register", async function (ctx) {
   if (!requestJSON.password || !requestJSON.username) {
     throwAPIError(ctx, "Either the username or password is missing.", 400);
   }
-
+  // Test if username is safe to use.
+  // Should the parameter be in `sesttings.ts`? Beats me.
+  if (!/^[A-Za-z0-9_]{1,24}$/.test(requestJSON.username)) {
+    throwAPIError(ctx, "Provided username not acceptable.", 400);
+  }
   // Check if the username is already taken.
   const notTaken = await UCheck(requestJSON.username);
 
   if (!notTaken) {
     throwAPIError(ctx, "Username already taken.", 400);
   }
-
-  // TODO: Implement username URL-compatibility check
 
   // Now we can get the actual user creation started, yes?
   // Use default things to put into user account here..
@@ -122,7 +124,7 @@ auth.post("/register", async function (ctx) {
   const userAPI = `${settings.siteURL}/u/${requestJSON.username}`;
 
   const actorInfo = actorObj({
-    "id": `${userAPI}/inbox`,
+    "id": `${userAPI}`,
     "following": `${userAPI}/following`,
     "followers": `${userAPI}/followers`,
     "liked": `${userAPI}/liked`,

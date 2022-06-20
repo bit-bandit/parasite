@@ -2,6 +2,7 @@
 
 import { Router } from "https://deno.land/x/oak/mod.ts";
 import { getUserInfo } from "./db.ts";
+import { isValid } from "./auth.ts";
 
 export let users = new Router();
 
