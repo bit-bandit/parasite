@@ -30,7 +30,7 @@ export async function exportKey() {
   // Store in memory for as short a time as possible
   keyStorage.jwk = {};
 
-  await Deno.writeFile(jwt.keyFile, encoder.encode(str), { mode: 0o400 });
+  await Deno.writeFile(jwt.keyFile, encoder.encode(str), { mode: 0o600 });
 }
 
 // Regenerates a key (just in case you want a new one)
