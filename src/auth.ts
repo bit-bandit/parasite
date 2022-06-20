@@ -1,10 +1,11 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
-import { create, decode, verify } from "https://deno.land/x/djwt/mod.ts";
+import * as djwt from "https://deno.land/x/djwt/mod.ts";
 import { getULoginInfo, getUMetaInfo, UCheck, UInit, ULogin } from "./db.ts";
 import { hashPass, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import { actorObj, genOrderedCollection } from "./activity.ts";
 import { roles } from "../roles.ts";
+import { getKey } from "./crypto.ts";
 // This file is comprised of two sections:
 // 1. Functions used to validate users within the system.
 // 2. Routing for letting users register, or log into accounts.
@@ -12,8 +13,13 @@ import { roles } from "../roles.ts";
 // Functions
 
 // Exportable
-export async function isValid(user: string, token: any) {
-  // For verifying tokens.
+export async function isValid(user: string, token: string) {
+  try {
+    let payload = await djwt.verify(token, getKey());
+    return payload.user == user;
+  } catch {
+    return false;
+  }
 }
 
 // Routes
@@ -47,6 +53,11 @@ auth.post("/login", async function (ctx) {
     // Return token, and update logins
     const t = Date.now();
     await ULogin(requestJSON.id, t);
+
+    let jwt = await djwt.create({ typ: "JWT", alg: settings.jwt.keyAlgStr }, {
+      user: requestJSON.id,
+      exp: djwt.getNumericDate(settings.jwt.tokenLifetime),
+    }, getKey());
   } else {
     throwAPIError(ctx, "Invalid credentials", 400);
   }
