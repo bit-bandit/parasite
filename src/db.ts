@@ -96,7 +96,7 @@ async function basicDataQuery(
   await client.connect();
   let res = await client.queryArray(query, args);
   await client.end();
-    
+
   if (res.rows.length !== 0) {
     return res.rows[0];
   }
@@ -180,7 +180,7 @@ export async function getULoginInfo(id: string): Promise<any> {
 export async function ULogin(id: string, time: number) {
   // Basically just push to the 'logins' array.
   let newValue: number[];
-  
+
   // screw it, not dealing with type shenanigans on this
   const raw = await getUMetaInfo(id);
   let logins: number[] = raw[1];
@@ -194,7 +194,7 @@ export async function ULogin(id: string, time: number) {
   await client.connect();
   await client.queryArray(
     "UPDATE users SET logins = $1 WHERE id = $2;",
-      [JSON.stringify(logins), id],
+    [JSON.stringify(logins), id],
   );
   await client.end();
 }
@@ -213,7 +213,6 @@ export async function UCheck(id: string) {
   if (res.rows.length === 0) {
     return true;
   }
-  return false;
 }
 
 export async function UInit(params: any = {}) {

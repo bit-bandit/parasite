@@ -1,6 +1,6 @@
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 import { settings } from "../settings.ts";
-import { auth } from "./auth.ts"
+import { auth } from "./auth.ts";
 
 let app = new Application();
 let media = new Router();

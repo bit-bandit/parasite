@@ -3,10 +3,11 @@
 Testing suite for Parasite.
 
 ## Prerequisites
-All testing is to be done with an out-of-the-box configuration of Parasite (That is,
-no modifications done to `settings.ts`, or anything else), and PostgreSQL. 
-We suggest using containers to make the process of setting it up less of 
-a pain in the ass:
+
+All testing is to be done with an out-of-the-box configuration of Parasite (That
+is, no modifications done to `settings.ts`, or anything else), and PostgreSQL.
+We suggest using containers to make the process of setting it up less of a pain
+in the ass:
 
 ```sh
 docker run --rm -p 5433:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_USER=admin -e POSTGRES_DB=parasite --name pg_db_container postgres
@@ -15,14 +16,15 @@ docker run --rm -p 5433:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_USER=admi
 If your distribution is anal about licensing, replace `docker` with `podman`.
 
 ## Writing tests
+
 - Limit yourself to `fetch` when doing HTTP requests.
-- Use whatever exportable function is available in `src/` whenever you
-  may need it.
+- Use whatever exportable function is available in `src/` whenever you may need
+  it.
 - Remember to stringify your fucking JSON.
 
 ## TODO
-- Add CSV sample file to import/export data.
-  (see https://skyvia.com/blog/complete-guide-on-how-to-import-and-export-csv-files-to-postgresql)
+
+- Add CSV sample file to import/export data. (see
+  https://skyvia.com/blog/complete-guide-on-how-to-import-and-export-csv-files-to-postgresql)
 - Add tests for user authentication.
 - Add tests for comment/list/torrent creation/updating/deletion.
-
