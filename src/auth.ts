@@ -1,5 +1,5 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
-import * as djwt from "https://deno.land/x/djwt/mod.ts";
+import { verify, create, getNumericDate } from "https://deno.land/x/djwt/mod.ts";
 import { Algorithm } from "https://deno.land/x/djwt/algorithm.ts";
 import { getULoginInfo, getUMetaInfo, UCheck, UInit, ULogin } from "./db.ts";
 import { hashPass, throwAPIError } from "./utils.ts";
@@ -16,7 +16,7 @@ import { getKey } from "./crypto.ts";
 // Exportable
 export async function isValid(user: string, token: string) {
   try {
-    let payload = await djwt.verify(token, await getKey());
+    let payload = await verify(token, await getKey());
     return payload.user == user;
   } catch {
     return false;
@@ -47,17 +47,21 @@ auth.post("/login", async function (ctx) {
     ctx.response.type = "application/json";
   }
 
-  let hashed = await hashPass(requestJSON.password, info[1]) 
-    
+  let hashed = await hashPass(requestJSON.password, info[1])
+
   if (hashed === info[0]) {
     // Return token, and update logins
     const t = Date.now();
     await ULogin(requestJSON.username, t);
 
-    let jwt = await djwt.create({ typ: "JWT", alg: settings.jwt.keyAlgStr as Algorithm}, {
+    let jwt = await create({ typ: "JWT", alg: settings.jwt.keyAlgStr as Algorithm}, {
       user: requestJSON.id,
-      exp:x djwt.getNumericDate(settings.jwt.tokenLifetime),
+      exp: getNumericDate(settings.jwt.tokenLifetime),
     }, await getKey());
+
+    ctx.response.body = jwt;
+    ctx.response.status = 200;
+    ctx.response.type = 'application/json'  
   } else {
     throwAPIError(ctx, "Invalid credentials", 400);
   }

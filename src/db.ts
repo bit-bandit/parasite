@@ -180,21 +180,21 @@ export async function getULoginInfo(id: string): Promise<any> {
 export async function ULogin(id: string, time: number) {
   // Basically just push to the 'logins' array.
   let newValue: number[];
-  await client.connect();
+  
   // screw it, not dealing with type shenanigans on this
-  let initialValue = await client.queryObject(
-    "SELECT logins FROM users WHERE id = $1",
-    [id],
-  );
-  if (initialValue.rows[0].logins.length >= 10) {
-    initialValue.shift();
-  }
-  console.log(initialValue.rows[0]);
-  newValue = initialValue.rows[0].logins.push(time);
+  const raw = await getUMetaInfo(id);
+  let logins: number[] = raw[1];
 
+  if (logins.length >= 10) {
+    logins.shift();
+  }
+
+  logins.push(time);
+
+  await client.connect();
   await client.queryArray(
     "UPDATE users SET logins = $1 WHERE id = $2;",
-    [JSON.stringify(newValue), id],
+      [JSON.stringify(logins), id],
   );
   await client.end();
 }

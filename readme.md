@@ -6,7 +6,7 @@ This is the core API source code for the Parasite torrent indexer. See
 ## Running
 
 ```
-deno task run-server
+deno task start-server
 ```
 
 ## License
