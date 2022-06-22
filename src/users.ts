@@ -1,22 +1,14 @@
 // User pages
 
-import { Router } from "https://deno.land/x/oak/mod.ts";
-import { getUserInfo } from "./db.ts";
+import { Context, Router } from "https://deno.land/x/oak/mod.ts";
+import { getUActivity } from "./db.ts";
 import { isValid } from "./auth.ts";
 
 export let users = new Router();
 
-users.get("/u/", async function (ctx) {
-  // Get information about logged-in user
-});
-
-users.get("/u/:id", async function (ctx) {
-  // Get information about user.
-  const res = await getUserInfo(ctx.params.id);
-
+async function basicGETActivity(ctx: Context, id: string, act: string) {
+  const res = await getUActivity(id, act);
   ctx.response.body = res;
-
-  // esoteric syntax because typescript yells at me if i check directly
   if (!("err" in res)) {
     ctx.response.status = 200;
     ctx.response.type =
@@ -25,26 +17,56 @@ users.get("/u/:id", async function (ctx) {
 
   ctx.response.status = 404;
   ctx.response.type = "application/json";
+}
+
+// GET activities
+users.get("/u/", async function (ctx) {
+  // Get information about logged-in user
 });
 
-users.post("/u/:id/", async function (ctx) {
-  // Update user information.
+users.get("/u/:id", async function (ctx) {
+  // Get information about user.
+  await basicGETActivity(ctx, ctx.params.id, "info");
 });
 
 users.get("/u/:id/outbox", async function (ctx) {
-  // Get outbox of user.
+  await basicGETActivity(ctx, ctx.params.id, "outbox");
 });
 
 users.get("/u/:id/inbox", async function (ctx) {
   // Get inbox of user.
+  // May require more authentication(?)
+  // Will have to deal with that shit in the future, though.
+  await basicGETActivity(ctx, ctx.params.id, "inbox");
 });
 
+users.get("/u/:id/likes", async function (ctx) {
+  await basicGETActivity(ctx, ctx.params.id, "likes");
+});
+
+users.get("/u/:id/dislikes", async function (ctx) {
+  await basicGETActivity(ctx, ctx.params.id, "dislikes");
+});
+
+users.get("/u/:id/following", async function (ctx) {
+  await basicGETActivity(ctx, ctx.params.id, "following");
+});
+
+users.get("/u/:id/followers", async function (ctx) {
+  await basicGETActivity(ctx, ctx.params.id, "followers");
+});
+
+// POST activities.
 users.post("/u/:id/outbox", async function (ctx) {
   // Send message, basically. Side effect of `POST /t/`
 });
 
 users.post("/u/:id/inbox", async function (ctx) {
   // Follows of an account get message upon recieving this.
+});
+
+users.post("/u/:id/", async function (ctx) {
+  // Update user information.
 });
 
 // WebFinger support. See https://www.rfc-editor.org/rfc/rfc7033.

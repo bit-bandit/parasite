@@ -2,13 +2,16 @@ import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 import { settings } from "../settings.ts";
 import { auth } from "./auth.ts";
 import { media } from "./static.ts";
+import { users } from "./users.ts";
 
 let app = new Application();
 
-app.use(media.routes());
-app.use(media.allowedMethods());
 app.use(auth.routes());
 app.use(auth.allowedMethods());
+app.use(media.routes());
+app.use(media.allowedMethods());
+app.use(users.routes());
+app.use(users.allowedMethods());
 
 app.addEventListener("listen", (evt) => {
   let protocol = (evt.secure ? "https" : "http");

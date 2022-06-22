@@ -103,7 +103,7 @@ async function basicDataQuery(
 
   return { "err": true, "msg": msg };
 }
-
+// Main JSON elements for objects
 export async function getTorrentJSON(id: string): Promise<any> {
   return basicDataQuery(
     "No torrent with id ${id} found",
@@ -148,14 +148,6 @@ export async function getCommentReplies(id: string): Promise<any> {
   return basicDataQuery(
     "No replies on list id ${id} found",
     "SELECT replies FROM comments WHERE id = $1",
-    id,
-  );
-}
-
-export async function getUserInfo(id: string): Promise<any> {
-  return basicDataQuery(
-    "User ${id} not found",
-    "SELECT info FROM users WHERE id = $1",
     id,
   );
 }
@@ -234,6 +226,22 @@ export async function UInit(params: any = {}) {
     ],
   );
   await client.end();
+}
+
+// ActivityPub  for users.
+export async function getUActivity(id: string, objType: string): Promise<any> {
+  // NOTE: NEVER EVER EVER EVER LET USERS SUBMIT THE `OBJTYPE` IN THIS CURRENT STATE.
+  // IT *WILL* LEAD TO AN SQL INJECTION BEING PERFORMED.
+  // See examples in `src/users.ts` to an example on how to use it.
+  await client.connect();
+  const res = await client.queryArray(
+    // I'm feeling dangerous and stupid today.
+    `SELECT ${objType} FROM users WHERE id = $1`,
+    [id],
+  );
+  await client.end();
+
+  return res.rows[0][0];
 }
 
 // Function to add to the DB. Because all the tables - Besides users -
