@@ -200,9 +200,6 @@ export async function ULogin(id: string, time: number) {
 }
 
 export async function UCheck(id: string) {
-  // Check users (For usage in signing up only, as of right now.)
-  // Do insensitive lookup of user ID. If an entry doesn't exist,
-  // return true, else, return false.
   await client.connect();
   const res = await client.queryArray(
     "SELECT id FROM users WHERE lower(id) = $1",
