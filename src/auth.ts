@@ -62,7 +62,8 @@ auth.post("/login", async function (ctx) {
       typ: "JWT",
       alg: settings.jwt.keyAlgStr as Algorithm,
     }, {
-      user: requestJSON.id,
+      name: requestJSON.username,
+      iat: t, 	
       exp: getNumericDate(settings.jwt.tokenLifetime),
     }, await getKey());
 
@@ -131,7 +132,7 @@ auth.post("/register", async function (ctx) {
     const userAPI = `${settings.siteURL}/u/${requestJSON.username}`;
 
     const actorInfo = actorObj({
-      "id": `${userAPI}`,
+      "actor": userAPI,
       "following": `${userAPI}/following`,
       "followers": `${userAPI}/followers`,
       "liked": `${userAPI}/liked`,
@@ -142,7 +143,7 @@ auth.post("/register", async function (ctx) {
       "icon": [
         avatar,
       ],
-      "image": banner,
+      "banner": banner,
     });
 
     // pass needs this.

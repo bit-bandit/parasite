@@ -85,6 +85,7 @@ export function genCommentID(inReplyTo: string) {
  * Throws a Web API usage error.
  * @param {Context} ctx Oak context.
  * @param {string} message Error message.
+ * @param {number} status Response status (Defaults to 404).
  */
 export function throwAPIError(ctx: Context, message?: string, status?: number) {
   message ??= "An unknown error occurred.";

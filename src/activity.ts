@@ -172,7 +172,7 @@ export function genObj(params: any = {}): ActivityObject {
       "href": params.link,
     },
     "to": ["https://www.w3.org/ns/activitystreams#Public"], // All posts are public; Sorry!
-    "replies": `${params.id}/c`,
+    "replies": `${params.id}/r`,
   };
 }
 // Voting. Type should be either `like` or `dislike`, since we're going by the standard.
@@ -207,9 +207,7 @@ export function actorObj(params: any = {}) {
     "outbox": params.outbox,
     "name": params.name,
     "summary": params.summary,
-    "icon": [
-      params.icon,
-    ],
+    "icon": params.icon,
     "image": params.banner,
   };
 }
