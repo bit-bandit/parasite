@@ -63,7 +63,7 @@ auth.post("/login", async function (ctx) {
       alg: settings.jwt.keyAlgStr as Algorithm,
     }, {
       name: requestJSON.username,
-      iat: t, 	
+      iat: t,
       exp: getNumericDate(settings.jwt.tokenLifetime),
     }, await getKey());
 

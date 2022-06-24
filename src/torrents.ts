@@ -8,9 +8,14 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
 import { getKey } from "./crypto.ts";
 import { genObj } from "./activity.ts";
-import { getTorrentJSON, getTorrentReplies, getUMetaInfo, getUActivity } from "./db.ts";
+import {
+  getTorrentJSON,
+  getTorrentReplies,
+  getUActivity,
+  getUMetaInfo,
+} from "./db.ts";
 import { isValid } from "./auth.ts";
-import { throwAPIError, genUUID } from "./utils.ts";
+import { genUUID, throwAPIError } from "./utils.ts";
 import { verify } from "https://deno.land/x/djwt/mod.ts";
 
 export let torrents = new Router();
@@ -53,42 +58,41 @@ torrents.get("/t/:id/r", async function (ctx) {
 
 // Posting
 torrents.post("/t/", async function (ctx) {
-  const rawAuth = await ctx.request.headers.get('authorization');
-  const auth = rawAuth.split(' ')[1]  
+  const rawAuth = await ctx.request.headers.get("authorization");
+  const auth = rawAuth.split(" ")[1];
 
-  if (!auth){
-    throwAPIError(ctx, "No authorization provided", 401)
+  if (!auth) {
+    throwAPIError(ctx, "No authorization provided", 401);
   }
   if (!ctx.request.hasBody) {
-    throwAPIError(ctx, "No body provided.", 400)
+    throwAPIError(ctx, "No body provided.", 400);
   }
 
   let raw = await ctx.request.body();
   if (raw.type !== "json") {
-    throwAPIError(ctx, "Invalid content type (Must be application/json)", 400)
+    throwAPIError(ctx, "Invalid content type (Must be application/json)", 400);
   }
 
   const requestJSON = await raw.value;
   const decodedAuth = await verify(auth, await getKey());
-    
-  // TODO: Also check user logins and compare that to `iwt`.
-  if(!decodedAuth.name){
-    throwAPIError(ctx, "No name provided", 400)
+
+  if (!decodedAuth.name) {
+    throwAPIError(ctx, "No name provided", 400);
   }
 
-  const userInfo = await getUMetaInfo(decodedAuth.name)
+  const userInfo = await getUMetaInfo(decodedAuth.name);
 
   if (!userInfo[1].includes(decodedAuth.iat)) {
-    throwAPIError(ctx, "Invalid issue date.", 400)
+    throwAPIError(ctx, "Invalid issue date.", 400);
   }
 
   if (requestJSON.type !== "Create") {
-    throwAPIError(ctx, "Invalid activity type", 400)
+    throwAPIError(ctx, "Invalid activity type", 400);
   }
 
-  const info = await getUActivity(decodedAuth.name, 'info');
+  const info = await getUActivity(decodedAuth.name, "info");
   const url = ``;
-  // TODO: Use `genobj` to get this shit taken care of.  
+  // TODO: Use `genobj` to get this shit taken care of.
 });
 
 torrents.post("/t/:id", async function (ctx) {
