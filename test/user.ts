@@ -38,3 +38,4 @@ Deno.test("Attempted user registration on preexisting account", async () => {
 
   assertEquals(res, expOut);
 });
+
