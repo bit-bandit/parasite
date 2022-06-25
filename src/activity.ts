@@ -214,7 +214,7 @@ export function actorObj(params: any = {}) {
 
 // We should note this isn't *required* by the standard, but due to paranoia,
 // we're adding it anyways.
-export async function wrapperCreate(params: any = {}): Promise<object> {
+export function wrapperCreate(params: any = {}): Promise<object> {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": "Create",

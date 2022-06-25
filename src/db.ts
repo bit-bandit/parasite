@@ -11,16 +11,16 @@ const userTableInit = `
 CREATE TABLE IF NOT EXISTS users (
   PRIMARY KEY(id),
   id          VARCHAR(21)   NOT NULL,
-  info        JSONB         NOT NULL,
+  info        JSON         NOT NULL,
   pass        VARCHAR(256)  NOT NULL,
-  roles       JSONB         NOT NULL,
-  inbox       JSONB         NOT NULL,
-  outbox      JSONB         NOT NULL,
-  likes       JSONB         NOT NULL,
-  dislikes    JSONB         NOT NULL,
-  following   JSONB         NOT NULL,
-  followers   JSONB         NOT NULL,
-  logins      JSONB         NOT NULL,
+  roles       JSON         NOT NULL,
+  inbox       JSON         NOT NULL,
+  outbox      JSON         NOT NULL,
+  likes       JSON         NOT NULL,
+  dislikes    JSON         NOT NULL,
+  following   JSON         NOT NULL,
+  followers   JSON         NOT NULL,
+  logins      JSON         NOT NULL,
   registered  VARCHAR(256)  NOT NULL
 );
 `;
@@ -29,13 +29,13 @@ const torrentTableInit = `
 CREATE TABLE IF NOT EXISTS torrents (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
-  json      JSONB         NOT NULL,
-  activity  JSONB         NOT NULL,
+  json      JSON         NOT NULL,
+  activity  JSON         NOT NULL,
   uploader  VARCHAR(256)  NOT NULL,
-  likes     JSONB         NOT NULL,
-  dislikes  JSONB         NOT NULL,
-  replies   JSONB         NOT NULL,
-  flags     JSONB         NOT NULL
+  likes     JSON         NOT NULL,
+  dislikes  JSON         NOT NULL,
+  replies   JSON         NOT NULL,
+  flags     JSON         NOT NULL
 );
 `;
 
@@ -44,13 +44,13 @@ const listsTableInit = `
 CREATE TABLE IF NOT EXISTS lists (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
-  json      JSONB         NOT NULL,
-  activity  JSONB         NOT NULL,
+  json      JSON         NOT NULL,
+  activity  JSON         NOT NULL,
   uploader  VARCHAR(256)  NOT NULL,
-  likes     JSONB         NOT NULL,
-  dislikes  JSONB         NOT NULL,
-  replies   JSONB         NOT NULL,
-  flags     JSONB         NOT NULL
+  likes     JSON         NOT NULL,
+  dislikes  JSON         NOT NULL,
+  replies   JSON         NOT NULL,
+  flags     JSON         NOT NULL
 );
 `;
 
@@ -58,13 +58,13 @@ const commentsTableInit = `
 CREATE TABLE IF NOT EXISTS comments (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
-  json      JSONB         NOT NULL,
-  activity  JSONB         NOT NULL,
+  json      JSON         NOT NULL,
+  activity  JSON         NOT NULL,
   uploader  VARCHAR(256)  NOT NULL,
-  likes     JSONB         NOT NULL,
-  dislikes  JSONB         NOT NULL,
-  replies   JSONB         NOT NULL,
-  flags     JSONB         NOT NULL 
+  likes     JSON         NOT NULL,
+  dislikes  JSON         NOT NULL,
+  replies   JSON         NOT NULL,
+  flags     JSON         NOT NULL 
 );
 `;
 
@@ -104,10 +104,10 @@ async function basicDataQuery(
   return { "err": true, "msg": msg };
 }
 // Main JSON elements for objects
-export async function getTorrentJSON(id: string): Promise<any> {
+export async function getTorrentJSON(id: string, t: string): Promise<any> {
   return basicDataQuery(
     "No torrent with id ${id} found",
-    "SELECT json FROM torrents WHERE id = $1",
+    `SELECT ${ t ?? "json" } FROM torrents WHERE id = $1`,
     id,
   );
 }
@@ -247,11 +247,6 @@ export async function getUActivity(id: string, objType: string): Promise<any> {
 // Function to add to the DB. Because all the tables - Besides users -
 // are virtually identical, we can get away with this.
 export async function addToDB(category: string, params: any = {}, id?: string) {
-  if (
-    category !== "torrents" || category !== "lists" || catagory !== "comments"
-  ) {
-    throw new Error("Specified type not applicable.");
-  }
   await client.connect();
 
   // For comments, we're just updating a column to a table. This should
@@ -275,6 +270,9 @@ export async function addToDB(category: string, params: any = {}, id?: string) {
       JSON.stringify(params.flags),
     ],
   );
+
+  // TODO: Also add to users outbox/followers inbox.
+  // Will have to figure out how to do that, though...
 
   if (category === "comments") {
     let reps = await getCommentReplies(id);
