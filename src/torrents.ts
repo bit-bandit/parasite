@@ -108,11 +108,13 @@ torrents.post("/t/", async function (ctx) {
     requestJSON.tags.split(",").map((x) =>
       tag.push(`${settings.siteURL}/tags/${x}`)
     );
-
+      
+   let d = new Date;
+      
     const obj = genObj({
       "id": url,
       "type": "Note",
-      "published": "",
+      "published": d.toISOString, // TODO: Set this from locale time to UTC
       "actor": info.id,
       "name": requestJSON.name,
       "content": marked.parse(requestJSON.content),
