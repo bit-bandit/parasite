@@ -71,7 +71,8 @@ CREATE TABLE IF NOT EXISTS comments (
 const tagsTableInit = `
 CREATE TABLE IF NOT EXISTS tags (
   name     VARCHAR(37)  NOT NULL,
-  created  TIMESTAMP    NOT NULL,
+  created  VARCHAR(37)  NOT NULL,
+  aliasof  VARCHAR(37),
   allowed  BOOLEAN      NOT NULL
 );
 `;
@@ -104,18 +105,20 @@ async function basicDataQuery(
   return { "err": true, "msg": msg };
 }
 // Main JSON elements for objects
+
+// This should probably be renamed.
 export async function getTorrentJSON(id: string, t: string): Promise<any> {
   return basicDataQuery(
     "No torrent with id ${id} found",
-    `SELECT ${ t ?? "json" } FROM torrents WHERE id = $1`,
+    `SELECT ${t ?? "json"} FROM torrents WHERE id = $1`,
     id,
   );
 }
 
-export async function getListJSON(id: string): Promise<any> {
+export async function getListJSON(id: string, t: string): Promise<any> {
   return basicDataQuery(
     "No list with id ${id} found",
-    "SELECT json FROM lists WHERE id = $1",
+    `SELECT ${t ?? "json"} FROM lists WHERE id = $1`,
     id,
   );
 }
@@ -123,31 +126,7 @@ export async function getListJSON(id: string): Promise<any> {
 export async function getCommentJSON(id: string): Promise<any> {
   return basicDataQuery(
     "No comment with id ${id} found",
-    "SELECT json FROM comments WHERE id = $1",
-    id,
-  );
-}
-
-export async function getTorrentReplies(id: string): Promise<any> {
-  return basicDataQuery(
-    "No replies on torrent id ${id} found",
-    "SELECT replies FROM torrents WHERE id = $1",
-    id,
-  );
-}
-
-export async function getListReplies(id: string): Promise<any> {
-  return basicDataQuery(
-    "No replies on list id ${id} found",
-    "SELECT replies FROM lists WHERE id = $1",
-    id,
-  );
-}
-
-export async function getCommentReplies(id: string): Promise<any> {
-  return basicDataQuery(
-    "No replies on list id ${id} found",
-    "SELECT replies FROM comments WHERE id = $1",
+    `SELECT ${t ?? "json"} FROM comments WHERE id = $1`,
     id,
   );
 }
@@ -292,9 +271,11 @@ export async function addToDB(category: string, params: any = {}, id?: string) {
 
 export async function deleteTorrent(id: string) {
   await client.connect();
-  // TODO: Figure out how to delete replies.
+  // TODO:
+  // - Figure out how to delete replies.
+  // - Mark delete action in outbox.
   await client.queryArray(
-    "DELETE * WHERE id = $1;",
+    "DELETE FROM torrents WHERE id = $1;",
     [id],
   );
   await client.end();

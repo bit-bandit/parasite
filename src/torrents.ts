@@ -8,11 +8,12 @@
 // TODO:
 //   - Add GET routes for all torrent columns.
 
-import { Router, Context } from "https://deno.land/x/oak/mod.ts";
+import { Context, Router } from "https://deno.land/x/oak/mod.ts";
 import { getKey } from "./crypto.ts";
 import { genObj, genOrderedCollection, wrapperCreate } from "./activity.ts";
 import {
   addToDB,
+  deleteTorrent,
   getTorrentJSON,
   getTorrentReplies,
   getUActivity,
@@ -43,17 +44,17 @@ async function boilerplateTorrentGet(ctx: Context, res: any) {
 
 torrents.get("/t/:id", async function (ctx) {
   const res = await getTorrentJSON(ctx.params.id);
-  await boilerplateTorrentGet(ctx, res)
+  await boilerplateTorrentGet(ctx, res);
 });
 
 torrents.get("/t/:id/r", async function (ctx) {
-  const res = await getTorrentJSON(ctx.params.id, 'replies');
-  await boilerplateTorrentGet(ctx, res)
+  const res = await getTorrentJSON(ctx.params.id, "replies");
+  await boilerplateTorrentGet(ctx, res);
 });
 
 torrents.get("/t/:id/activity", async function (ctx) {
   let res = await getTorrentJSON(ctx.params.id, "activity");
-  await boilerplateTorrentGet(ctx, res)
+  await boilerplateTorrentGet(ctx, res);
 });
 
 // Posting
@@ -100,7 +101,7 @@ torrents.post("/t/", async function (ctx) {
     const info = await getUActivity(decodedAuth.name, "info");
     // TODO: Only allow for `p`, `em`, `strong`, and `a` tags.
     const parse = marked.parse(requestJSON.content);
-    
+
     const id: string = genUUID(12);
     const url = `${settings.siteURL}/t/${id}`;
     // TODO: Tag checking/creation if not exists.
@@ -108,9 +109,9 @@ torrents.post("/t/", async function (ctx) {
     requestJSON.tags.split(",").map((x) =>
       tag.push(`${settings.siteURL}/tags/${x}`)
     );
-      
-   let d = new Date;
-      
+
+    let d = new Date();
+
     const obj = genObj({
       "id": url,
       "type": "Note",
@@ -126,7 +127,7 @@ torrents.post("/t/", async function (ctx) {
       "actor": obj.attributedTo,
       "object": obj,
     });
-      
+
     await addToDB("torrents", {
       "id": id,
       "json": obj,
@@ -138,7 +139,7 @@ torrents.post("/t/", async function (ctx) {
       "flags": genOrderedCollection(`${url}/flags`),
     });
 
-    ctx.response.body = { "msg": `Torrent uploaded at ${url}`};
+    ctx.response.body = { "msg": `Torrent uploaded at ${url}` };
     ctx.response.status = 201;
     ctx.response.type =
       'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
@@ -147,53 +148,100 @@ torrents.post("/t/", async function (ctx) {
 });
 
 torrents.post("/t/:id", async function (ctx) {
+  const rawAuth = await ctx.request.headers.get("authorization");
+  const auth = rawAuth.split(" ")[1];
+  let err = false;
+  if (!auth) {
+    throwAPIError(ctx, "No authorization provided", 401);
+  }
   if (!ctx.request.hasBody) {
-    ctx.response.body = {
-      "err": true,
-      "msg": "No body provided",
-    };
-    ctx.response.status = 400;
-    ctx.response.type = "application/json";
+    throwAPIError(ctx, "No body provided.", 400);
+    err = true;
   }
 
   let raw = await ctx.request.body();
-
   if (raw.type !== "json") {
-    ctx.response.body = {
-      "err": true,
-      "msg": "Invalid content type",
-    };
-    ctx.response.status = 400;
-    ctx.response.type = "application/json";
+    throwAPIError(ctx, "Invalid content type (Must be application/json)", 400);
+    err = true;
   }
 
-  let requestJSON = await raw.value();
+  const requestJSON = await raw.value;
+  const decodedAuth = await verify(auth, await getKey());
 
-  switch (requestJSON.type) {
-    // Voting
-    case "Like":
-      break;
-    case "Dislike":
-      break;
-    // Creating a comment.
-    case "Create":
-      break;
-    // Updating
-    case "Update":
-      break;
-    // Delete/Remove
-    case "Delete":
-    case "Remove":
-      break;
-    case "Flag":
-      break;
-    // In case none of the above were met:
-    default:
-      ctx.response.body = {
-        "err": true,
-        "msg": "Invalid Activity type",
-      };
-      ctx.response.status = 400;
-      ctx.response.type = "application/json";
+  if (!decodedAuth.name) {
+    throwAPIError(ctx, "No name provided", 400);
+    err = true;
+  }
+
+  const userInfo = await getUMetaInfo(decodedAuth.name);
+
+  if (!userInfo[1].includes(decodedAuth.iat)) {
+    throwAPIError(ctx, "Invalid issue date.", 400);
+    err = true;
+  }
+
+  let tData: any[] = [];
+
+  try {
+    tData = await getTorrentJSON(ctx.params.id, "json, uploader");
+  } catch {
+    throwAPIError(ctx, "Torrent doesn't exist.", 400);
+    err = true;
+  }
+
+  if (!err) {
+    switch (requestJSON.type) {
+      // Voting
+      case "Like":
+	// If user is local: Add 'like' action to outbox, and torrent. Add post URL to user 'liked'.
+	// Else: Webfinger to check if user actually exists. If not, send err. If so,
+	// add user to `likes`.
+        break;
+      case "Dislike":
+        break;
+      // Creating a comment.
+      case "Create":
+        break;
+      // Updating
+      case "Update":
+        console.log("Update");
+        break;
+      // Delete/Remove
+      case "Delete":
+      case "Remove":
+        // In AP, servers can choose to not exactly delete the content,
+        // but just replace everything with a tombstone.
+        // We think that's stupid, so we're not doing it - Plus we can
+        // get away with it, as it's not part of the standard.
+        // See Section 6.4 of the ActivityPub standard.
+        const userRole = userInfo[2];
+
+        function bpDeleteStatement() {
+          ctx.response.body = { "msg": `Torrent ${ctx.params.id} deleted` };
+          ctx.response.status = 200;
+          ctx.response.type = "application/json";
+        }
+
+        // Ensure that the user is either the original poster, or has total deletion privs.
+        // Also made sure that the user has the proper role to delete.
+        if (!userRole.deleteOwnTorrents || !tData[1] == decodedAuth.name) {
+          throwAPIError(ctx, "You aren't allowed to delete this torrent", 400);
+        } else if (
+          !userRole.deleteOthersTorrents && !tData[1] == decodedAuth.name
+        ) {
+          await deleteTorrent(ctx.params.id);
+          bpDeleteStatement();
+        } else {
+          await deleteTorrent(ctx.params.id);
+          bpDeleteStatement();
+        }
+
+        break;
+      case "Flag":
+        break;
+      // In case none of the above were met:
+      default:
+        throwAPIError(ctx, "Invalid activity type", 400);
+    }
   }
 });
