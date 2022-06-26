@@ -225,27 +225,21 @@ export async function getUActivity(id: string, objType: string): Promise<any> {
 
 // Before you do say anything:
 //   - Yes, this is probably the worst piece of code in the entire project.
-//   - Yes, it is *highly* insecure at this stage.
-//   - Yes, it-hopefully-will be refactored soon.
-/*
- * Loops through supplied parameters and applies changes where property exists.
- */
+//   - Hopefully, it will become much better than...this.
 export async function basicObjectUpdate(
   category: string,
   params: any = {},
   id: string,
 ) {
-  let toUpdate = "";
+  await client.connect();
 
   for (const prop in params) {
-    toUpdate += `${prop} ='${JSON.stringify(params[prop])}',`;
+    const res = await client.queryArray(
+      `UPDATE  ${category} SET ${prop} = $1 WHERE id = $2`,
+      [JSON.stringify(params[prop]), id],
+    );
   }
 
-  await client.connect();
-  const res = await client.queryArray(
-    `UPDATE  ${category} SET ${toUpdate.slice(0, -1)}   WHERE id = $1;        `,
-    [id],
-  );
   await client.end();
 }
 

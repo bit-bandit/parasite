@@ -257,8 +257,13 @@ torrents.post("/t/:id", async function (ctx) {
             "activity": activity,
             "json": tData[0],
           }, `${ctx.params.id}`);
+
+          ctx.response.body = { "msg": `Torrent ${ctx.params.id} updated` };
+          ctx.response.status = 200;
+          ctx.response.type = "application/json";
+
+          break;
         }
-        break;
       }
       // Delete/Remove
       case "Remove":
