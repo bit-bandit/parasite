@@ -228,6 +228,20 @@ export function wrapperCreate(params: any = {}): Promise<object> {
   };
 }
 
+export function wrapperUpdate(params: any = {}): Promise<object> {
+  return {
+    "@context": "https://www.w3.org/ns/activitystreams",
+    "type": "Update",
+    // NOTE: ID is NOT the object ID; it's a seperate URL that indicates an object is created. (6.2)
+    "id": params.id,
+    "actor": params.actor,
+    "object": params.object,
+    "published": params.object.published,
+    "to": params.object.to,
+    "cc": ["https://www.w3.org/ns/activitystreams#Public"],
+  };
+}
+
 // TODO: Do the same shit as above but for deletes, comments, collections, actor objects, et. all.
 // And that's not even getting started on the wrappers!
 // I'm gonna die.

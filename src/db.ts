@@ -29,13 +29,13 @@ const torrentTableInit = `
 CREATE TABLE IF NOT EXISTS torrents (
   PRIMARY KEY(id),
   id        VARCHAR(256)  NOT NULL,
-  json      JSON         NOT NULL,
-  activity  JSON         NOT NULL,
+  json      JSON          NOT NULL,
+  activity  JSON          NOT NULL,
   uploader  VARCHAR(256)  NOT NULL,
-  likes     JSON         NOT NULL,
-  dislikes  JSON         NOT NULL,
-  replies   JSON         NOT NULL,
-  flags     JSON         NOT NULL
+  likes     JSON          NOT NULL,
+  dislikes  JSON          NOT NULL,
+  replies   JSON          NOT NULL,
+  flags     JSON          NOT NULL
 );
 `;
 
@@ -221,6 +221,32 @@ export async function getUActivity(id: string, objType: string): Promise<any> {
   await client.end();
 
   return res.rows[0][0];
+}
+
+// Before you do say anything:
+//   - Yes, this is probably the worst piece of code in the entire project.
+//   - Yes, it is *highly* insecure at this stage.
+//   - Yes, it-hopefully-will be refactored soon.
+/*
+ * Loops through supplied parameters and applies changes where property exists.
+ */
+export async function basicObjectUpdate(
+  category: string,
+  params: any = {},
+  id: string,
+) {
+  let toUpdate = "";
+
+  for (const prop in params) {
+    toUpdate += `${prop} ='${JSON.stringify(params[prop])}',`;
+  }
+
+  await client.connect();
+  const res = await client.queryArray(
+    `UPDATE  ${category} SET ${toUpdate.slice(0, -1)}   WHERE id = $1;        `,
+    [id],
+  );
+  await client.end();
 }
 
 // Function to add to the DB. Because all the tables - Besides users -

@@ -61,6 +61,7 @@ Deno.test("Attempt to get nonexistent torrent", async () => {
   assertEquals(json.err, true);
 });
 
+/*
 Deno.test("Delete Torrent", async () => {
   const r = await fetch(torrentURL, {
     method: "POST",
@@ -84,3 +85,4 @@ Deno.test("Get deleted torrent", async () => {
   const j = await r.json();
   assertEquals(r.status, 404);
 });
+*/
