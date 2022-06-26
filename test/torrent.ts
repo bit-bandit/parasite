@@ -61,7 +61,22 @@ Deno.test("Attempt to get nonexistent torrent", async () => {
   assertEquals(json.err, true);
 });
 
-/*
+Deno.test("Update Torrent", async () => {
+  const r = await fetch(torrentURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${userJWT}`,
+    },
+    body: JSON.stringify({
+      "type": "Update",
+      "content": "Something different",
+    }),
+  });
+
+  const res = await r.json();
+  assertEquals(res.err === true, false);
+});
 Deno.test("Delete Torrent", async () => {
   const r = await fetch(torrentURL, {
     method: "POST",
@@ -85,4 +100,3 @@ Deno.test("Get deleted torrent", async () => {
   const j = await r.json();
   assertEquals(r.status, 404);
 });
-*/
