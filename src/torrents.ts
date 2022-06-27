@@ -165,6 +165,14 @@ torrents.post("/t/", async function (ctx) {
       "flags": genOrderedCollection(`${url}/flags`),
     });
 
+    const userOutbox = await getUActivity(decodedAuth.name, "outbox");
+    userOutbox.orderedItems.push(activity);
+    userOutbox.totalItems = userOutbox.orderedItems.length;
+
+    await basicObjectUpdate("users", {
+      "outbox": userOutbox,
+    }, decodedAuth.name);
+
     ctx.response.body = { "msg": `Torrent uploaded at ${url}` };
     ctx.response.status = 201;
     ctx.response.type =
@@ -256,6 +264,14 @@ torrents.post("/t/:id", async function (ctx) {
           "replies": genOrderedCollection(`${url}/r`),
           "flags": genOrderedCollection(`${url}/flags`),
         }, ctx.params.id);
+
+        const userOutbox = await getUActivity(decodedAuth.name, "outbox");
+        userOutbox.orderedItems.push(activity);
+        userOutbox.totalItems = userOutbox.orderedItems.length;
+
+        await basicObjectUpdate("users", {
+          "outbox": userOutbox,
+        }, decodedAuth.name);
 
         ctx.response.body = {
           "msg": `Comment ${id} added to Torrent ${ctx.params.id}`,

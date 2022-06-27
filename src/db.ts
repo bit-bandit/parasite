@@ -275,9 +275,9 @@ export async function addToDB(category: string, params: any = {}, id?: string) {
 
   if (category === "comments") {
     let reps = await getTorrentJSON(id, "replies");
-      
+
     await client.connect();
-      
+
     reps = reps[0];
     reps.orderedItems.push(params.json.id);
     reps.totalItems = reps.orderedItems.length;
