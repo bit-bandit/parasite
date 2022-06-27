@@ -13,6 +13,7 @@ import { getKey } from "./crypto.ts";
 import {
   genObj,
   genOrderedCollection,
+  genReply,
   wrapperCreate,
   wrapperUpdate,
 } from "./activity.ts";
@@ -34,6 +35,7 @@ import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
 await ammonia.init();
 export let torrents = new Router();
 
+// Helper functions
 function boilerplateDeleteStatement(ctx: Context) {
   ctx.response.body = { "msg": `Torrent ${ctx.params.id} deleted` };
   ctx.response.status = 200;
@@ -53,6 +55,11 @@ function boilerplateTorrentGet(ctx: Context, res: any) {
   }
 }
 
+function invalidMagnet(magnet) {
+  return /magnet:\?xt=urn:[a-z0-9]+:[a-z0-9]{32}/i.test(magnet);
+}
+
+// Routes
 torrents.get("/t/:id", async function (ctx) {
   const res = await getTorrentJSON(ctx.params.id);
   await boilerplateTorrentGet(ctx, res);
@@ -106,6 +113,12 @@ torrents.post("/t/", async function (ctx) {
     throwAPIError(ctx, "Invalid activity type", 400);
     err = true;
   }
+
+  if (invalidMagnet(requestJSON)) {
+    throwAPIError(ctx, "Bad magnet link.", 400);
+    err = true;
+  }
+
   // TODO: Check if magnet link is actually valid.
   if (!err) {
     // TODO: Make more spec compliant.
@@ -117,9 +130,11 @@ torrents.post("/t/", async function (ctx) {
     const url = `${settings.siteURL}/t/${id}`;
     // TODO: Tag checking/creation if not exists.
     let tag: string[] = [];
-    requestJSON.tags.split(",").map((x) =>
-      tag.push(`${settings.siteURL}/tags/${x}`)
-    );
+    if (requestJSON.tags) {
+      requestJSON.tags.split(",").map((x) =>
+        tag.push(`${settings.siteURL}/tags/${x}`)
+      );
+    }
 
     const d = new Date();
 
@@ -191,7 +206,10 @@ torrents.post("/t/:id", async function (ctx) {
     err = true;
   }
 
+  const userActivity = await getUActivity(decodedAuth.name, "info");
+
   let tData: any[] = [];
+  const d = new Date();
 
   try {
     tData = await getTorrentJSON(ctx.params.id, "json, uploader");
@@ -210,9 +228,44 @@ torrents.post("/t/:id", async function (ctx) {
         break;
       case "Dislike":
         break;
-      case "Create":
+      case "Create": {
         // Creating a comment.
+        const id: string = await genUUID(14);
+        const url = `${settings.siteURL}/c/${id}`;
+        const comment = genReply({
+          "id": url,
+          "actor": userActivity.id,
+          "published": d.toISOString(),
+          "content": marked.parse(requestJSON.content),
+          "inReplyTo": tData[0].id,
+        });
+
+        const activity = wrapperCreate({
+          "id": `${url}/activity`,
+          "actor": comment.attributedTo,
+          "object": comment,
+        });
+
+        await addToDB("comments", {
+          "id": id,
+          "json": comment,
+          "activity": activity,
+          "uploader": decodedAuth.name,
+          "likes": genOrderedCollection(`${url}/likes`),
+          "dislikes": genOrderedCollection(`${url}/dislikes`),
+          "replies": genOrderedCollection(`${url}/r`),
+          "flags": genOrderedCollection(`${url}/flags`),
+        }, ctx.params.id);
+
+        ctx.response.body = {
+          "msg": `Comment ${id} added to Torrent ${ctx.params.id}`,
+        };
+        ctx.response.status = 201;
+        ctx.response.type =
+          'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+        ctx.response.headers.set("Location", url);
         break;
+      }
       // Updating
       case "Update": {
         if (
@@ -220,9 +273,9 @@ torrents.post("/t/:id", async function (ctx) {
           !userInfo[2].editUploads
         ) {
           throwAPIError(ctx, "You aren't allowed to edit this torrent", 400);
+        } else if (invalidMagnet(requestJSON)) {
+          throwAPIError(ctx, "Bad magnet link.", 400);
         } else {
-          const d = new Date();
-
           let tag: string[] = [];
 
           if (requestJSON.tags) {
@@ -294,8 +347,9 @@ torrents.post("/t/:id", async function (ctx) {
         break;
       }
       // In case none of the above were met:
-      default:
+      default: {
         throwAPIError(ctx, "Invalid activity type", 400);
+      }
     }
   }
 });

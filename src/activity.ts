@@ -175,6 +175,21 @@ export function genObj(params: any = {}): ActivityObject {
     "replies": `${params.id}/r`,
   };
 }
+// Create reply object.
+export function genReply(params: any = {}): ActivityObject {
+  return {
+    "@context": "https://www.w3.org/ns/activitystreams",
+    "id": params.id,
+    "type": params.type ?? "Note", // In case we can't be shitted to write this down, keep note in.
+    "published": params.published, // TODO: Figure out how the fuck ActivityStreams does dates
+    "attributedTo": params.actor,
+    "content": params.content,
+    "inReplyTo": params.inReplyTo,
+    "to": ["https://www.w3.org/ns/activitystreams#Public"], // All posts are public; Sorry!
+    "replies": `${params.id}/r`,
+  };
+}
+
 // Voting. Type should be either `like` or `dislike`, since we're going by the standard.
 // We're doing some other shit with this too (See `doc/voting.md`), but we can get away
 // with it.

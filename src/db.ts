@@ -123,7 +123,7 @@ export async function getListJSON(id: string, t: string): Promise<any> {
   );
 }
 
-export async function getCommentJSON(id: string): Promise<any> {
+export async function getCommentJSON(id: string, t?: string): Promise<any> {
   return basicDataQuery(
     "No comment with id ${id} found",
     `SELECT ${t ?? "json"} FROM comments WHERE id = $1`,
@@ -269,17 +269,19 @@ export async function addToDB(category: string, params: any = {}, id?: string) {
       JSON.stringify(params.flags),
     ],
   );
-
+  await client.end();
   // TODO: Also add to users outbox/followers inbox.
   // Will have to figure out how to do that, though...
 
   if (category === "comments") {
-    let reps = await getCommentReplies(id);
-
+    let reps = await getTorrentJSON(id, "replies");
+      
+    await client.connect();
+      
+    reps = reps[0];
     reps.orderedItems.push(params.json.id);
-    reps.totalItems = r.orderedItems.length;
+    reps.totalItems = reps.orderedItems.length;
 
-    // Add to both comments and torrents(The `replies` column).
     await client.queryArray("UPDATE torrents SET replies = $1 WHERE id = $2", [
       JSON.stringify(reps),
       id,
