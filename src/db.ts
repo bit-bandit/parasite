@@ -11,16 +11,16 @@ const userTableInit = `
 CREATE TABLE IF NOT EXISTS users (
   PRIMARY KEY(id),
   id          VARCHAR(21)   NOT NULL,
-  info        JSON         NOT NULL,
+  info        JSON          NOT NULL,
   pass        VARCHAR(256)  NOT NULL,
-  roles       JSON         NOT NULL,
-  inbox       JSON         NOT NULL,
-  outbox      JSON         NOT NULL,
-  likes       JSON         NOT NULL,
-  dislikes    JSON         NOT NULL,
-  following   JSON         NOT NULL,
-  followers   JSON         NOT NULL,
-  logins      JSON         NOT NULL,
+  roles       JSON          NOT NULL,
+  inbox       JSON          NOT NULL,
+  outbox      JSON          NOT NULL,
+  likes       JSON          NOT NULL,
+  dislikes    JSON          NOT NULL,
+  following   JSON          NOT NULL,
+  followers   JSON          NOT NULL,
+  logins      JSON          NOT NULL,
   registered  VARCHAR(256)  NOT NULL
 );
 `;
