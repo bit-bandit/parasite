@@ -77,6 +77,24 @@ Deno.test("Update Torrent", async () => {
   const res = await r.json();
   assertEquals(res.err === true, false);
 });
+
+Deno.test("Comment on Torrent", async () => {
+  const r = await fetch(torrentURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${userJWT}`,
+    },
+    body: JSON.stringify({
+      "type": "Create",
+      "content": "Something different",
+    }),
+  });
+
+  const res = await r.json();
+  assertEquals(res.err === true, false);
+});
+
 Deno.test("Delete Torrent", async () => {
   const r = await fetch(torrentURL, {
     method: "POST",
