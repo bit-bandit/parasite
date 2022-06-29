@@ -1,4 +1,7 @@
-import { assertEquals } from "https://deno.land/std@0.144.0/testing/asserts.ts";
+import {
+  assertEquals,
+  assertNotEquals,
+} from "https://deno.land/std@0.144.0/testing/asserts.ts";
 
 // Global variables we're going to call later on.
 let torrentURL = "";
@@ -10,6 +13,8 @@ const loginData = {
   "username": "bob",
   "password": "subgenius",
 };
+
+let firstTorrentURL = "";
 
 const tokenRequest = await fetch("http://0.0.0.0:8080/login", {
   method: "POST",
@@ -44,14 +49,17 @@ Deno.test("Upload Torrent", async () => {
   if (!res.err) {
     torrentURL = res.msg.split(" ").pop();
   }
-  assertEquals(res.err === true, false);
+  assertNotEquals(res.err, true);
 });
 
 Deno.test("Get torrent", async () => {
   const r = await fetch(torrentURL);
   const stat = r.status;
-  // This is purely to stop an error from happening.
+
   const j = await r.json();
+
+  firstTorrentURL = j.id;
+
   assertEquals(r.status, 200);
 });
 
@@ -75,7 +83,7 @@ Deno.test("Update Torrent", async () => {
   });
 
   const res = await r.json();
-  assertEquals(res.err === true, false);
+  assertNotEquals(res.err, true);
 });
 
 Deno.test("Comment on Torrent", async () => {
@@ -95,6 +103,38 @@ Deno.test("Comment on Torrent", async () => {
   assertEquals(res.err === true, false);
 });
 
+Deno.test("Like Torrent", async () => {
+  const r = await fetch(torrentURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${userJWT}`,
+    },
+    body: JSON.stringify({
+      "type": "Like",
+    }),
+  });
+
+  const res = await r.json();
+  assertNotEquals(res.err, true);
+});
+
+Deno.test("Dislike Torrent", async () => {
+  const r = await fetch(torrentURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${userJWT}`,
+    },
+    body: JSON.stringify({
+      "type": "Dislike",
+    }),
+  });
+
+  const res = await r.json();
+  assertNotEquals(res.err, true);
+});
+
 Deno.test("Delete Torrent", async () => {
   const r = await fetch(torrentURL, {
     method: "POST",
@@ -108,7 +148,7 @@ Deno.test("Delete Torrent", async () => {
   });
 
   const res = await r.json();
-  assertEquals(res.err === true, false);
+  assertNotEquals(res.err, true);
 });
 
 Deno.test("Get deleted torrent", async () => {
@@ -117,4 +157,22 @@ Deno.test("Get deleted torrent", async () => {
   // This is purely to stop an error from happening.
   const j = await r.json();
   assertEquals(r.status, 404);
+});
+
+Deno.test("ID randomness", async () => {
+  const r = await fetch("http://0.0.0.0:8080/t/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${userJWT}`,
+    },
+    body: JSON.stringify(torrentData),
+  });
+
+  const res = await r.json();
+  if (!res.err) {
+    torrentURL = res.msg.split(" ").pop();
+  }
+
+  assertNotEquals(firstTorrentURL, res.id);
 });

@@ -135,7 +135,7 @@ auth.post("/register", async function (ctx) {
       "actor": userAPI,
       "following": `${userAPI}/following`,
       "followers": `${userAPI}/followers`,
-      "liked": `${userAPI}/liked`,
+      "liked": `${userAPI}/likes`,
       "inbox": `${userAPI}/inbox`,
       "outbox": `${userAPI}/outbox`,
       "name": `${requestJSON.username}`,

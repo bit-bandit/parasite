@@ -238,8 +238,12 @@ torrents.post("/t/:id", async function (ctx) {
           throwAPIError(ctx, "Voting not allowed", 400);
         } else {
           let userLikes = await getUActivity(decodedAuth.name, "likes");
-          let torrentLikes = await getTorrentJSON(ctx.params.id, "likes");
-          // TODO: Redundancy check - If item is already in list, throw error back.
+          let torrentLikes = (await getTorrentJSON(ctx.params.id, "likes"))[0];
+
+          if (userLikes.orderedItems.includes(tData[0].id)) {
+            throwAPIError(ctx, "Already voted on item", 400);
+            break;
+          }
           userLikes.orderedItems.push(tData[0].id);
           userLikes.totalItems = userLikes.orderedItems.length;
 
@@ -271,16 +275,21 @@ torrents.post("/t/:id", async function (ctx) {
           throwAPIError(ctx, "Voting not allowed", 400);
         } else {
           let userDislikes = await getUActivity(decodedAuth.name, "dislikes");
-          let torrentDislikes = await getTorrentJSON(ctx.params.id, "dislikes");
-          // TODO: Redundancy check - If item is already in list, throw error back.
+          let torrentDislikes =
+            (await getTorrentJSON(ctx.params.id, "dislikes"))[0];
+
+          if (userDislikes.orderedItems.includes(tData[0].id)) {
+            throwAPIError(ctx, "Already voted on item", 400);
+            break;
+          }
           userDislikes.orderedItems.push(tData[0].id);
-          userDislikes.totalItems = userLikes.orderedItems.length;
+          userDislikes.totalItems = userDislikes.orderedItems.length;
 
           torrentDislikes.orderedItems.push(userActivity.id);
-          torrentDislikes.totalItems = torrentLikes.orderedItems.length;
+          torrentDislikes.totalItems = torrentDislikes.orderedItems.length;
 
           await basicObjectUpdate("users", {
-            "dislikes": userLikes,
+            "dislikes": userDislikes,
           }, decodedAuth.name);
 
           await basicObjectUpdate("torrents", {

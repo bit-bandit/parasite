@@ -295,7 +295,7 @@ export async function deleteTorrent(id: string) {
   await client.connect();
   // TODO:
   // - Figure out how to delete replies.
-  // - Mark delete action in outbox.
+  // - Remove content from user outbox.
   await client.queryArray(
     "DELETE FROM torrents WHERE id = $1;",
     [id],
