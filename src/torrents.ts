@@ -14,6 +14,7 @@ import {
   genObj,
   genOrderedCollection,
   genReply,
+  genVote,
   wrapperCreate,
   wrapperUpdate,
 } from "./activity.ts";
@@ -229,13 +230,74 @@ torrents.post("/t/:id", async function (ctx) {
   if (!err) {
     switch (requestJSON.type) {
       // Voting
-      case "Like":
-        // If user is local: Add 'like' action to outbox, and torrent. Add post URL to user 'liked'.
+      case "Like": {
+        // If user is local: Add user to torrent likes. Add post URL to user 'likes'.
         // Else: Webfinger to check if user actually exists. If not, send err. If so,
         // add user to `likes`.
+        if (!userInfo[2].vote) {
+          throwAPIError(ctx, "Voting not allowed", 400);
+        } else {
+          let userLikes = await getUActivity(decodedAuth.name, "likes");
+          let torrentLikes = await getTorrentJSON(ctx.params.id, "likes");
+          // TODO: Redundancy check - If item is already in list, throw error back.
+          userLikes.orderedItems.push(tData[0].id);
+          userLikes.totalItems = userLikes.orderedItems.length;
+
+          torrentLikes.orderedItems.push(userActivity.id);
+          torrentLikes.totalItems = torrentLikes.orderedItems.length;
+
+          await basicObjectUpdate("users", {
+            "likes": userLikes,
+          }, decodedAuth.name);
+
+          await basicObjectUpdate("torrents", {
+            "likes": torrentLikes,
+          }, ctx.params.id);
+
+          ctx.response.body = {
+            "msg": `Torrent ${ctx.params.id} added to likes collection`,
+          };
+          // TODO: Actually add federation support.
+          ctx.response.status = 201;
+          ctx.response.type =
+            'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+          ctx.response.headers.set("Location", userActivity.liked);
+        }
         break;
-      case "Dislike":
+      }
+      case "Dislike": {
+        // Same as above, but with dislikes instead of likes.
+        if (!userInfo[2].vote) {
+          throwAPIError(ctx, "Voting not allowed", 400);
+        } else {
+          let userDislikes = await getUActivity(decodedAuth.name, "dislikes");
+          let torrentDislikes = await getTorrentJSON(ctx.params.id, "dislikes");
+          // TODO: Redundancy check - If item is already in list, throw error back.
+          userDislikes.orderedItems.push(tData[0].id);
+          userDislikes.totalItems = userLikes.orderedItems.length;
+
+          torrentDislikes.orderedItems.push(userActivity.id);
+          torrentDislikes.totalItems = torrentLikes.orderedItems.length;
+
+          await basicObjectUpdate("users", {
+            "dislikes": userLikes,
+          }, decodedAuth.name);
+
+          await basicObjectUpdate("torrents", {
+            "dislikes": torrentDislikes,
+          }, ctx.params.id);
+
+          ctx.response.body = {
+            "msg": `Torrent ${ctx.params.id} added to dislikes collection`,
+          };
+          // TODO: Actually add federation support.
+          ctx.response.status = 201;
+          ctx.response.type =
+            'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+          ctx.response.headers.set("Location", userActivity.liked);
+        }
         break;
+      }
       case "Create": {
         // Creating a comment.
         const id: string = await genUUID(14);
