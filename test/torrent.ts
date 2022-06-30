@@ -119,6 +119,22 @@ Deno.test("Like Torrent", async () => {
   assertNotEquals(res.err, true);
 });
 
+Deno.test("Try to like Torrent twice", async () => {
+  const r = await fetch(torrentURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${userJWT}`,
+    },
+    body: JSON.stringify({
+      "type": "Like",
+    }),
+  });
+
+  const res = await r.json();
+  assertEquals(res.err, true);
+});
+
 Deno.test("Dislike Torrent", async () => {
   const r = await fetch(torrentURL, {
     method: "POST",
@@ -133,6 +149,22 @@ Deno.test("Dislike Torrent", async () => {
 
   const res = await r.json();
   assertNotEquals(res.err, true);
+});
+
+Deno.test("Try to dislike Torrent twice", async () => {
+  const r = await fetch(torrentURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${userJWT}`,
+    },
+    body: JSON.stringify({
+      "type": "Dislike",
+    }),
+  });
+
+  const res = await r.json();
+  assertEquals(res.err, true);
 });
 
 Deno.test("Delete Torrent", async () => {
