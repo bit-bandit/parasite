@@ -117,11 +117,11 @@ auth.post("/register", async function (ctx) {
     await Deno.mkdir(destDir, { recursive: true }); // auto-create `/static/u/`
     await Deno.copyFile(
       `${settings.staticFileDir}/defs/avatar.png`,
-      `${settings.staticFileDir}/u/avatar.png`,
+      `${destDir}/avatar.png`,
     );
     await Deno.copyFile(
       `${settings.staticFileDir}/defs/banner.png`,
-      `${settings.staticFileDir}/u/banner.png`,
+      `${destDir}/u/banner.png`,
     );
 
     const userStatic = `${settings.siteURL}/m/u/${requestJSON.username}`;
