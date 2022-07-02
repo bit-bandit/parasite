@@ -292,15 +292,32 @@ export async function addToDB(category: string, params: any = {}, id?: string) {
 }
 
 export async function deleteTorrent(id: string) {
+  const tData = await getTorrentJSON(id, "json, uploader");
+  const user = tData[1];
+  const json = tData[0];
+
   await client.connect();
   // TODO:
   // - Figure out how to delete replies.
-  // - Remove content from user outbox.
   await client.queryArray(
     "DELETE FROM torrents WHERE id = $1;",
     [id],
   );
   await client.end();
+  // Modify outbox
+  let outbox = await getUActivity(user, "outbox");
+
+  for (let i = 0; i < outbox.orderedItems.length; i++) {
+    if (outbox.orderedItems[i].object.id === json.id) {
+      outbox.orderedItems.splice(i, 1);
+    }
+  }
+
+  outbox.totalItems = outbox.orderedItems.length;
+
+  await basicObjectUpdate("users", {
+    "outbox": outbox,
+  }, user);
 }
 
 export async function search(query: string) {

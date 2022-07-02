@@ -121,7 +121,7 @@ auth.post("/register", async function (ctx) {
     );
     await Deno.copyFile(
       `${settings.staticFileDir}/defs/banner.png`,
-      `${destDir}/u/banner.png`,
+      `${destDir}/banner.png`,
     );
 
     const userStatic = `${settings.siteURL}/m/u/${requestJSON.username}`;
