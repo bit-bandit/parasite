@@ -190,21 +190,3 @@ Deno.test("Get deleted torrent", async () => {
   const j = await r.json();
   assertEquals(r.status, 404);
 });
-
-Deno.test("ID randomness", async () => {
-  const r = await fetch("http://0.0.0.0:8080/t/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${userJWT}`,
-    },
-    body: JSON.stringify(torrentData),
-  });
-
-  const res = await r.json();
-  if (!res.err) {
-    torrentURL = res.msg.split(" ").pop();
-  }
-
-  assertNotEquals(firstTorrentURL, res.id);
-});
