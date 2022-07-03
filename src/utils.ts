@@ -99,3 +99,44 @@ export function throwAPIError(ctx: Context, message?: string, status?: number) {
   ctx.response.status = status;
   ctx.response.type = "application/json";
 }
+
+/** 
+  * Validate incoming POST requests.
+  * Will return an object with request data.
+  * @param {Context} ctx Oak context 
+  */
+export async function authData(ctx: Context) {
+  const rawAuth = await ctx.request.headers.get("Authorization");
+  const auth = rawAuth.split(" ")[1];
+
+  if (!auth) {
+    return throwAPIError(ctx, "No authorization provided", 401);
+  }
+  if (!ctx.request.hasBody) {
+    return throwAPIError(ctx, "No body provided.", 400);
+  }
+
+  const raw = await ctx.request.body();
+  if (raw.type !== "json") {
+    return throwAPIError(
+      ctx,
+      "Invalid content type (Must be application/json)",
+      400,
+    );
+  }
+
+  const requestJSON = await raw.value;
+  const decodedAuth = await verify(auth, await getKey());
+
+  if (!decodedAuth.name) {
+    return throwAPIError(ctx, "No name provided", 400);
+  }
+  
+  if (!userInfo[1].includes(decodedAuth.iat)) {
+    return throwAPIError(ctx, "Invalid issue date.", 400);
+  }
+  return {
+      "decoded": decodedAuth,
+      "request": requestJSON,
+  }
+}
