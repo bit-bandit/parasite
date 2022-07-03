@@ -235,14 +235,13 @@ torrents.post("/t/:id", async function (ctx) {
         // Else: Webfinger to check if user actually exists. If not, send err. If so,
         // add user to `likes`.
         if (!userInfo[2].vote) {
-          throwAPIError(ctx, "Voting not allowed", 400);
+          return throwAPIError(ctx, "Voting not allowed", 400);
         } else {
           let userLikes = await getUActivity(decodedAuth.name, "likes");
           let torrentLikes = (await getTorrentJSON(ctx.params.id, "likes"))[0];
 
           if (userLikes.orderedItems.includes(tData[0].id)) {
-            throwAPIError(ctx, "Already voted on item", 400);
-            break;
+            return throwAPIError(ctx, "Already voted on item", 400);
           }
           userLikes.orderedItems.push(tData[0].id);
           userLikes.totalItems = userLikes.orderedItems.length;
@@ -272,16 +271,17 @@ torrents.post("/t/:id", async function (ctx) {
       case "Dislike": {
         // Same as above, but with dislikes instead of likes.
         if (!userInfo[2].vote) {
-          throwAPIError(ctx, "Voting not allowed", 400);
+          return throwAPIError(ctx, "Voting not allowed", 400);
         } else {
           let userDislikes = await getUActivity(decodedAuth.name, "dislikes");
+
           let torrentDislikes =
             (await getTorrentJSON(ctx.params.id, "dislikes"))[0];
 
           if (userDislikes.orderedItems.includes(tData[0].id)) {
-            throwAPIError(ctx, "Already voted on item", 400);
-            break;
+            return throwAPIError(ctx, "Already voted on item", 400);
           }
+
           userDislikes.orderedItems.push(tData[0].id);
           userDislikes.totalItems = userDislikes.orderedItems.length;
 
@@ -359,51 +359,54 @@ torrents.post("/t/:id", async function (ctx) {
           tData[1] !== decodedAuth.name ||
           !userInfo[2].editUploads
         ) {
-          throwAPIError(ctx, "You aren't allowed to edit this torrent", 400);
+          return throwAPIError(
+            ctx,
+            "You aren't allowed to edit this torrent",
+            400,
+          );
         } else if (invalidMagnet(requestJSON)) {
-          throwAPIError(ctx, "Bad magnet link.", 400);
-        } else {
-          let tag: string[] = [];
-
-          if (requestJSON.tags) {
-            requestJSON.tags.split(",").map((x) =>
-              tag.push(`${settings.siteURL}/tags/${x}`)
-            );
-            tData[0].tag = tag;
-          }
-
-          // Everything here may seem extremely boilerplatey, but it's to prevent
-          // people from adding bad values to a torrent.
-          if (requestJSON.title) {
-            tData[0].name = requestJSON.title;
-          }
-          if (requestJSON.content) {
-            tData[0].content = marked.parse(requestJSON.content);
-          }
-          if (requestJSON.href) {
-            tData[0].href = requestJSON.href;
-          }
-          tData[0].updated = d.toISOString();
-
-          const activity = wrapperUpdate({
-            "id": `${tData[0].id}/activity`,
-            "actor": tData[0].attributedTo,
-            "object": tData[0],
-            "published": tData[0].published,
-          });
-
-          // This works, unfortunately.
-          await basicObjectUpdate("torrents", {
-            "activity": activity,
-            "json": tData[0],
-          }, `${ctx.params.id}`);
-
-          ctx.response.body = { "msg": `Torrent ${ctx.params.id} updated` };
-          ctx.response.status = 200;
-          ctx.response.type = "application/json";
-
-          break;
+          return throwAPIError(ctx, "Bad magnet link.", 400);
         }
+        let tag: string[] = [];
+
+        if (requestJSON.tags) {
+          requestJSON.tags.split(",").map((x) =>
+            tag.push(`${settings.siteURL}/tags/${x}`)
+          );
+          tData[0].tag = tag;
+        }
+
+        // Everything here may seem extremely boilerplatey, but it's to prevent
+        // people from adding bad values to a torrent.
+        if (requestJSON.title) {
+          tData[0].name = requestJSON.title;
+        }
+        if (requestJSON.content) {
+          tData[0].content = marked.parse(requestJSON.content);
+        }
+        if (requestJSON.href) {
+          tData[0].href = requestJSON.href;
+        }
+        tData[0].updated = d.toISOString();
+
+        const activity = wrapperUpdate({
+          "id": `${tData[0].id}/activity`,
+          "actor": tData[0].attributedTo,
+          "object": tData[0],
+          "published": tData[0].published,
+        });
+
+        // This works, unfortunately.
+        await basicObjectUpdate("torrents", {
+          "activity": activity,
+          "json": tData[0],
+        }, `${ctx.params.id}`);
+
+        ctx.response.body = { "msg": `Torrent ${ctx.params.id} updated` };
+        ctx.response.status = 200;
+        ctx.response.type = "application/json";
+
+        break;
       }
       // Delete/Remove
       case "Remove":
