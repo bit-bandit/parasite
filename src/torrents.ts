@@ -78,7 +78,7 @@ torrents.get("/t/:id/activity", async function (ctx) {
 
 // Posting
 torrents.post("/t/", async function (ctx) {
-  const rawAuth = await ctx.request.headers.get("authorization");
+  const rawAuth = await ctx.request.headers.get("Authorization");
   const auth = rawAuth.split(" ")[1];
   let err = false;
   if (!auth) {
@@ -183,7 +183,7 @@ torrents.post("/t/", async function (ctx) {
 });
 
 torrents.post("/t/:id", async function (ctx) {
-  const rawAuth = await ctx.request.headers.get("authorization");
+  const rawAuth = await ctx.request.headers.get("Authorization");
   const auth = rawAuth.split(" ")[1];
   let err = false;
   if (!auth) {
