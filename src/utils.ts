@@ -1,5 +1,7 @@
 import { Context } from "https://deno.land/x/oak/mod.ts";
-
+import { verify } from "https://deno.land/x/djwt/mod.ts";
+import { getKey } from "./crypto.ts";
+import { getUMetaInfo } from "./db.ts";
 /**
  * Generates up to 32 universally-unique hex digits at a time to use as an ID.
  * @param {number} length A length, up to 32
@@ -131,10 +133,13 @@ export async function authData(ctx: Context) {
   if (!decodedAuth.name) {
     return throwAPIError(ctx, "No name provided", 400);
   }
-  
+
+  const userInfo = await getUMetaInfo(decodedAuth.name);
+    
   if (!userInfo[1].includes(decodedAuth.iat)) {
     return throwAPIError(ctx, "Invalid issue date.", 400);
   }
+    
   return {
       "decoded": decodedAuth,
       "request": requestJSON,

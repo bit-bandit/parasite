@@ -8,7 +8,9 @@ interface Role {
   deleteOwnComments: boolean;
   deleteOthersComments: boolean;
   editUploads: boolean;
+  flag: boolean;
   login: boolean;
+  vote: boolean;
 }
 
 export const roles: Record<string, Role> = {
@@ -20,9 +22,10 @@ export const roles: Record<string, Role> = {
     deleteOthersTorrents: true,
     deleteOwnComments: true,
     deleteOthersComments: true,
-    vote: true,
     editUploads: true,
-    login: true,
+    flag: true,
+    login: false,
+    vote: true,
   },
   "User": {
     createTorrents: true,
@@ -32,9 +35,10 @@ export const roles: Record<string, Role> = {
     deleteOthersTorrents: false,
     deleteOwnComments: true,
     deleteOthersComments: false,
-    vote: true,
     editUploads: true,
-    login: true,
+    flag: true,
+    login: false,
+    vote: true,
   },
   "Banned": {
     createTorrents: false,
@@ -44,8 +48,9 @@ export const roles: Record<string, Role> = {
     deleteOthersTorrents: false,
     deleteOwnComments: false,
     deleteOthersComments: false,
-    vote: false,
     editUploads: false,
+    flag: true,
     login: false,
+    vote: false,
   },
 };

@@ -145,7 +145,7 @@ torrents.post("/t/", async function (ctx) {
     "id": id,
     "json": obj,
     "activity": activity,
-    "uploader": decodedAuth.name,
+    "uploader": data.decoded.name,
     "likes": genOrderedCollection(`${url}/likes`),
     "dislikes": genOrderedCollection(`${url}/dislikes`),
     "replies": genOrderedCollection(`${url}/r`),
@@ -169,7 +169,7 @@ torrents.post("/t/", async function (ctx) {
 
 torrents.post("/t/:id", async function (ctx) {
   const data = await authData(ctx);
-  const requestJSON = data.request;
+  let requestJSON = data.request;
 
   const userInfo = await getUMetaInfo(data.decoded.name);
 
@@ -293,7 +293,7 @@ torrents.post("/t/:id", async function (ctx) {
         "flags": genOrderedCollection(`${url}/flags`),
       }, ctx.params.id);
 
-      const userOutbox = await getUActivity(decodedAuth.name, "outbox");
+      const userOutbox = await getUActivity(data.decoded.name, "outbox");
 
       userOutbox.orderedItems.push(activity);
       userOutbox.totalItems = userOutbox.orderedItems.length;
@@ -336,13 +336,14 @@ torrents.post("/t/:id", async function (ctx) {
         tData[0].name = requestJSON.title;
       }
       if (requestJSON.content) {
-        return tData[0].content = marked.parse(requestJSON.content);
+        tData[0].content = marked.parse(requestJSON.content);
       }
       if (requestJSON.href) {
-        return tData[0].href = requestJSON.href;
+        tData[0].href = requestJSON.href;
       }
-      tData[0].updated = d.toISOString();
 
+      tData[0].updated = d.toISOString();
+	
       const activity = wrapperUpdate({
         "id": `${tData[0].id}/activity`,
         "actor": tData[0].attributedTo,
