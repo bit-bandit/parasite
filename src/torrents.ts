@@ -94,13 +94,13 @@ torrents.get("/t/:id/flags", async function (ctx) {
 // Posting
 torrents.post("/t/", async function (ctx) {
   const data = await authData(ctx);
- 
+
   const requestJSON = data.request;
-    
+
   if (requestJSON.type !== "Create") {
     return throwAPIError(ctx, "Invalid activity type", 400);
   }
-    
+
   if (invalidMagnet(requestJSON)) {
     return throwAPIError(ctx, "Bad magnet link.", 400);
   }
@@ -175,6 +175,8 @@ torrents.post("/t/:id", async function (ctx) {
 
   const userActivity = await getUActivity(data.decoded.name, "info");
 
+  const userRole = userInfo[2];
+
   let tData: any[] = [];
   const d = new Date();
 
@@ -190,7 +192,7 @@ torrents.post("/t/:id", async function (ctx) {
       // If user is local: Add user to torrent likes. Add post URL to user 'likes'.
       // Else: Webfinger to check if user actually exists. If not, send err. If so,
       // add user to `likes`.
-      if (!userInfo[2].vote) {
+      if (!userRole.vote) {
         return throwAPIError(ctx, "Voting not allowed", 400);
       }
       const userLikes = await getUActivity(data.decoded.name, "likes");
@@ -228,7 +230,7 @@ torrents.post("/t/:id", async function (ctx) {
 
     case "Dislike": {
       // Same as above, but with dislikes instead of likes.
-      if (!userInfo[2].vote) {
+      if (!userRole.vote) {
         return throwAPIError(ctx, "Voting not allowed", 400);
       }
       const userDislikes = await getUActivity(data.decoded.name, "dislikes");
@@ -315,7 +317,7 @@ torrents.post("/t/:id", async function (ctx) {
     case "Update": {
       if (
         tData[1] !== data.decoded.name ||
-        !userInfo[2].editUploads
+        !userRole.editUploads
       ) {
         return throwAPIError(ctx, "Not allowed to edit torrent", 400);
       } else if (invalidMagnet(requestJSON)) {
@@ -343,7 +345,7 @@ torrents.post("/t/:id", async function (ctx) {
       }
 
       tData[0].updated = d.toISOString();
-	
+
       const activity = wrapperUpdate({
         "id": `${tData[0].id}/activity`,
         "actor": tData[0].attributedTo,
@@ -370,7 +372,6 @@ torrents.post("/t/:id", async function (ctx) {
       // We think that's stupid, so we're not doing it - Plus we can
       // get away with it, as it's not part of the standard.
       // See Section 6.4 of the ActivityPub standard.
-      const userRole = userInfo[2];
 
       // Ensure that the user is either the original poster, or has total deletion privs.
       // Also made sure that the user has the proper role to delete.

@@ -102,11 +102,11 @@ export function throwAPIError(ctx: Context, message?: string, status?: number) {
   ctx.response.type = "application/json";
 }
 
-/** 
-  * Validate incoming POST requests.
-  * Will return an object with request data.
-  * @param {Context} ctx Oak context 
-  */
+/**
+ * Validate incoming POST requests.
+ * Will return an object with request data.
+ * @param {Context} ctx Oak context
+ */
 export async function authData(ctx: Context) {
   const rawAuth = await ctx.request.headers.get("Authorization");
   const auth = rawAuth.split(" ")[1];
@@ -135,13 +135,13 @@ export async function authData(ctx: Context) {
   }
 
   const userInfo = await getUMetaInfo(decodedAuth.name);
-    
+
   if (!userInfo[1].includes(decodedAuth.iat)) {
     return throwAPIError(ctx, "Invalid issue date.", 400);
   }
-    
+
   return {
-      "decoded": decodedAuth,
-      "request": requestJSON,
-  }
+    "decoded": decodedAuth,
+    "request": requestJSON,
+  };
 }

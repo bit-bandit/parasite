@@ -1,6 +1,7 @@
 import { Application } from "https://deno.land/x/oak/mod.ts";
 import { settings } from "../settings.ts";
 import { auth } from "./auth.ts";
+import { comments } from "./comments.ts"
 import { media } from "./static.ts";
 import { torrents } from "./torrents.ts";
 import { users } from "./users.ts";
@@ -9,6 +10,8 @@ let app = new Application();
 
 app.use(auth.routes());
 app.use(auth.allowedMethods());
+app.use(comments.routes());
+app.use(comments.allowedMethods());
 app.use(media.routes());
 app.use(media.allowedMethods());
 app.use(torrents.routes());
