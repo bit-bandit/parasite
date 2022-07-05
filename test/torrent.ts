@@ -119,6 +119,22 @@ Deno.test("Like Torrent", async () => {
   assertNotEquals(res.err, true);
 });
 
+Deno.test("Flag Torrent", async () => {
+  const r = await fetch(torrentURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${userJWT}`,
+    },
+    body: JSON.stringify({
+      "type": "Flag",
+    }),
+  });
+
+  const res = await r.json();
+  assertNotEquals(res.err, true);
+});
+
 Deno.test("Try to like Torrent twice", async () => {
   const r = await fetch(torrentURL, {
     method: "POST",
