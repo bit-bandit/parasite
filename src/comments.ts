@@ -1,7 +1,16 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
-import { deleteComment, getCommentJSON } from "./db.ts";
+import { addToDB, deleteComment, getCommentJSON, getUMetaInfo, getUActivity, basicObjectUpdate } from "./db.ts";
 import { isValid } from "./auth.ts";
 import { authData, genUUID, throwAPIError } from "./utils.ts";
+import { settings } from "../settings.ts";
+import {
+  genObj,
+  genOrderedCollection,
+  genReply,
+  genVote,
+  wrapperCreate,
+  wrapperUpdate,
+} from "./activity.ts";
 
 export let comments = new Router();
 
@@ -30,27 +39,27 @@ comments.get("/c/:id", async function (ctx) {
 });
 
 comments.get("/c/:id/r", async function (ctx) {
-  const res = await getCommentReplies(ctx.params.id, "replies");
+  const res = await getCommentJSON(ctx.params.id, "replies");
   await boilerplateCommentGet(ctx, res);
 });
 
 comments.get("/c/:id/activity", async function (ctx) {
-  const res = await getCommentReplies(ctx.params.id, "activity");
+  const res = await getCommentJSON(ctx.params.id, "activity");
   await boilerplateCommentGet(ctx, res);
 });
 
 comments.get("/c/:id/likes", async function (ctx) {
-  const res = await getCommentReplies(ctx.params.id, "likes");
+  const res = await getCommentJSON(ctx.params.id, "likes");
   await boilerplateCommentGet(ctx, res);
 });
 
 comments.get("/c/:id/dislikes", async function (ctx) {
-  const res = await getCommentReplies(ctx.params.id, "dislikes");
+  const res = await getCommentJSON(ctx.params.id, "dislikes");
   await boilerplateCommentGet(ctx, res);
 });
 
 comments.get("/c/:id/flags", async function (ctx) {
-  const res = await getCommentReplies(ctx.params.id, "flags");
+  const res = await getCommentJSON(ctx.params.id, "flags");
   await boilerplateCommentGet(ctx, res);
 });
 
@@ -101,7 +110,7 @@ comments.post("/c/:id", async function (ctx) {
         "dislikes": genOrderedCollection(`${url}/dislikes`),
         "replies": genOrderedCollection(`${url}/r`),
         "flags": genOrderedCollection(`${url}/flags`),
-      }, ctx.params.id);
+      }, ctx.params.id, true);
 
       const userOutbox = await getUActivity(data.decoded.name, "outbox");
 

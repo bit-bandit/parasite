@@ -245,7 +245,7 @@ export async function basicObjectUpdate(
 
 // Function to add to the DB. Because all the tables - Besides users -
 // are virtually identical, we can get away with this.
-export async function addToDB(category: string, params: any = {}, id?: string) {
+export async function addToDB(category: string, params: any = {}, id?: string, isReply?: boolean) {
   await client.connect();
 
   // For comments, we're just updating a column to a table. This should
@@ -273,22 +273,41 @@ export async function addToDB(category: string, params: any = {}, id?: string) {
   // TODO: Also add to users outbox/followers inbox.
   // Will have to figure out how to do that, though...
 
-  if (category === "comments") {
-    let reps = await getTorrentJSON(id, "replies");
+  let reps: any;
+    
+  if (category === "comments" && !isReply) {
+    reps = await getTorrentJSON(id, "replies");
 
-    await client.connect();
 
-    reps = reps[0];
-    reps.orderedItems.push(params.json.id);
-    reps.totalItems = reps.orderedItems.length;
+  await client.connect();
+    
+  reps = reps[0];
+  reps.orderedItems.push(params.json.id);
+  reps.totalItems = reps.orderedItems.length;
 
     await client.queryArray("UPDATE torrents SET replies = $1 WHERE id = $2", [
       JSON.stringify(reps),
       id,
     ]);
-  }
 
-  await client.end();
+  } else if (category === "comments" && isReply) {
+  reps = await getCommentJSON(id, "replies");
+
+
+  await client.connect();
+    
+  reps = reps[0];
+  reps.orderedItems.push(params.json.id);
+  reps.totalItems = reps.orderedItems.length;
+
+    await client.queryArray("UPDATE comments SET replies = $1 WHERE id = $2", [
+      JSON.stringify(reps),
+      id,
+    ]);
+
+  }
+    
+await client.end();
 }
 
 export async function deleteTorrent(id: string) {
