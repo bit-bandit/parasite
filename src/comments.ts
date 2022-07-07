@@ -1,5 +1,12 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
-import { addToDB, deleteComment, getCommentJSON, getUMetaInfo, getUActivity, basicObjectUpdate } from "./db.ts";
+import {
+  addToDB,
+  basicObjectUpdate,
+  deleteComment,
+  getCommentJSON,
+  getUActivity,
+  getUMetaInfo,
+} from "./db.ts";
 import { isValid } from "./auth.ts";
 import { authData, genUUID, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
@@ -101,16 +108,21 @@ comments.post("/c/:id", async function (ctx) {
         "object": comment,
       });
 
-      await addToDB("comments", {
-        "id": id,
-        "json": comment,
-        "activity": activity,
-        "uploader": data.decoded.name,
-        "likes": genOrderedCollection(`${url}/likes`),
-        "dislikes": genOrderedCollection(`${url}/dislikes`),
-        "replies": genOrderedCollection(`${url}/r`),
-        "flags": genOrderedCollection(`${url}/flags`),
-      }, ctx.params.id, true);
+      await addToDB(
+        "comments",
+        {
+          "id": id,
+          "json": comment,
+          "activity": activity,
+          "uploader": data.decoded.name,
+          "likes": genOrderedCollection(`${url}/likes`),
+          "dislikes": genOrderedCollection(`${url}/dislikes`),
+          "replies": genOrderedCollection(`${url}/r`),
+          "flags": genOrderedCollection(`${url}/flags`),
+        },
+        ctx.params.id,
+        true,
+      );
 
       const userOutbox = await getUActivity(data.decoded.name, "outbox");
 
@@ -136,7 +148,7 @@ comments.post("/c/:id", async function (ctx) {
         return throwAPIError(ctx, "Voting not allowed", 400);
       }
       const userLikes = await getUActivity(data.decoded.name, "likes");
-      const CommentLikes = (await getCommentJSON(ctx.params.id, "dislikes"))[0];
+      const commentLikes = (await getCommentJSON(ctx.params.id, "dislikes"))[0];
 
       if (userLikes.orderedItems.includes(cData[0].id)) {
         throwAPIError(ctx, "Already voted on item", 400);

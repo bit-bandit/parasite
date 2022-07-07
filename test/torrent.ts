@@ -103,7 +103,7 @@ Deno.test("Comment on Torrent", async () => {
   assertEquals(res.err === true, false);
 });
 
-Deno.test("Reply to torrent comment", async () => {
+Deno.test("Reply to Torrent Comment", async () => {
   let r = await fetch(torrentURL);
   let res = await r.json();
   r = await fetch(res.replies);
@@ -130,7 +130,7 @@ Deno.test("Reply to torrent comment", async () => {
   assertNotEquals(res.totalItems, 0);  
 });
 
-Deno.test("Like comment", async () => {
+Deno.test("Like Comment", async () => {
   let r = await fetch(torrentURL);
   let res = await r.json();
   r = await fetch(res.replies);

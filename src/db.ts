@@ -245,7 +245,12 @@ export async function basicObjectUpdate(
 
 // Function to add to the DB. Because all the tables - Besides users -
 // are virtually identical, we can get away with this.
-export async function addToDB(category: string, params: any = {}, id?: string, isReply?: boolean) {
+export async function addToDB(
+  category: string,
+  params: any = {},
+  id?: string,
+  isReply?: boolean,
+) {
   await client.connect();
 
   // For comments, we're just updating a column to a table. This should
@@ -274,40 +279,36 @@ export async function addToDB(category: string, params: any = {}, id?: string, i
   // Will have to figure out how to do that, though...
 
   let reps: any;
-    
+
   if (category === "comments" && !isReply) {
     reps = await getTorrentJSON(id, "replies");
 
+    await client.connect();
 
-  await client.connect();
-    
-  reps = reps[0];
-  reps.orderedItems.push(params.json.id);
-  reps.totalItems = reps.orderedItems.length;
+    reps = reps[0];
+    reps.orderedItems.push(params.json.id);
+    reps.totalItems = reps.orderedItems.length;
 
     await client.queryArray("UPDATE torrents SET replies = $1 WHERE id = $2", [
       JSON.stringify(reps),
       id,
     ]);
-
   } else if (category === "comments" && isReply) {
-  reps = await getCommentJSON(id, "replies");
+    reps = await getCommentJSON(id, "replies");
 
+    await client.connect();
 
-  await client.connect();
-    
-  reps = reps[0];
-  reps.orderedItems.push(params.json.id);
-  reps.totalItems = reps.orderedItems.length;
+    reps = reps[0];
+    reps.orderedItems.push(params.json.id);
+    reps.totalItems = reps.orderedItems.length;
 
     await client.queryArray("UPDATE comments SET replies = $1 WHERE id = $2", [
       JSON.stringify(reps),
       id,
     ]);
-
   }
-    
-await client.end();
+
+  await client.end();
 }
 
 export async function deleteTorrent(id: string) {
@@ -348,7 +349,36 @@ export async function deleteComment(id: string) {
   // TODO:
   // - Figure out how to delete replies.
   await client.queryArray(
-    "DELETE FROM torrents WHERE id = $1;",
+    "DELETE FROM comments WHERE id = $1;",
+    [id],
+  );
+  await client.end();
+  // Modify outbox
+  let outbox = await getUActivity(user, "outbox");
+
+  for (let i = 0; i < outbox.orderedItems.length; i++) {
+    if (outbox.orderedItems[i].object.id === json.id) {
+      outbox.orderedItems.splice(i, 1);
+    }
+  }
+
+  outbox.totalItems = outbox.orderedItems.length;
+
+  await basicObjectUpdate("users", {
+    "outbox": outbox,
+  }, user);
+}
+
+export async function deleteList(id: string) {
+  const lData = await getListJSON(id, "json, uploader");
+  const user = lData[1];
+  const json = lData[0];
+
+  await client.connect();
+  // TODO:
+  // - Figure out how to delete replies.
+  await client.queryArray(
+    "DELETE FROM lists WHERE id = $1;",
     [id],
   );
   await client.end();

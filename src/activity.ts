@@ -263,12 +263,27 @@ export function wrapperUpdate(params: any = {}): Promise<object> {
 
 // With some exceptions - Namely for inboxes/outboxes - We only store items via. their
 // URLS.
-export function genOrderedCollection(id: string, items?: any[]) {
+export function genOrderedCollection(
+  id: string,
+  items?: any[],
+  params: any = {},
+) {
   let l = 0;
 
   // This is a hack I had to do because the compiler wouldn't stop yelling at me.
-  if (items) {
-    l = items.length;
+  if (params) {
+    return {
+      "@context": "https://www.w3.org/ns/activitystreams",
+      "id": id,
+      "type": "OrderedCollection",
+      "name": params.name,
+      "attributedTo": params.actor,
+      "published": params.published,
+      "summary": params.summary,
+      "totalItems": items.length ?? l,
+      "orderedItems": items ?? [],
+      "tag": params.tags,
+    };
   }
 
   return {
