@@ -130,6 +130,32 @@ Deno.test("Reply to torrent comment", async () => {
   assertNotEquals(res.totalItems, 0);  
 });
 
+Deno.test("Like comment", async () => {
+  let r = await fetch(torrentURL);
+  let res = await r.json();
+  r = await fetch(res.replies);
+  res = await r.json();
+  r = await fetch(res.orderedItems[0]);
+  res = await r.json();
+
+  const req = await fetch(res.id, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${userJWT}`,
+    },
+    body: JSON.stringify({
+      "type": "Like"
+    }),
+  });
+
+  let reqJson = await req.json();
+
+  r = await fetch(res.replies)
+  res = await r.json(); 
+  assertNotEquals(res.totalItems, 0);  
+});
+
 Deno.test("Like Torrent", async () => {
   const r = await fetch(torrentURL, {
     method: "POST",
