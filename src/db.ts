@@ -241,11 +241,13 @@ export async function basicObjectUpdate(
 
 // Function to add to the DB. Because all the tables - Besides users -
 // are virtually identical, we can get away with this.
+// This is so fucking ugly.
 export async function addToDB(
   category: string,
   params = {},
   id?: string,
   isReply?: boolean,
+  isList?: boolean,  
 ) {
   await client.connect();
 
@@ -277,10 +279,13 @@ export async function addToDB(
   let reps;
 
   if (category === "comments" && !isReply) {
-    reps = await getTorrentJSON(id, "replies");
-
+    if (isList) { 
+      reps = await getListJSON(id, "replies");
+    } else {
+      reps = await getTorrentJSON(id, "replies");
+    }
+      
     await client.connect();
-
     reps = reps[0];
     reps.orderedItems.push(params.json.id);
     reps.totalItems = reps.orderedItems.length;
@@ -379,7 +384,7 @@ export async function deleteList(id: string) {
   );
   await client.end();
   // Modify outbox
-  const outbox = await getUActivity(user, "outbox");
+  let outbox = await getUActivity(user, "outbox");
 
   for (let i = 0; i < outbox.orderedItems.length; i++) {
     if (outbox.orderedItems[i].object.id === json.id) {

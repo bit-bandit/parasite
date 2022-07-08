@@ -15,6 +15,16 @@ docker run --rm -p 5433:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_USER=admi
 
 If your distribution is anal about licensing, replace `docker` with `podman`.
 
+You MUST have a running Parasite server to do these tests. See the `readme` in
+the root directory to see how to do that. Once you have one up and accepting
+connections, it's as easy as:
+
+```
+deno test --allow-net user.ts torrent.ts
+```
+
+Add and remove tests to your liking.
+
 ## Writing tests
 
 - Limit yourself to `fetch` when doing HTTP requests.

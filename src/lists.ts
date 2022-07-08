@@ -45,7 +45,7 @@ lists.get("/l/:id", async function (ctx) {
 
 lists.get("/l/:id/r", async function (ctx) {
   const res = await getListJSON(ctx.params.id, "replies");
-  await boilerplateTorrentGet(ctx, res);
+  await boilerplateListGet(ctx, res);
 });
 
 lists.get("/l/:id/activity", async function (ctx) {
@@ -104,6 +104,7 @@ lists.post("/l/", async function (ctx) {
     "actor": info.id,
     "name": requestJSON.name,
     "summary": parsed,
+    "replies": `${url}/r`,   
     "tags": tag,
   });
   const activity = wrapperCreate({
@@ -177,7 +178,7 @@ lists.post("/l/:id", async function (ctx) {
       userLikes.totalItems = userLikes.orderedItems.length;
 
       listLikes.orderedItems.push(userActivity.id);
-      listLikes.totalItems = torrentLikes.orderedItems.length;
+      listLikes.totalItems = listLikes.orderedItems.length;
 
       await basicObjectUpdate("users", {
         "likes": userLikes,
@@ -205,7 +206,7 @@ lists.post("/l/:id", async function (ctx) {
         return throwAPIError(ctx, "Voting not allowed", 400);
       }
       const userDislikes = await getUActivity(data.decoded.name, "dislikes");
-      const listDislikes = (await getListSON(ctx.params.id, "dislikes"))[0];
+      const listDislikes = (await getListJSON(ctx.params.id, "dislikes"))[0];
 
       if (userDislikes.orderedItems.includes(json.id)) {
         throwAPIError(ctx, "Already voted on item", 400);
@@ -215,14 +216,14 @@ lists.post("/l/:id", async function (ctx) {
       userDislikes.totalItems = userDislikes.orderedItems.length;
 
       listDislikes.orderedItems.push(userActivity.id);
-      listDislikes.totalItems = torrentDislikes.orderedItems.length;
+      listDislikes.totalItems = listDislikes.orderedItems.length;
 
       await basicObjectUpdate("users", {
         "dislikes": userDislikes,
       }, data.decoded.name);
 
       await basicObjectUpdate("lists", {
-        "dislikes": torrentDislikes,
+        "dislikes": listDislikes,
       }, ctx.params.id);
 
       ctx.response.body = {
@@ -263,7 +264,7 @@ lists.post("/l/:id", async function (ctx) {
         "dislikes": genOrderedCollection(`${url}/dislikes`),
         "replies": genOrderedCollection(`${url}/r`),
         "flags": genOrderedCollection(`${url}/flags`),
-      }, ctx.params.id);
+      }, ctx.params.id, null, true);
 
       const userOutbox = await getUActivity(data.decoded.name, "outbox");
 
@@ -302,7 +303,7 @@ lists.post("/l/:id", async function (ctx) {
       }
 
       // Everything here may seem extremely boilerplatey, but it's to prevent
-      // people from adding bad values to a torrent.
+      // people from adding bad values to a list.
       if (requestJSON.title) {
         json.name = requestJSON.title;
       }
@@ -345,7 +346,7 @@ lists.post("/l/:id", async function (ctx) {
       // Ensure that the user is either the original poster, or has total deletion privs.
       // Also made sure that the user has the proper role to delete.
       if (!userRole.deleteOwnLists || uploader !== data.decoded.name) {
-        throwAPIError(ctx, "You aren't allowed to delete this torrent", 400);
+        throwAPIError(ctx, "You aren't allowed to delete this list", 400);
       } else if (
         userRole.deleteOthersLists
       ) {

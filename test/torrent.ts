@@ -5,7 +5,6 @@ import {
 
 // Global variables we're going to call later on.
 let torrentURL = "";
-let firstTorrentURL = "";
 
 // You're on your own when it comes to the tokens.
 // Hopefully you already registered the `bob` account with the users test.
@@ -22,6 +21,7 @@ const tokenRequest = await fetch("http://0.0.0.0:8080/login", {
   },
   body: JSON.stringify(loginData),
 });
+
 const userJWT = await tokenRequest.text();
 
 // ... Now onto the actual Torrent shit.
@@ -35,7 +35,7 @@ const torrentData = {
 };
 
 Deno.test("Upload Torrent", async () => {
-  const r = await fetch("http://0.0.0.0:8080/t/", {
+  const r = await fetch("http://localhost:8080/t/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -54,8 +54,6 @@ Deno.test("Upload Torrent", async () => {
 Deno.test("Get torrent", async () => {
   const r = await fetch(torrentURL);
   const j = await r.json();
-
-  firstTorrentURL = j.id;
 
   assertEquals(r.status, 200);
 });
@@ -108,7 +106,7 @@ Deno.test("Reply to Torrent Comment", async () => {
   r = await fetch(res.orderedItems[0]);
   res = await r.json();
 
-  let req = await fetch(res.id, {
+  const req = await fetch(res.id, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -134,7 +132,7 @@ Deno.test("Like Comment", async () => {
   r = await fetch(res.orderedItems[0]);
   res = await r.json();
 
-  let req = await fetch(res.id, {
+  const req = await fetch(res.id, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
