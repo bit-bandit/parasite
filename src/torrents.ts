@@ -287,7 +287,7 @@ torrents.post("/t/:id", async function (ctx) {
         "dislikes": genOrderedCollection(`${url}/dislikes`),
         "replies": genOrderedCollection(`${url}/r`),
         "flags": genOrderedCollection(`${url}/flags`),
-      }, ctx.params.id);
+      });
 
       const userOutbox = await getUActivity(data.decoded.name, "outbox");
 
@@ -297,6 +297,13 @@ torrents.post("/t/:id", async function (ctx) {
       await basicObjectUpdate("users", {
         "outbox": userOutbox,
       }, data.decoded.name);
+
+     let torrentReplies = await getTorrentJSON(ctx.params.id, "replies");
+	torrentReplies[0].orderedItems.push(url);	
+	torrentReplies[0].totalItems = torrentReplies[0].orderedItems.length;
+      await basicObjectUpdate("torrents", {
+        "replies": torrentReplies[0],
+      }, ctx.params.id);
 
       ctx.response.body = {
         "msg": `Comment ${id} added to Torrent ${ctx.params.id}`,

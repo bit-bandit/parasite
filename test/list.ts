@@ -255,7 +255,6 @@ Deno.test("Try to dislike list twice", async () => {
   assertEquals(res.err, true);
 });
 
-
 Deno.test("Delete List", async () => {
   const r = await fetch(listURL, {
     method: "POST",
@@ -269,7 +268,6 @@ Deno.test("Delete List", async () => {
   });
 
   const res = await r.json();
-  console.log(res)
   assertNotEquals(res.err, true);
 });
 

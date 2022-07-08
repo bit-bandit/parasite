@@ -245,9 +245,6 @@ export async function basicObjectUpdate(
 export async function addToDB(
   category: string,
   params = {},
-  id?: string,
-  isReply?: boolean,
-  isList?: boolean,  
 ) {
   await client.connect();
 
@@ -275,41 +272,6 @@ export async function addToDB(
   await client.end();
   // TODO: Also add to users outbox/followers inbox.
   // Will have to figure out how to do that, though...
-
-  let reps;
-
-  if (category === "comments" && !isReply) {
-    if (isList) { 
-      reps = await getListJSON(id, "replies");
-    } else {
-      reps = await getTorrentJSON(id, "replies");
-    }
-      
-    await client.connect();
-    reps = reps[0];
-    reps.orderedItems.push(params.json.id);
-    reps.totalItems = reps.orderedItems.length;
-
-    await client.queryArray("UPDATE torrents SET replies = $1 WHERE id = $2", [
-      JSON.stringify(reps),
-      id,
-    ]);
-  } else if (category === "comments" && isReply) {
-    reps = await getCommentJSON(id, "replies");
-
-    await client.connect();
-
-    reps = reps[0];
-    reps.orderedItems.push(params.json.id);
-    reps.totalItems = reps.orderedItems.length;
-
-    await client.queryArray("UPDATE comments SET replies = $1 WHERE id = $2", [
-      JSON.stringify(reps),
-      id,
-    ]);
-  }
-
-  await client.end();
 }
 
 export async function deleteTorrent(id: string) {
