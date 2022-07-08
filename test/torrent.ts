@@ -5,16 +5,15 @@ import {
 
 // Global variables we're going to call later on.
 let torrentURL = "";
+let firstTorrentURL = "";
 
 // You're on your own when it comes to the tokens.
 // Hopefully you already registered the `bob` account with the users test.
-// If ypu haven't: Do that. Right now.
+// If you haven't: Do that. Right now.
 const loginData = {
   "username": "bob",
   "password": "subgenius",
 };
-
-let firstTorrentURL = "";
 
 const tokenRequest = await fetch("http://0.0.0.0:8080/login", {
   method: "POST",
@@ -54,8 +53,6 @@ Deno.test("Upload Torrent", async () => {
 
 Deno.test("Get torrent", async () => {
   const r = await fetch(torrentURL);
-  const stat = r.status;
-
   const j = await r.json();
 
   firstTorrentURL = j.id;
@@ -111,7 +108,7 @@ Deno.test("Reply to Torrent Comment", async () => {
   r = await fetch(res.orderedItems[0]);
   res = await r.json();
 
-  const req = await fetch(res.id, {
+  let req = await fetch(res.id, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -122,12 +119,11 @@ Deno.test("Reply to Torrent Comment", async () => {
       "content": "Something even stranger!",
     }),
   });
+  await req.json();
 
-  let reqJson = await req.json();
-
-  r = await fetch(res.replies)
-  res = await r.json(); 
-  assertNotEquals(res.totalItems, 0);  
+  r = await fetch(res.replies);
+  res = await r.json();
+  assertNotEquals(res.totalItems, 0);
 });
 
 Deno.test("Like Comment", async () => {
@@ -138,22 +134,21 @@ Deno.test("Like Comment", async () => {
   r = await fetch(res.orderedItems[0]);
   res = await r.json();
 
-  const req = await fetch(res.id, {
+  let req = await fetch(res.id, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
     },
     body: JSON.stringify({
-      "type": "Like"
+      "type": "Like",
     }),
   });
+  await req.json();
 
-  let reqJson = await req.json();
-
-  r = await fetch(res.replies)
-  res = await r.json(); 
-  assertNotEquals(res.totalItems, 0);  
+  r = await fetch(res.replies);
+  res = await r.json();
+  assertNotEquals(res.totalItems, 0);
 });
 
 Deno.test("Like Torrent", async () => {
@@ -254,8 +249,7 @@ Deno.test("Delete Torrent", async () => {
 
 Deno.test("Get deleted torrent", async () => {
   const r = await fetch(torrentURL);
-  const stat = r.status;
-  // This is purely to stop an error from happening.
-  const j = await r.json();
+  await r.json();
+
   assertEquals(r.status, 404);
 });

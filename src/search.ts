@@ -1,10 +1,10 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
 import { search } from "./db.ts";
 
-export let search = new Router();
+export const search = new Router();
 
 search.get("/s", async function (ctx) {
-  let res = await search(ctx.request.url);
+  const res = await search(ctx.request.url);
   if (!res.err) {
     // TODO: Implement search queries.
     // See issue #5.

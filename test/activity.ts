@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
 
-import { actorObj, genObj } from "../src/activity.ts";
+import { genObj } from "../src/activity.ts";
 
 const expout = { // Expected output
   "@context": "https://www.w3.org/ns/activitystreams",

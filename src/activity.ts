@@ -127,7 +127,7 @@ export interface ActivityObject {
 
 export interface ActivityCollection extends Omit<ActivityObject, "type"> {
   type?: "Collection" | "OrderedCollection";
-  totalItems?: Number;
+  totalItems?: number;
   current?: string;
   first?: string;
   last?: string;
@@ -137,7 +137,7 @@ export interface ActivityCollection extends Omit<ActivityObject, "type"> {
 // Have to seperate this one from the others because of collision reasons...interface ActivityCollectionPage extends Omit<ActivityObject, "type"> {
 export interface ActivityCollectionPage extends Omit<ActivityObject, "type"> {
   type?: "CollectionPage";
-  totalItems?: Number;
+  totalItems?: number;
   current?: string;
   first?: string;
   last?: string;
@@ -157,7 +157,7 @@ export interface ActivityImage extends ActivityLink {
 }
 
 // Generate the actual object with the magnet link (AKA; The 'Pub' part of ActivityPub)
-export function genObj(params: any = {}): ActivityObject {
+export function genObj(params = {}): ActivityObject {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": params.id,
@@ -176,7 +176,7 @@ export function genObj(params: any = {}): ActivityObject {
   };
 }
 // Create reply object.
-export function genReply(params: any = {}): ActivityObject {
+export function genReply(params = {}): ActivityObject {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": params.id,
@@ -193,7 +193,7 @@ export function genReply(params: any = {}): ActivityObject {
 // Voting. Type should be either `like` or `dislike`, since we're going by the standard.
 // We're doing some other shit with this too (See `doc/voting.md`), but we can get away
 // with it.
-export function genVote(params: any = {}) {
+export function genVote(params = {}) {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": params.type,
@@ -207,7 +207,7 @@ export function genVote(params: any = {}) {
 
 // See 4.1: Actor objects for more understandings on how to do this shit.
 
-export function actorObj(params: any = {}) {
+export function actorObj(params = {}) {
   // Notes: Image is used for user banners, icons are used for, well, icons.
   // This is because Mastodon, and Pleroma do it, so we're gonna have to
   // follow the bandwagon, there.
@@ -229,7 +229,7 @@ export function actorObj(params: any = {}) {
 
 // We should note this isn't *required* by the standard, but due to paranoia,
 // we're adding it anyways.
-export function wrapperCreate(params: any = {}): Promise<object> {
+export function wrapperCreate(params = {}): ActivityWrapper {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": "Create",
@@ -243,7 +243,7 @@ export function wrapperCreate(params: any = {}): Promise<object> {
   };
 }
 
-export function wrapperUpdate(params: any = {}): Promise<object> {
+export function wrapperUpdate(params = {}): ActivityWrapper {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": "Update",
@@ -262,35 +262,22 @@ export function wrapperUpdate(params: any = {}): Promise<object> {
 // I'm gonna die.
 
 // With some exceptions - Namely for inboxes/outboxes - We only store items via. their
-// URLS.
+// URLs.
 export function genOrderedCollection(
   id: string,
-  items?: any[],
-  params: any = {},
+  items?: (ActivityObject | ActivityLink)[] = [],
+  params = {},
 ) {
-  let l = 0;
-
-  // This is a hack I had to do because the compiler wouldn't stop yelling at me.
-  if (params) {
-    return {
-      "@context": "https://www.w3.org/ns/activitystreams",
-      "id": id,
-      "type": "OrderedCollection",
-      "name": params.name,
-      "attributedTo": params.actor,
-      "published": params.published,
-      "summary": params.summary,
-      "totalItems": items.length ?? l,
-      "orderedItems": items ?? [],
-      "tag": params.tags,
-    };
-  }
-
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": id,
     "type": "OrderedCollection",
-    "totalItems": l,
-    "orderedItems": [] ?? items,
+    "name": params.name,
+    "attributedTo": params.actor,
+    "published": params.published,
+    "summary": params.summary,
+    "totalItems": items.length,
+    "orderedItems": items,
+    "tag": params.tags,
   };
 }

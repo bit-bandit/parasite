@@ -5,7 +5,7 @@ import { settings } from "../settings.ts";
 interface CryptoKeyStorage {
   creationDate: number;
   signedTestData: ArrayBuffer;
-  jwk: Record<string, any>;
+  jwk: Record<string, unknown>;
 }
 
 const jwt = settings.jwt;
@@ -15,17 +15,17 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 let keyStorage: CryptoKeyStorage = {} as CryptoKeyStorage;
-let key: any;
+let key: CryptoKey;
 
 // The only function most people will use.
-export async function getKey(): Promise<CryptoKey> {
+export function getKey(): Promise<CryptoKey> {
   return key;
 }
 
 // Exports key data.
 export async function exportKey() {
   keyStorage.jwk = await crypto.subtle.exportKey("jwk", key);
-  let str = JSON.stringify(keyStorage);
+  const str = JSON.stringify(keyStorage);
 
   // Store in memory for as short a time as possible
   keyStorage.jwk = {};

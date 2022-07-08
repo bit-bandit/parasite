@@ -3,8 +3,7 @@
 import { Client } from "https://deno.land/x/postgres@v0.16.1/mod.ts";
 import { settings } from "../settings.ts";
 
-let db_settings = settings.database.settings;
-
+const db_settings = settings.database.settings;
 const client = new Client(db_settings);
 
 const userTableInit = `
@@ -95,7 +94,7 @@ async function basicDataQuery(
   ...args: string[]
 ) {
   await client.connect();
-  let res = await client.queryArray(query, args);
+  const res = await client.queryArray(query, args);
   await client.end();
 
   if (res.rows.length !== 0) {
@@ -107,7 +106,7 @@ async function basicDataQuery(
 // Main JSON elements for objects
 
 // This should probably be renamed.
-export async function getTorrentJSON(id: string, t: string): Promise<any> {
+export function getTorrentJSON(id: string, t: string): Promise<> {
   return basicDataQuery(
     "No torrent with id ${id} found",
     `SELECT ${t ?? "json"} FROM torrents WHERE id = $1`,
@@ -115,7 +114,7 @@ export async function getTorrentJSON(id: string, t: string): Promise<any> {
   );
 }
 
-export async function getListJSON(id: string, t: string): Promise<any> {
+export function getListJSON(id: string, t: string): Promise<> {
   return basicDataQuery(
     "No list with id ${id} found",
     `SELECT ${t ?? "json"} FROM lists WHERE id = $1`,
@@ -123,7 +122,7 @@ export async function getListJSON(id: string, t: string): Promise<any> {
   );
 }
 
-export async function getCommentJSON(id: string, t?: string): Promise<any> {
+export function getCommentJSON(id: string, t?: string): Promise<> {
   return basicDataQuery(
     "No comment with id ${id} found",
     `SELECT ${t ?? "json"} FROM comments WHERE id = $1`,
@@ -132,7 +131,7 @@ export async function getCommentJSON(id: string, t?: string): Promise<any> {
 }
 
 // User related information
-export async function getUMetaInfo(id: string): Promise<any> {
+export function getUMetaInfo(id: string): Promise<> {
   return basicDataQuery(
     "User ${id} not found",
     "SELECT id, logins, roles FROM users WHERE id = $1",
@@ -140,7 +139,7 @@ export async function getUMetaInfo(id: string): Promise<any> {
   );
 }
 
-export async function getULoginInfo(id: string): Promise<any> {
+export function getULoginInfo(id: string): Promise<> {
   return basicDataQuery(
     `User ${id} not found`,
     "SELECT pass, registered FROM users WHERE id = $1",
@@ -149,12 +148,9 @@ export async function getULoginInfo(id: string): Promise<any> {
 }
 
 export async function ULogin(id: string, time: number) {
-  // Basically just push to the 'logins' array.
-  let newValue: number[];
-
   // screw it, not dealing with type shenanigans on this
   const raw = await getUMetaInfo(id);
-  let logins: number[] = raw[1];
+  const logins: number[] = raw[1];
 
   if (logins.length >= 10) {
     logins.shift();
@@ -183,7 +179,7 @@ export async function UCheck(id: string) {
   }
 }
 
-export async function UInit(params: any = {}) {
+export async function UInit(params = {}) {
   await client.connect();
   await client.queryArray(
     `INSERT INTO users (id, info, pass, roles, inbox, outbox, likes, 
@@ -208,7 +204,7 @@ export async function UInit(params: any = {}) {
 }
 
 // ActivityPub  for users.
-export async function getUActivity(id: string, objType: string): Promise<any> {
+export async function getUActivity(id: string, objType: string): Promise<> {
   // NOTE: NEVER EVER EVER EVER LET USERS SUBMIT THE `OBJTYPE` IN THIS CURRENT STATE.
   // IT *WILL* LEAD TO AN SQL INJECTION BEING PERFORMED.
   // See examples in `src/users.ts` to an example on how to use it.
@@ -228,13 +224,13 @@ export async function getUActivity(id: string, objType: string): Promise<any> {
 //   - Hopefully, it will become much better than...this.
 export async function basicObjectUpdate(
   category: string,
-  params: any = {},
+  params = {},
   id: string,
 ) {
   await client.connect();
 
   for (const prop in params) {
-    const res = await client.queryArray(
+    await client.queryArray(
       `UPDATE  ${category} SET ${prop} = $1 WHERE id = $2`,
       [JSON.stringify(params[prop]), id],
     );
@@ -247,7 +243,7 @@ export async function basicObjectUpdate(
 // are virtually identical, we can get away with this.
 export async function addToDB(
   category: string,
-  params: any = {},
+  params = {},
   id?: string,
   isReply?: boolean,
 ) {
@@ -278,7 +274,7 @@ export async function addToDB(
   // TODO: Also add to users outbox/followers inbox.
   // Will have to figure out how to do that, though...
 
-  let reps: any;
+  let reps;
 
   if (category === "comments" && !isReply) {
     reps = await getTorrentJSON(id, "replies");
@@ -325,7 +321,7 @@ export async function deleteTorrent(id: string) {
   );
   await client.end();
   // Modify outbox
-  let outbox = await getUActivity(user, "outbox");
+  const outbox = await getUActivity(user, "outbox");
 
   for (let i = 0; i < outbox.orderedItems.length; i++) {
     if (outbox.orderedItems[i].object.id === json.id) {
@@ -354,7 +350,7 @@ export async function deleteComment(id: string) {
   );
   await client.end();
   // Modify outbox
-  let outbox = await getUActivity(user, "outbox");
+  const outbox = await getUActivity(user, "outbox");
 
   for (let i = 0; i < outbox.orderedItems.length; i++) {
     if (outbox.orderedItems[i].object.id === json.id) {
@@ -383,7 +379,7 @@ export async function deleteList(id: string) {
   );
   await client.end();
   // Modify outbox
-  let outbox = await getUActivity(user, "outbox");
+  const outbox = await getUActivity(user, "outbox");
 
   for (let i = 0; i < outbox.orderedItems.length; i++) {
     if (outbox.orderedItems[i].object.id === json.id) {
@@ -404,7 +400,7 @@ export async function search(query: string) {
   // u = Specify user
   // s = Sort 'highest/lowest'
 
-  let u = new URLPattern(query);
+  const u = new URLPattern(query);
 
   if (u.search.length === 0) {
     return {
@@ -413,12 +409,12 @@ export async function search(query: string) {
     };
   }
 
-  let search = new URLSearchParams(u.search);
+  const search = new URLSearchParams(u.search);
 
   // I'm not going to even fucking bother with this, for the time being.
   if (search.has("q")) {
     await client.connect();
-    let res = await client.queryArray(
+    await client.queryArray(
       "SELECT json WHERE json->>'title' ILIKE $1 OR json->>'content' ILIKE $1 OR id = $1;",
       [search.get("q")],
     );

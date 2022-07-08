@@ -7,19 +7,16 @@ import {
   getUActivity,
   getUMetaInfo,
 } from "./db.ts";
-import { isValid } from "./auth.ts";
 import { authData, genUUID, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import {
-  genObj,
   genOrderedCollection,
   genReply,
-  genVote,
   wrapperCreate,
   wrapperUpdate,
 } from "./activity.ts";
 
-export let comments = new Router();
+export const comments = new Router();
 
 function boilerplateDeleteStatement(ctx: Context) {
   ctx.response.body = { "msg": `Torrent ${ctx.params.id} deleted` };
@@ -27,7 +24,7 @@ function boilerplateDeleteStatement(ctx: Context) {
   ctx.response.type = "application/json";
 }
 
-function boilerplateCommentGet(ctx: Context, res: any) {
+function boilerplateCommentGet(ctx: Context, res = {}) {
   if (!res.err) {
     ctx.response.body = res[0]; // Have to do this because `basicDataQuery` is designed to return arrays.
     ctx.response.status = 200;
@@ -72,7 +69,7 @@ comments.get("/c/:id/flags", async function (ctx) {
 
 comments.post("/c/:id", async function (ctx) {
   const data = await authData(ctx);
-  let requestJSON = data.request;
+  const requestJSON = data.request;
 
   const userInfo = await getUMetaInfo(data.decoded.name);
 
@@ -80,11 +77,11 @@ comments.post("/c/:id", async function (ctx) {
 
   const userRole = userInfo[2];
 
-  let cData: any[] = [];
+  let json, uploader;
   const d = new Date();
 
   try {
-    cData = await getCommentJSON(ctx.params.id, "json, uploader");
+    [json, uploader] = await getCommentJSON(ctx.params.id, "json, uploader");
   } catch {
     return throwAPIError(ctx, "Torrent doesn't exist.", 400);
   }
@@ -99,7 +96,7 @@ comments.post("/c/:id", async function (ctx) {
         "actor": userActivity.id,
         "published": d.toISOString(),
         "content": marked.parse(requestJSON.content),
-        "inReplyTo": cData[0].id,
+        "inReplyTo": json.id,
       });
 
       const activity = wrapperCreate({
@@ -150,11 +147,11 @@ comments.post("/c/:id", async function (ctx) {
       const userLikes = await getUActivity(data.decoded.name, "likes");
       const commentLikes = (await getCommentJSON(ctx.params.id, "dislikes"))[0];
 
-      if (userLikes.orderedItems.includes(cData[0].id)) {
+      if (userLikes.orderedItems.includes(json.id)) {
         throwAPIError(ctx, "Already voted on item", 400);
         break;
       }
-      userLikes.orderedItems.push(cData[0].id);
+      userLikes.orderedItems.push(json.id);
       userLikes.totalItems = userLikes.orderedItems.length;
 
       commentLikes.orderedItems.push(userActivity.id);
@@ -185,14 +182,14 @@ comments.post("/c/:id", async function (ctx) {
         return throwAPIError(ctx, "Voting not allowed", 400);
       }
       const userDislikes = await getUActivity(data.decoded.name, "dislikes");
-      const CommentDislikes =
+      const commentDislikes =
         (await getCommentJSON(ctx.params.id, "dislikes"))[0];
 
-      if (userDislikes.orderedItems.includes(cData[0].id)) {
+      if (userDislikes.orderedItems.includes(json.id)) {
         throwAPIError(ctx, "Already voted on item", 400);
         break;
       }
-      userDislikes.orderedItems.push(cData[0].id);
+      userDislikes.orderedItems.push(json.id);
       userDislikes.totalItems = userDislikes.orderedItems.length;
 
       commentDislikes.orderedItems.push(userActivity.id);
@@ -218,28 +215,28 @@ comments.post("/c/:id", async function (ctx) {
     }
     case "Update": {
       if (
-        cData[1] !== data.decoded.name ||
+        uploader !== data.decoded.name ||
         !userRole.editUploads
       ) {
         return throwAPIError(ctx, "Not allowed to edit comment", 400);
       }
 
       if (requestJSON.content) {
-        cData[0].content = marked.parse(requestJSON.content);
+        json.content = marked.parse(requestJSON.content);
       }
 
-      cData[0].updated = d.toISOString();
+      json.updated = d.toISOString();
 
       const activity = wrapperUpdate({
-        "id": `${tData[0].id}/activity`,
-        "actor": cData[0].attributedTo,
-        "object": cData[0],
-        "published": cData[0].published,
+        "id": `${json.id}/activity`,
+        "actor": json.attributedTo,
+        "object": json,
+        "published": json.published,
       });
 
       await basicObjectUpdate("comments", {
         "activity": activity,
-        "json": cData[0],
+        "json": json,
       }, `${ctx.params.id}`);
 
       ctx.response.body = { "msg": `Torrent ${ctx.params.id} updated` };
@@ -250,7 +247,7 @@ comments.post("/c/:id", async function (ctx) {
     }
     case "Remove":
     case "Delete": {
-      if (!userRole.deleteOwnComments || cData[1] !== data.decoded.name) {
+      if (!userRole.deleteOwnComments || uploader !== data.decoded.name) {
         throwAPIError(ctx, "You aren't allowed to delete this comment", 400);
       } else if (
         userRole.deleteOthersComments

@@ -68,7 +68,7 @@ export function genListID(title: string) {
 
   // Just 6 hex bytes are needed
   // I don't think people are gonna upload >16777216 versions of the same list to the same namespace anyway
-  let uuidPart = genUUID(6);
+  const uuidPart = genUUID(6);
 
   return encodeURIComponent(titlePart + "-" + uuidPart);
 }
@@ -79,8 +79,7 @@ export function genListID(title: string) {
  * @return {string} A comment ID suitable for URIs.
  */
 export function genCommentID(inReplyTo: string) {
-  let uuidPart = genUUID(4);
-  return inReplyTo + "-" + uuidPart;
+  return inReplyTo + "-" + genUUID(4);
 }
 
 /**

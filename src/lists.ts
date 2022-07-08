@@ -1,10 +1,7 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
-import { getKey } from "./crypto.ts";
 import {
-  genObj,
   genOrderedCollection,
   genReply,
-  genVote,
   wrapperCreate,
   wrapperUpdate,
 } from "./activity.ts";
@@ -16,14 +13,11 @@ import {
   getUActivity,
   getUMetaInfo,
 } from "./db.ts";
-import { isValid } from "./auth.ts";
 import { authData, genUUID, throwAPIError } from "./utils.ts";
-import { verify } from "https://deno.land/x/djwt/mod.ts";
 import { settings } from "../settings.ts";
-import * as ammonia from "https://deno.land/x/ammonia@0.3.1/mod.ts";
 import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
 
-export let lists = new Router();
+export const lists = new Router();
 
 function boilerplateDeleteStatement(ctx: Context) {
   ctx.response.body = { "msg": `List ${ctx.params.id} deleted` };
@@ -31,7 +25,7 @@ function boilerplateDeleteStatement(ctx: Context) {
   ctx.response.type = "application/json";
 }
 
-function boilerplateListGet(ctx: Context, res: any) {
+function boilerplateListGet(ctx: Context, res) {
   if (!res.err) {
     ctx.response.body = res[0]; // Have to do this because `basicDataQuery` is designed to return arrays.
     ctx.response.status = 200;
@@ -86,8 +80,6 @@ lists.post("/l/", async function (ctx) {
   if (!Array.isArray(requestJSON.orderedItems)) {
     return throwAPIError(ctx, "Invalid items.", 400);
   }
-
-  const userInfo = await getUMetaInfo(data.decoded.name);
 
   // TODO: Check if magnet link is actually valid.
   // TODO: Make more spec compliant.
@@ -148,7 +140,7 @@ lists.post("/l/", async function (ctx) {
 
 lists.post("/l/:id", async function (ctx) {
   const data = await authData(ctx);
-  let requestJSON = data.request;
+  const requestJSON = data.request;
 
   const userInfo = await getUMetaInfo(data.decoded.name);
 
@@ -156,11 +148,11 @@ lists.post("/l/:id", async function (ctx) {
 
   const userRole = userInfo[2];
 
-  let lData: any[] = [];
+  let json, uploader;
   const d = new Date();
 
   try {
-    tData = await getListJSON(ctx.params.id, "json, uploader");
+    [json, uploader] = await getListJSON(ctx.params.id, "json, uploader");
   } catch {
     return throwAPIError(ctx, "List doesn't exist.", 400);
   }
@@ -177,11 +169,11 @@ lists.post("/l/:id", async function (ctx) {
       const userLikes = await getUActivity(data.decoded.name, "likes");
       const listLikes = (await getListJSON(ctx.params.id, "likes"))[0];
 
-      if (userLikes.orderedItems.includes(lData[0].id)) {
+      if (userLikes.orderedItems.includes(json.id)) {
         throwAPIError(ctx, "Already voted on item", 400);
         break;
       }
-      userLikes.orderedItems.push(tData[0].id);
+      userLikes.orderedItems.push(json.id);
       userLikes.totalItems = userLikes.orderedItems.length;
 
       listLikes.orderedItems.push(userActivity.id);
@@ -215,11 +207,11 @@ lists.post("/l/:id", async function (ctx) {
       const userDislikes = await getUActivity(data.decoded.name, "dislikes");
       const listDislikes = (await getListSON(ctx.params.id, "dislikes"))[0];
 
-      if (userDislikes.orderedItems.includes(tData[0].id)) {
+      if (userDislikes.orderedItems.includes(json.id)) {
         throwAPIError(ctx, "Already voted on item", 400);
         break;
       }
-      userDislikes.orderedItems.push(tData[0].id);
+      userDislikes.orderedItems.push(json.id);
       userDislikes.totalItems = userDislikes.orderedItems.length;
 
       listDislikes.orderedItems.push(userActivity.id);
@@ -253,7 +245,7 @@ lists.post("/l/:id", async function (ctx) {
         "actor": userActivity.id,
         "published": d.toISOString(),
         "content": marked.parse(requestJSON.content),
-        "inReplyTo": lData[0].id,
+        "inReplyTo": json.id,
       });
 
       const activity = wrapperCreate({
@@ -294,7 +286,7 @@ lists.post("/l/:id", async function (ctx) {
     // Updating
     case "Update": {
       if (
-        lData[1] !== data.decoded.name ||
+        uploader !== data.decoded.name ||
         !userRole.editUploads
       ) {
         return throwAPIError(ctx, "Not allowed to edit list", 400);
@@ -306,33 +298,33 @@ lists.post("/l/:id", async function (ctx) {
         requestJSON.tags.split(",").map((x) =>
           tag.push(`${settings.siteURL}/tags/${x}`)
         );
-        tData[0].tag = tag;
+        json.tag = tag;
       }
 
       // Everything here may seem extremely boilerplatey, but it's to prevent
       // people from adding bad values to a torrent.
       if (requestJSON.title) {
-        lData[0].name = requestJSON.title;
+        json.name = requestJSON.title;
       }
       if (requestJSON.summary) {
-        lData[0].summary = marked.parse(requestJSON.summary);
+        json.summary = marked.parse(requestJSON.summary);
       }
       if (requestJSON.href) {
-        lData[0].orderedItems = requestJSON.orderedItems;
+        json.orderedItems = requestJSON.orderedItems;
       }
 
-      tData[0].updated = d.toISOString();
+      json.updated = d.toISOString();
 
       const activity = wrapperUpdate({
-        "id": `${tData[0].id}/activity`,
-        "actor": lData[0].attributedTo,
-        "object": lData[0],
-        "published": lData[0].published,
+        "id": `${json.id}/activity`,
+        "actor": json.attributedTo,
+        "object": json,
+        "published": json.published,
       });
 
       await basicObjectUpdate("lists", {
         "activity": activity,
-        "json": lData[0],
+        "json": json,
       }, `${ctx.params.id}`);
 
       ctx.response.body = { "msg": `List ${ctx.params.id} updated` };
@@ -352,7 +344,7 @@ lists.post("/l/:id", async function (ctx) {
 
       // Ensure that the user is either the original poster, or has total deletion privs.
       // Also made sure that the user has the proper role to delete.
-      if (!userRole.deleteOwnLists || tData[1] !== data.decoded.name) {
+      if (!userRole.deleteOwnLists || uploader !== data.decoded.name) {
         throwAPIError(ctx, "You aren't allowed to delete this torrent", 400);
       } else if (
         userRole.deleteOthersLists
