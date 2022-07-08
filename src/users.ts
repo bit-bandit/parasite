@@ -127,6 +127,12 @@ users.get("/.well-known/webfinger", async function (ctx) {
     ],
   };
 
+  // If there are no matching link relation types defined for
+  // the resource, the "links" array in the JRD will be either absent or
+  // empty. (RCF 7033 §4.3)
+  if (rel)
+    jrd.links = [];
+
   ctx.response.status = 200;
   ctx.response.type = "application/jrd+json";
   ctx.response.body = JSON.stringify(jrd);
