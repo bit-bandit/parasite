@@ -44,7 +44,7 @@ lists.get("/l/:id", async function (ctx) {
 });
 
 lists.get("/l/:id/r", async function (ctx) {
-    const res = await getListJSON(ctx.params.id, "replies");
+  const res = await getListJSON(ctx.params.id, "replies");
   await boilerplateListGet(ctx, res);
 });
 
@@ -104,7 +104,7 @@ lists.post("/l/", async function (ctx) {
     "actor": info.id,
     "name": requestJSON.name,
     "summary": parsed,
-    "replies": `${url}/r`,   
+    "replies": `${url}/r`,
     "tags": tag,
   });
   const activity = wrapperCreate({
@@ -277,13 +277,13 @@ lists.post("/l/:id", async function (ctx) {
 
       // Add to list replies collection
       let listReplies = await getListJSON(ctx.params.id, "replies");
-	listReplies[0].orderedItems.push(url);	
-	listReplies[0].totalItems = listReplies[0].orderedItems.length;
-	
+      listReplies[0].orderedItems.push(url);
+      listReplies[0].totalItems = listReplies[0].orderedItems.length;
+
       await basicObjectUpdate("lists", {
         "replies": listReplies[0],
       }, ctx.params.id);
-	
+
       ctx.response.body = {
         "msg": `Comment ${id} added to List ${ctx.params.id}`,
       };

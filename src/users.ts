@@ -62,10 +62,39 @@ users.post("/u/:id/outbox", async function (ctx) {
 
 users.post("/u/:id/inbox", async function (ctx) {
   // Follows of an account get message upon recieving this.
+  // Check inbox content, make sure no dupes exist
+  // Maybe add max inbox length?
+  // If everything is good, add link to inbox.
+
+  const raw = await ctx.request.body();
+  if (raw.type !== "json") {
+    return throwAPIError(
+      ctx,
+      "Invalid content type (Must be application/json)",
+      400,
+    );
+  }
+  const req = await raw.value();
+
+  const inbox = await getUActivity(ctx.params.id, "inbox");
+  const follows = await getUActivity(ctx.params.id, "following");
+
+  // Message should be the URL to an Activity object
+
+  if (!follows.orderedItems.includes(req.actor)) {
+    return throwAPIError(ctx, "Recipient is not following user", 400);
+  }
+
+  inbox.orderedItems.push(req.id);
+
+  // Update inbox
 });
 
 users.post("/u/:id/", async function (ctx) {
   // Update user information.
+  // Seperate into json & form-content:
+  //   - JSON: name, bio, etc.
+  //   - form-content: avatar/pfp.
 });
 
 // WebFinger support. See https://www.rfc-editor.org/rfc/rfc7033.

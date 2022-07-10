@@ -277,7 +277,7 @@ export function genOrderedCollection(
     "published": params.published,
     "summary": params.summary,
     "totalItems": items.length,
-    "replies": params.replies,  
+    "replies": params.replies,
     "orderedItems": items,
     "tag": params.tags,
   };

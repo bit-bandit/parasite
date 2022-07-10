@@ -1,5 +1,6 @@
 import { Context } from "https://deno.land/x/oak/mod.ts";
 import { verify } from "https://deno.land/x/djwt/mod.ts";
+import { settings } from "../settings.ts";
 import { getKey } from "./crypto.ts";
 import { getUMetaInfo } from "./db.ts";
 /**
@@ -143,4 +144,40 @@ export async function authData(ctx: Context) {
     "decoded": decodedAuth,
     "request": requestJSON,
   };
+}
+
+export async function sendToFollowers(id: string, obj: any) {
+  const follows = await getUActivity(ctx.params.id, "followers");
+
+  for (follower in follows[0].orderedItems) {
+    const u = new URL(follower);
+      
+    if (u.origin === settings.siteURL)) {
+      // Deliver locally, and nothing more.
+      const username = u.pathname.split('/').pop();
+      // Add to inbox of local user.
+    } else {
+      // REMINDER:
+      // Add HTTP headers, and whatnot.
+      // Read below for more details:
+      // https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/	
+      let actInfo = await fetch(follower, {
+        headers: {
+          "Accept": "application/activity+json",
+          "Content-Type": "application/activity+json",
+        },
+        method: "GET",
+      });
+      actInfo = await actInfo.json();
+
+      const r = await fetch(actInfo.inbox, {
+        headers: {
+          "Accept": "application/activity+json",
+          "Content-Type": "application/activity+json",
+        },
+        method: "POST",
+        body: JSON.stringify(obj),
+      });
+    }
+  }
 }

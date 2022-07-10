@@ -128,15 +128,15 @@ comments.post("/c/:id", async function (ctx) {
         "outbox": userOutbox,
       }, data.decoded.name);
 
-	let commentReplies = await getCommentJSON(ctx.params.id, "replies");
-	
-	commentReplies[0].orderedItems.push(url);
-	commentReplies[0].totalItems = commentReplies[0].orderedItems.length;
+      let commentReplies = await getCommentJSON(ctx.params.id, "replies");
+
+      commentReplies[0].orderedItems.push(url);
+      commentReplies[0].totalItems = commentReplies[0].orderedItems.length;
 
       await basicObjectUpdate("comments", {
         "replies": commentReplies[0],
       }, ctx.params.id);
-	
+
       ctx.response.body = {
         "msg": `Comment ${id} added to Torrent ${ctx.params.id}`,
       };

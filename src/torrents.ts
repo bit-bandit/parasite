@@ -298,9 +298,9 @@ torrents.post("/t/:id", async function (ctx) {
         "outbox": userOutbox,
       }, data.decoded.name);
 
-     let torrentReplies = await getTorrentJSON(ctx.params.id, "replies");
-	torrentReplies[0].orderedItems.push(url);	
-	torrentReplies[0].totalItems = torrentReplies[0].orderedItems.length;
+      let torrentReplies = await getTorrentJSON(ctx.params.id, "replies");
+      torrentReplies[0].orderedItems.push(url);
+      torrentReplies[0].totalItems = torrentReplies[0].orderedItems.length;
       await basicObjectUpdate("torrents", {
         "replies": torrentReplies[0],
       }, ctx.params.id);
