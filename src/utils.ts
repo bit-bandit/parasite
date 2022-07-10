@@ -2,7 +2,7 @@ import { Context } from "https://deno.land/x/oak/mod.ts";
 import { verify } from "https://deno.land/x/djwt/mod.ts";
 import { settings } from "../settings.ts";
 import { getKey } from "./crypto.ts";
-import { getUMetaInfo } from "./db.ts";
+import { getUMetaInfo, getUActivity } from "./db.ts";
 /**
  * Generates up to 32 universally-unique hex digits at a time to use as an ID.
  * @param {number} length A length, up to 32
@@ -156,6 +156,13 @@ export async function sendToFollowers(id: string, obj: any) {
       // Deliver locally, and nothing more.
       const username = u.pathname.split('/').pop();
       // Add to inbox of local user.
+      let inbox = await getUActivity(ctx.params.id, "inbox");
+      inbox.orderedItems.push(obj.id);
+      inbox.totalItems = inbox.orderedItems.length;
+      
+      await basicObjectUpdate("users", {
+        "inbox": inbox,
+      }, username);
     } else {
       // REMINDER:
       // Add HTTP headers, and whatnot.

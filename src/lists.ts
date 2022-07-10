@@ -13,7 +13,7 @@ import {
   getUActivity,
   getUMetaInfo,
 } from "./db.ts";
-import { authData, genUUID, throwAPIError } from "./utils.ts";
+import { authData, genUUID, throwAPIError, sendToFollowers } from "./utils.ts";
 import { settings } from "../settings.ts";
 import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
 
@@ -132,6 +132,8 @@ lists.post("/l/", async function (ctx) {
     "outbox": userOutbox,
   }, data.decoded.name);
 
+  sendToFollowers(data.decoded.name, activity)
+    
   ctx.response.body = { "msg": `List uploaded at ${url}` };
   ctx.response.status = 201;
   ctx.response.type =
@@ -284,6 +286,8 @@ lists.post("/l/:id", async function (ctx) {
         "replies": listReplies[0],
       }, ctx.params.id);
 
+      sendToFollowers(data.decoded.name, activity)
+	
       ctx.response.body = {
         "msg": `Comment ${id} added to List ${ctx.params.id}`,
       };

@@ -1,7 +1,7 @@
 // User pages
 
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
-import { getUActivity } from "./db.ts";
+import { getUActivity, basicObjectUpdate } from "./db.ts";
 
 export const users = new Router();
 
@@ -86,7 +86,12 @@ users.post("/u/:id/inbox", async function (ctx) {
   }
 
   inbox.orderedItems.push(req.id);
-
+  inbox.totalItems = inbox.orderedItems.length;
+    
+   await basicObjectUpdate("users", {
+       "inbox": inbox,
+   }, ctx.params.id);
+    
   // Update inbox
 });
 
