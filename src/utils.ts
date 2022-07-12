@@ -1,7 +1,7 @@
 import { Context } from "https://deno.land/x/oak/mod.ts";
 import { verify } from "https://deno.land/x/djwt/mod.ts";
 import { settings } from "../settings.ts";
-import { getKey } from "./crypto.ts";
+import { getJWTKey } from "./crypto.ts";
 import { getUActivity, getUMetaInfo } from "./db.ts";
 /**
  * Generates up to 32 universally-unique hex digits at a time to use as an ID.
@@ -128,7 +128,7 @@ export async function authData(ctx: Context) {
   }
 
   const requestJSON = await raw.value;
-  const decodedAuth = await verify(auth, await getKey());
+  const decodedAuth = await verify(auth, await getJWTKey());
 
   if (!decodedAuth.name) {
     return throwAPIError(ctx, "No name provided", 400);

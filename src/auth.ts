@@ -10,7 +10,7 @@ import { hashPass, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import { actorObj, genOrderedCollection } from "./activity.ts";
 import { roles } from "../roles.ts";
-import { getKey, genKeyPair } from "./crypto.ts";
+import { getJWTKey, genKeyPair } from "./crypto.ts";
 // This file is comprised of two sections:
 // 1. Functions used to validate users within the system.
 // 2. Routing for letting users register, or log into accounts.
@@ -20,7 +20,7 @@ import { getKey, genKeyPair } from "./crypto.ts";
 // Exportable
 export async function isValid(user: string, token: string) {
   try {
-    const payload = await verify(token, await getKey());
+    const payload = await verify(token, await getJWTKey());
     return payload.user == user;
   } catch {
     return false;
@@ -69,7 +69,7 @@ auth.post("/login", async function (ctx) {
     name: requestJSON.username,
     iat: t,
     exp: getNumericDate(settings.jwt.tokenLifetime),
-  }, await getKey());
+  }, await getJWTKey());
 
   ctx.response.body = jwt;
   ctx.response.status = 200;
