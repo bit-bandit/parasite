@@ -10,11 +10,7 @@ import { hashPass, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import { actorObj, genOrderedCollection } from "./activity.ts";
 import { roles } from "../roles.ts";
-<<<<<<< HEAD
-import { genKeyPair, getKey } from "./crypto.ts";
-=======
 import { getJWTKey, genKeyPair } from "./crypto.ts";
->>>>>>> db14b60cbc1d17e8f48202fa62bc9e7f65389ade
 // This file is comprised of two sections:
 // 1. Functions used to validate users within the system.
 // 2. Routing for letting users register, or log into accounts.
