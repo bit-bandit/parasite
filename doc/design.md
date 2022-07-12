@@ -21,6 +21,23 @@ Reading the following documents is suggested, before diving into this:
 - `larvae`, `mothra`, and `phillip` are example users we'll constantly refer to
   throughout.
 
+## An overview of the routes
+
+Route roots are usually a single letter long, and usually an abbriviation.
+
+| Name | Abbreviation of                  | Usage                           |
+| ---- | -------------------------------- | ------------------------------- |
+| /a/  | **A**dministration               | Managing an instance.           |
+| /c/  | **C**omments                     | Comments to lists, or torrents. |
+| /i/  | **I**dentifiers                  | Tags attached with a torrent.   |
+| /l/  | **L**ists                        | Generic collections of objects. |
+| /m/  | **M**edia                        | Static media files.             |
+| /s/  | **S**earch                       | Query database                  |
+| /x/  | A**ct**ions (A strech, we know.) | Usually likes, dislikes, etc.   |
+| /t/  | **T**orrents                     | Torrents posted by users.       |
+
+All of the above will be described in depth later.
+
 ## Torrents
 
 Torrents - Indicated by `/t/` - Are the core of Parasite. A sample JSON payload

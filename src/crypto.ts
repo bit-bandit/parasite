@@ -101,3 +101,97 @@ export async function importKey() {
 }
 
 await importKey();
+
+function wrapKey(t, s) {
+  return `-----BEGIN ${t} KEY-----\n${s}\n-----END ${t} KEY-----`;
+}
+
+function encode(buf) {
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(buf)));
+}
+
+export async function genKeyPair(): string[] {
+  const keyPair = await crypto.subtle.generateKey(
+    {
+      name: "RSA-PSS",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: "SHA-256",
+    },
+    true,
+    ["sign", "verify"],
+  );
+  const rawPublicKey = await window.crypto.subtle.exportKey(
+    "spki",
+    keyPair.publicKey,
+  );
+
+  const rawPrivateKey = await window.crypto.subtle.exportKey(
+    "pkcs8",
+    keyPair.privateKey,
+  );
+
+  const publicKey = wrapKey("PUBLIC", encode(rawPublicKey));
+  const privateKey = wrapKey("PRIVATE", encode(rawPrivateKey));
+
+  return [publicKey, privateKey];
+}
+
+// from https://developers.google.com/web/updates/2012/06/How-to-convert-ArrayBuffer-to-and-from-String
+function str2ab(str) {
+  const buf = new ArrayBuffer(str.length);
+  const bufView = new Uint8Array(buf);
+  for (let i = 0, strLen = str.length; i < strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
+}
+
+export async function extractKey(keyType: string, key: string) {
+  if (keyType === "public") {
+    const keyHeader = "-----BEGIN PUBLIC KEY-----";
+    const keyFooter = "-----END PUBLIC KEY-----";
+    const keyContents = key.substring(
+      keyHeader.length,
+      key.length - keyFooter.length,
+    );
+
+    const binaryString = atob(keyContents);
+    const keyToImport = str2ab(binaryString);
+
+    return crypto.subtle.importKey(
+      "spki",
+      keyToImport,
+      {
+        name: "RSA-OAEP",
+        hash: "SHA-256",
+      },
+      true,
+      ["verify"],
+    );
+      
+  } else if (keyType === "private") {
+    const keyHeader = "-----BEGIN PRIVATE KEY-----";
+    const keyFooter = "-----END PRIVATE KEY-----";
+    const keyContents = key.substring(
+      keyHeader.length,
+      key.length - keyFooter.length,
+    );
+
+    const binaryString = atob(keyContents);
+    const keyToImport = str2ab(binaryString);
+
+    return window.crypto.subtle.importKey(
+      "pkcs8",
+      keyToImport,
+      {
+        name: "RSA-PSS",
+        hash: "SHA-256",
+      },
+      true,
+      ["sign"],
+    );
+  } else {
+    throw new Error("Invalid key type");
+  }
+}

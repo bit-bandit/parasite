@@ -7,7 +7,7 @@ import {
   getUActivity,
   getUMetaInfo,
 } from "./db.ts";
-import { authData, genUUID, throwAPIError, sendToFollowers } from "./utils.ts";
+import { authData, genUUID, sendToFollowers, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import {
   genOrderedCollection,
@@ -137,8 +137,8 @@ comments.post("/c/:id", async function (ctx) {
         "replies": commentReplies[0],
       }, ctx.params.id);
 
-      sendToFollowers(data.decoded.name, activity)
-	
+      // sendToFollowers(data.decoded.name, activity);
+
       ctx.response.body = {
         "msg": `Comment ${id} added to Torrent ${ctx.params.id}`,
       };

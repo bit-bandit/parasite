@@ -24,7 +24,7 @@ import {
   getUActivity,
   getUMetaInfo,
 } from "./db.ts";
-import { authData, genUUID, throwAPIError, sendToFollowers } from "./utils.ts";
+import { authData, genUUID, sendToFollowers, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import * as ammonia from "https://deno.land/x/ammonia@0.3.1/mod.ts";
 import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
@@ -154,8 +154,8 @@ torrents.post("/t/", async function (ctx) {
     "outbox": userOutbox,
   }, data.decoded.name);
 
-  sendToFollowers(data.decoded.name, activity)
-    
+  // sendToFollowers(data.decoded.name, activity);
+
   ctx.response.body = { "msg": `Torrent uploaded at ${url}` };
   ctx.response.status = 201;
   ctx.response.type =
@@ -307,8 +307,8 @@ torrents.post("/t/:id", async function (ctx) {
         "replies": torrentReplies[0],
       }, ctx.params.id);
 
-      sendToFollowers(data.decoded.name, activity)	
-	
+      // sendToFollowers(data.decoded.name, activity);
+
       ctx.response.body = {
         "msg": `Comment ${id} added to Torrent ${ctx.params.id}`,
       };

@@ -212,7 +212,10 @@ export function actorObj(params = {}) {
   // This is because Mastodon, and Pleroma do it, so we're gonna have to
   // follow the bandwagon, there.
   return {
-    "@context": "https://www.w3.org/ns/activitystreams",
+    "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    "https://w3id.org/security/v1"
+    ],
     "type": "Person",
     "id": params.actor,
     "following": params.following,
@@ -222,6 +225,11 @@ export function actorObj(params = {}) {
     "outbox": params.outbox,
     "name": params.name,
     "summary": params.summary,
+    "publicKey": {
+       "id": params.keyURL,
+	"owner": params.actor,
+	"publicKeyPem": params.key
+    },
     "icon": params.icon,
     "image": params.banner,
   };

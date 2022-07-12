@@ -1,7 +1,7 @@
 // User pages
 
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
-import { getUActivity, basicObjectUpdate } from "./db.ts";
+import { basicObjectUpdate, getUActivity } from "./db.ts";
 
 export const users = new Router();
 
@@ -55,6 +55,19 @@ users.get("/u/:id/followers", async function (ctx) {
   await basicGETActivity(ctx, ctx.params.id, "followers");
 });
 
+users.get("/u/:id/main-key", async function (ctx) {
+  const res = await getUActivity(ctx.params.id, "keys");
+  ctx.response.body = res[0];
+  if (!("err" in res)) {
+    ctx.response.status = 200;
+    ctx.response.type = 'text/plain';
+  }
+
+  ctx.response.status = 404;
+  ctx.response.type = "application/json";
+
+})
+
 // POST activities.
 users.post("/u/:id/outbox", async function (ctx) {
   // Send message, basically. Side effect of `POST /t/`
@@ -66,7 +79,10 @@ users.post("/u/:id/inbox", async function (ctx) {
   // Maybe add max inbox length?
   // If everything is good, add link to inbox.
 
+  // TODO: Check for HTTP Signature.
+
   const raw = await ctx.request.body();
+
   if (raw.type !== "json") {
     return throwAPIError(
       ctx,
@@ -74,8 +90,12 @@ users.post("/u/:id/inbox", async function (ctx) {
       400,
     );
   }
+
   const req = await raw.value();
 
+  // If type === Follow:
+  // Create/Respond with object of the "Accept" type.
+  // Accept it.
   const inbox = await getUActivity(ctx.params.id, "inbox");
   const follows = await getUActivity(ctx.params.id, "following");
 
@@ -85,21 +105,24 @@ users.post("/u/:id/inbox", async function (ctx) {
     return throwAPIError(ctx, "Recipient is not following user", 400);
   }
 
+  // Put HTTP signature middleware shit here.
+
   inbox.orderedItems.push(req.id);
   inbox.totalItems = inbox.orderedItems.length;
-    
-   await basicObjectUpdate("users", {
-       "inbox": inbox,
-   }, ctx.params.id);
-    
-  // Update inbox
+
+  await basicObjectUpdate("users", {
+    "inbox": inbox,
+  }, ctx.params.id);
+
+  // Look into what response should be if it's
+  // successful.
 });
 
 users.post("/u/:id/", async function (ctx) {
+  // If type === 'Update'
   // Update user information.
   // Seperate into json & form-content:
-  //   - JSON: name, bio, etc.
-  //   - form-content: avatar/pfp.
+  //   - JSON: name, bio, etc., icon is UInt8Array.
 });
 
 // WebFinger support. See https://www.rfc-editor.org/rfc/rfc7033.
