@@ -10,7 +10,7 @@ import { hashPass, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import { actorObj, genOrderedCollection } from "./activity.ts";
 import { roles } from "../roles.ts";
-import { getKey, genKeyPair } from "./crypto.ts";
+import { genKeyPair, getKey } from "./crypto.ts";
 // This file is comprised of two sections:
 // 1. Functions used to validate users within the system.
 // 2. Routing for letting users register, or log into accounts.
@@ -137,7 +137,7 @@ auth.post("/register", async function (ctx) {
 
   const userAPI = `${settings.siteURL}/u/${requestJSON.username}`;
   const keys = await genKeyPair();
-  
+
   const actorInfo = actorObj({
     "actor": userAPI,
     "following": `${userAPI}/following`,

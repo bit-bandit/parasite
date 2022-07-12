@@ -147,8 +147,9 @@ export async function authData(ctx: Context) {
 }
 
 export async function sendToFollowers(id: string, obj: any) {
-  const follows = await getUActivity(id, "followers");
-
+  // const follows = await getUActivity(id, "followers");
+  // console.log(follows);
+  /*
   for (follower in follows[0].orderedItems) {
     const u = new URL(follower);
 
@@ -187,4 +188,5 @@ export async function sendToFollowers(id: string, obj: any) {
       });
     }
   }
+*/
 }

@@ -213,8 +213,8 @@ export function actorObj(params = {}) {
   // follow the bandwagon, there.
   return {
     "@context": [
-    "https://www.w3.org/ns/activitystreams",
-    "https://w3id.org/security/v1"
+      "https://www.w3.org/ns/activitystreams",
+      "https://w3id.org/security/v1",
     ],
     "type": "Person",
     "id": params.actor,
@@ -226,9 +226,9 @@ export function actorObj(params = {}) {
     "name": params.name,
     "summary": params.summary,
     "publicKey": {
-       "id": params.keyURL,
-	"owner": params.actor,
-	"publicKeyPem": params.key
+      "id": params.keyURL,
+      "owner": params.actor,
+      "publicKeyPem": params.key,
     },
     "icon": params.icon,
     "image": params.banner,

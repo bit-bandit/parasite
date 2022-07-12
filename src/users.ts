@@ -60,13 +60,12 @@ users.get("/u/:id/main-key", async function (ctx) {
   ctx.response.body = res[0];
   if (!("err" in res)) {
     ctx.response.status = 200;
-    ctx.response.type = 'text/plain';
+    ctx.response.type = "text/plain";
   }
 
   ctx.response.status = 404;
   ctx.response.type = "application/json";
-
-})
+});
 
 // POST activities.
 users.post("/u/:id/outbox", async function (ctx) {

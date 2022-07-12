@@ -199,7 +199,7 @@ export async function UInit(params = {}) {
       JSON.stringify(params.followers),
       JSON.stringify(params.logins),
       params.registered,
-      JSON.stringify(params.keys)	   
+      JSON.stringify(params.keys),
     ],
   );
   await client.end();
@@ -210,15 +210,16 @@ export async function getUActivity(id: string, objType: string): Promise<> {
   // NOTE: NEVER EVER EVER EVER LET USERS SUBMIT THE `OBJTYPE` IN THIS CURRENT STATE.
   // IT *WILL* LEAD TO AN SQL INJECTION BEING PERFORMED.
   // See examples in `src/users.ts` to an example on how to use it.
-  await client.connect();
-  const res = await client.queryArray(
-    // I'm feeling dangerous and stupid today.
-    `SELECT ${objType} FROM users WHERE id = $1`,
-    [id],
+  let res = await basicDataQuery(
+    `User ${id} not found`,
+    `SELECT ${objType ?? "json"} FROM users WHERE id = $1`,
+    id,
   );
-  await client.end();
-
-  return res.rows[0][0];
+  if (!res.err) {
+      return res[0]
+  } else {
+      return res;
+  }
 }
 
 // Before you do say anything:
