@@ -195,3 +195,9 @@ export async function extractKey(keyType: string, key: string) {
     throw new Error("Invalid key type");
   }
 }
+
+export function genHTTPSigBoilerplate(params: string = {}) {
+    return `(request-target): ${params.target}
+host: ${params.host}
+date: ${params.date}`
+}
