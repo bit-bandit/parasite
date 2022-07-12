@@ -163,13 +163,12 @@ export async function extractKey(keyType: string, key: string) {
       "spki",
       keyToImport,
       {
-        name: "RSA-OAEP",
+        name: "RSA-PSS",
         hash: "SHA-256",
       },
       true,
       ["verify"],
     );
-      
   } else if (keyType === "private") {
     const keyHeader = "-----BEGIN PRIVATE KEY-----";
     const keyFooter = "-----END PRIVATE KEY-----";
@@ -197,7 +196,40 @@ export async function extractKey(keyType: string, key: string) {
 }
 
 export function genHTTPSigBoilerplate(params: string = {}) {
-    return `(request-target): ${params.target}
+  let hosstr = `(request-target): ${params.target}
 host: ${params.host}
-date: ${params.date}`
+date: ${params.date}`;
+}
+
+export async function simpleSign(msg: string, privateKey: any) {
+  const enc = new TextEncoder();
+  const encoded = enc.encode(msg);
+
+  return await crypto.subtle.sign(
+    {
+      name: "RSA-PSS",
+      saltLength: 32,
+    },
+    privateKey,
+    encoded,
+  );
+}
+
+export async function simpleVerify(
+  publicKey: any,
+  msg: string,
+  signature: any,
+) {
+  const enc = new TextEncoder();
+  const encoded = enc.encode(msg);
+
+  return await window.crypto.subtle.verify(
+    {
+      name: "RSA-PSS",
+      saltLength: 32,
+    },
+    publicKey,
+    signature,
+    encoded,
+  );
 }
