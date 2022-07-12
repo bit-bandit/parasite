@@ -18,12 +18,12 @@ let keyStorage: CryptoKeyStorage = {} as CryptoKeyStorage;
 let key: CryptoKey;
 
 // The only function most people will use.
-export function getKey(): Promise<CryptoKey> {
+export function getJWTKey(): Promise<CryptoKey> {
   return key;
 }
 
 // Exports key data.
-export async function exportKey() {
+export async function exportJWTKey() {
   keyStorage.jwk = await crypto.subtle.exportKey("jwk", key);
   const str = JSON.stringify(keyStorage);
 
@@ -34,7 +34,7 @@ export async function exportKey() {
 }
 
 // Regenerates a key (just in case you want a new one)
-export async function regenerateKey() {
+export async function regenerateJWTKey() {
   key = await crypto.subtle.generateKey(
     jwt.keyAlgObj,
     true,
@@ -52,11 +52,11 @@ export async function regenerateKey() {
   );
 
   // Autosave.
-  await exportKey();
+  await exportJWTKey();
 }
 
 // Import a key from a keyfile.
-export async function importKey() {
+export async function importJWTKey() {
   let data, str;
 
   // Try reading directly -- if that fails, regenerate the key.
@@ -64,13 +64,13 @@ export async function importKey() {
     data = await Deno.readFile(jwt.keyFile);
     str = decoder.decode(data);
   } catch {
-    await regenerateKey();
+    await regenerateJWTKey();
     return;
   }
 
   // No data means we regenerate.
   if (str.length === 0) {
-    await regenerateKey();
+    await regenerateJWTKey();
     return;
   }
 
@@ -80,7 +80,7 @@ export async function importKey() {
 
   // Is it revokin' time?
   if (Date.now() - keyStorage.creationDate >= jwt.keyLifetime) {
-    await regenerateKey();
+    await regenerateJWTKey();
     return;
   }
 
@@ -97,10 +97,10 @@ export async function importKey() {
   keyStorage.jwk = {};
 
   // Autosave.
-  await exportKey();
+  await exportJWTKey();
 }
 
-await importKey();
+await importJWTKey();
 
 function wrapKey(t, s) {
   return `-----BEGIN ${t} KEY-----\n${s}\n-----END ${t} KEY-----`;
