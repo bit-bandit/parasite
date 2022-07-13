@@ -168,7 +168,7 @@ torrents.post("/t/", async function (ctx) {
   const followers = await getUActivity(data.decoded.name, "followers");
 
   let i = 0;
-    
+
   for (const follower of followers.orderedItems) {
     const u = new URL(follower);
 
@@ -229,20 +229,20 @@ torrents.post("/t/", async function (ctx) {
         body: JSON.stringify(activity),
       });
 
-	r = await r.json();
+      r = await r.json();
 
-	if (r.err) {
-	    i++;
-	}
+      if (r.err) {
+        i++;
+      }
     }
   }
 
-  let errNo = ""; 
+  let errNo = "";
 
-    if (0 < i) {
-	errNo = ` with ${i} followers failing to recieve it` // Keep the space at the start.
-    }
-    
+  if (0 < i) {
+    errNo = ` with ${i} followers failing to recieve it`; // Keep the space at the start.
+  }
+
   ctx.response.body = { "msg": `Torrent uploaded at ${url}${errNo}` };
   ctx.response.status = 201;
   ctx.response.type =

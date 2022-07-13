@@ -141,10 +141,10 @@ lists.post("/l/", async function (ctx) {
     "outbox": userOutbox,
   }, data.decoded.name);
 
-    const followers = await getUActivity(data.decoded.name, "followers");
+  const followers = await getUActivity(data.decoded.name, "followers");
 
   let i = 0;
-    
+
   for (const follower of followers.orderedItems) {
     const u = new URL(follower);
 
@@ -205,11 +205,11 @@ lists.post("/l/", async function (ctx) {
         body: JSON.stringify(activity),
       });
 
-	r = await r.json();
+      r = await r.json();
 
-	if (r.err) {
-	    i++;
-	}
+      if (r.err) {
+        i++;
+      }
     }
   }
 
@@ -319,7 +319,7 @@ lists.post("/l/:id", async function (ctx) {
     }
     // Creating a comment.
     // TODO: Totally overhaul this.
-    // Maybe go through /x/, too?	  
+    // Maybe go through /x/, too?
     case "Create": {
       const id: string = await genUUID(14);
       const url = `${settings.siteURL}/c/${id}`;
