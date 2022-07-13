@@ -147,10 +147,12 @@ export async function authData(ctx: Context) {
 }
 
 export async function sendToFollowers(id: string, obj: any) {
-  // const follows = await getUActivity(id, "followers");
-  // console.log(follows);
+  console.log(id, obj);
   /*
-  for (follower in follows[0].orderedItems) {
+  const follows = await getUActivity(id, "followers");
+  console.log(follows);
+
+  for (let follower in follows.orderedItems) {
     const u = new URL(follower);
 
     if (u.origin === settings.siteURL) {
@@ -188,5 +190,17 @@ export async function sendToFollowers(id: string, obj: any) {
       });
     }
   }
-*/
+  */
+}
+
+function parseHTTPSig(msg: string) {
+  let res: any = {};
+
+  msg.split(",").map((x) => {
+    let c = x.split("=");
+    c[1] = c[1].substring(1, c[1].length - 1);
+    res[`${c[0]}`] = c[1];
+  });
+
+  return res;
 }

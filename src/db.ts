@@ -77,6 +77,20 @@ CREATE TABLE IF NOT EXISTS tags (
 );
 `;
 
+const actionsTableInit = `
+CREATE TABLE IF NOT EXISTS actions (
+  PRIMARY KEY(id),
+  id        VARCHAR(256)  NOT NULL,
+  json      JSON         NOT NULL,
+  activity  JSON         NOT NULL,
+  uploader  VARCHAR(256)  NOT NULL,
+  likes     JSON         NOT NULL,
+  dislikes  JSON         NOT NULL,
+  replies   JSON         NOT NULL,
+  flags     JSON         NOT NULL 
+);
+`;
+
 await client.connect();
 
 await client.queryArray(`
@@ -85,6 +99,7 @@ await client.queryArray(`
   ${listsTableInit}
   ${commentsTableInit}
   ${tagsTableInit}
+  ${actionsTableInit}
 `);
 
 await client.end();
@@ -115,6 +130,14 @@ export function getTorrentJSON(id: string, t: string): Promise<> {
   );
 }
 
+export function getActionJSON(id: string, t: string): Promise<> {
+  return basicDataQuery(
+    "No action with id ${id} found",
+    `SELECT ${t ?? "json"} FROM actions WHERE id = $1`,
+    id,
+  );
+}
+
 export function getListJSON(id: string, t: string): Promise<> {
   return basicDataQuery(
     "No list with id ${id} found",
@@ -128,6 +151,14 @@ export function getCommentJSON(id: string, t?: string): Promise<> {
     "No comment with id ${id} found",
     `SELECT ${t ?? "json"} FROM comments WHERE id = $1`,
     id,
+  );
+}
+
+export function getJSONfromTags(category: string, t?: string[]): Promise<> {
+  return basicDataQuery(
+    "No objects with that tag were found",
+    `SELECT json FROM ${category} WHERE json @> $1`,
+    JSON.stringify({ "tag": t }),
   );
 }
 
@@ -216,9 +247,9 @@ export async function getUActivity(id: string, objType: string): Promise<> {
     id,
   );
   if (!res.err) {
-      return res[0]
+    return res[0];
   } else {
-      return res;
+    return res;
   }
 }
 

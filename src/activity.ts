@@ -190,6 +190,18 @@ export function genReply(params = {}): ActivityObject {
   };
 }
 
+export function genInvitationReply(params = {}) {
+  return {
+    "@context": "https://www.w3.org/ns/activitystreams",
+    "id": params.id,
+    "type": params.type ?? "Note", // In case we can't be shitted to write this down, keep note in.
+    "actor": params.actor,
+    "summary": params.summary,
+    "object": params.inReplyTo,
+    "to": ["https://www.w3.org/ns/activitystreams#Public"], // All posts are public; Sorry!
+  };
+}
+
 // Voting. Type should be either `like` or `dislike`, since we're going by the standard.
 // We're doing some other shit with this too (See `doc/voting.md`), but we can get away
 // with it.

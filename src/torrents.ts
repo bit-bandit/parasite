@@ -113,7 +113,7 @@ torrents.post("/t/", async function (ctx) {
   const tag: string[] = [];
   if (requestJSON.tags) {
     requestJSON.tags.split(",").map((x) =>
-      tag.push(`${settings.siteURL}/tags/${x}`)
+      tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
     );
   }
 
@@ -154,7 +154,49 @@ torrents.post("/t/", async function (ctx) {
     "outbox": userOutbox,
   }, data.decoded.name);
 
-  // sendToFollowers(data.decoded.name, activity);
+  // Send data to followers
+
+  const followers = await getUActivity(data.decoded.name, "followers");
+  console.log(followers);
+
+  for (let follower in followers.orderedItems) {
+    const u = new URL(follower);
+
+    if (u.origin === settings.siteURL) {
+      // Deliver locally, and nothing more.
+      const username = u.pathname.split("/").pop();
+      // Add to inbox of local user.
+      let inbox = await getUActivity(ctx.params.id, "inbox");
+      inbox.orderedItems.push(activity.id);
+      inbox.totalItems = inbox.orderedItems.length;
+
+      await basicObjectUpdate("users", {
+        "inbox": inbox,
+      }, username);
+    } else {
+      // REMINDER:
+      // Add HTTP headers, and whatnot.
+      // Read below for more details:
+      // https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/
+      const actInfo = await fetch(follower, {
+        headers: {
+          "Accept": "application/activity+json",
+          "Content-Type": "application/activity+json",
+        },
+        method: "GET",
+      });
+      actInfo = await actInfo.json();
+
+      const r = await fetch(actInfo.inbox, {
+        headers: {
+          "Accept": "application/activity+json",
+          "Content-Type": "application/activity+json",
+        },
+        method: "POST",
+        body: JSON.stringify(activity),
+      });
+    }
+  }
 
   ctx.response.body = { "msg": `Torrent uploaded at ${url}` };
   ctx.response.status = 201;
@@ -332,7 +374,7 @@ torrents.post("/t/:id", async function (ctx) {
 
       if (requestJSON.tags) {
         requestJSON.tags.split(",").map((x) =>
-          tag.push(`${settings.siteURL}/tags/${x}`)
+          tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
         );
         json.tag = tag;
       }

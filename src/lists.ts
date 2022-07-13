@@ -93,7 +93,7 @@ lists.post("/l/", async function (ctx) {
   const tag: string[] = [];
   if (requestJSON.tags) {
     requestJSON.tags.split(",").map((x) =>
-      tag.push(`${settings.siteURL}/tags/${x}`)
+      tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
     );
   }
 
@@ -310,7 +310,7 @@ lists.post("/l/:id", async function (ctx) {
 
       if (requestJSON.tags) {
         requestJSON.tags.split(",").map((x) =>
-          tag.push(`${settings.siteURL}/tags/${x}`)
+          tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
         );
         json.tag = tag;
       }

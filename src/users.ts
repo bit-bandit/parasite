@@ -1,7 +1,17 @@
 // User pages
 
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
-import { basicObjectUpdate, getUActivity } from "./db.ts";
+import { addToDB, basicObjectUpdate, getUActivity } from "./db.ts";
+import { genInvitationReply } from "./activity.ts";
+import { authData, genUUID, sendToFollowers, throwAPIError } from "./utils.ts";
+import { settings } from "../settings.ts";
+import {
+  extractKey,
+  genKeyPair,
+  simpleSign,
+  simpleVerify,
+  str2ab,
+} from "./crypto.ts";
 
 export const users = new Router();
 
@@ -79,7 +89,7 @@ users.post("/u/:id/inbox", async function (ctx) {
   // If everything is good, add link to inbox.
 
   // TODO: Check for HTTP Signature.
-
+  const reqSig = await ctx.request.headers.get("Signature");
   const raw = await ctx.request.body();
 
   if (raw.type !== "json") {
@@ -90,31 +100,100 @@ users.post("/u/:id/inbox", async function (ctx) {
     );
   }
 
+  const actor = await getUActivity(ctx.params.id, "info");
+  const follows = await getUActivity(ctx.params.id, "followers");
+  const inbox = await getUActivity(ctx.params.id, "inbox");
   const req = await raw.value();
 
-  // If type === Follow:
-  // Create/Respond with object of the "Accept" type.
-  // Accept it.
-  const inbox = await getUActivity(ctx.params.id, "inbox");
-  const follows = await getUActivity(ctx.params.id, "following");
+  const foreignActorInfo = (await fetch(raw.actor)).json();
+  const foreignKey = extractKey(
+    "public",
+    foreignActorInfo.publicKey.publicKeyPem,
+  );
 
-  // Message should be the URL to an Activity object
+  const u = new URL(foreignActorInfo.id);
+  const reqURL = new URL(ctx.request.url);
 
-  if (!follows.orderedItems.includes(req.actor)) {
-    return throwAPIError(ctx, "Recipient is not following user", 400);
+  const msg = genHTTPSigBoilerplate({
+    "target": `post ${reqURL.pathname}`,
+    "host": reqURL.hostname,
+    "date": await ctx.request.headers.get("date"),
+  });
+  const parsedSig = parseHTTPSig(reqSig);
+  const validSig = await simpleVerify(
+    foreignKey,
+    msg,
+    str2ab(atob(parsedSig.signature)),
+  );
+
+  if (!validSig) {
+    return throwAPIError(ctx, "Invalid HTTP Signature", 400);
   }
 
-  // Put HTTP signature middleware shit here.
+  if (req.type === "Follow") {
+    if (!req.actor) {
+      return throwAPIError(ctx, "'actor' parameter not present", 400);
+    }
 
-  inbox.orderedItems.push(req.id);
-  inbox.totalItems = inbox.orderedItems.length;
+    follows.orderedItems.push(req.actor);
+    follows.totalItems = follows.orderedItems.length;
 
-  await basicObjectUpdate("users", {
-    "inbox": inbox,
-  }, ctx.params.id);
+    await basicObjectUpdate("users", {
+      "followers": follows,
+    }, ctx.params.id);
 
-  // Look into what response should be if it's
-  // successful.
+    const id: string = await genUUID(19);
+    const url = `${settings.siteURL}/x/${id}`;
+
+    const acceptJSON = genInvitationReply({
+      "id": url,
+      "actor": actor.id,
+      "type": "Accept",
+      "summary": `${req.actor} following ${ctx.params.id}`,
+      "object": req,
+    });
+
+    await addToDB(
+      "actions",
+      {
+        "id": id,
+        "json": acceptJSON,
+        "activity": {},
+        "uploader": ctx.params.id,
+        "likes": {},
+        "dislikes": {},
+        "replies": {},
+        "flags": {},
+      },
+    );
+
+    ctx.response.status = acceptJSON;
+    ctx.response.status = 201;
+    ctx.response.type = "application/json";
+
+    return;
+  } else if (
+    req.type === "Create" ||
+    req.type === "Update"
+  ) {
+    // Message should be the URL to an Activity object
+
+    if (!follows.orderedItems.includes(req.actor)) {
+      return throwAPIError(ctx, "Recipient is not following user", 400);
+    }
+
+    // Put HTTP signature middleware shit here.
+
+    inbox.orderedItems.push(req.id);
+    inbox.totalItems = inbox.orderedItems.length;
+
+    await basicObjectUpdate("users", {
+      "inbox": inbox,
+    }, ctx.params.id);
+    // Look into what response should be if it's
+    // successful.
+  } else if (req.type === "Undo") {
+  }
 });
 
 users.post("/u/:id/", async function (ctx) {

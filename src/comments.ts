@@ -257,7 +257,11 @@ comments.post("/c/:id", async function (ctx) {
     case "Remove":
     case "Delete": {
       if (!userRole.deleteOwnComments || uploader !== data.decoded.name) {
-        throwAPIError(ctx, "You aren't allowed to delete this comment", 400);
+        return throwAPIError(
+          ctx,
+          "You aren't allowed to delete this comment",
+          400,
+        );
       } else if (
         userRole.deleteOthersComments
       ) {
