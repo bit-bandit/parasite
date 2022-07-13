@@ -3,10 +3,17 @@
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
 import { addToDB, basicObjectUpdate, getUActivity } from "./db.ts";
 import { genInvitationReply } from "./activity.ts";
-import { authData, genUUID, sendToFollowers, throwAPIError } from "./utils.ts";
+import {
+  authData,
+  genUUID,
+  parseHTTPSig,
+  sendToFollowers,
+  throwAPIError,
+} from "./utils.ts";
 import { settings } from "../settings.ts";
 import {
   extractKey,
+  genHTTPSigBoilerplate,
   genKeyPair,
   simpleSign,
   simpleVerify,
@@ -88,7 +95,7 @@ users.post("/u/:id/inbox", async function (ctx) {
   // Maybe add max inbox length?
   // If everything is good, add link to inbox.
 
-  // TODO: Check for HTTP Signature.
+  // TODO: Redundancy checking
   const reqSig = await ctx.request.headers.get("Signature");
   const raw = await ctx.request.body();
 
@@ -103,10 +110,10 @@ users.post("/u/:id/inbox", async function (ctx) {
   const actor = await getUActivity(ctx.params.id, "info");
   const follows = await getUActivity(ctx.params.id, "followers");
   const inbox = await getUActivity(ctx.params.id, "inbox");
-  const req = await raw.value();
+  const req = await raw.value;
 
-  const foreignActorInfo = (await fetch(raw.actor)).json();
-  const foreignKey = extractKey(
+  const foreignActorInfo = await (await fetch(req.actor)).json();
+  const foreignKey = await extractKey(
     "public",
     foreignActorInfo.publicKey.publicKeyPem,
   );
@@ -116,14 +123,18 @@ users.post("/u/:id/inbox", async function (ctx) {
 
   const msg = genHTTPSigBoilerplate({
     "target": `post ${reqURL.pathname}`,
-    "host": reqURL.hostname,
+    "host": reqURL.host,
     "date": await ctx.request.headers.get("date"),
   });
-  const parsedSig = parseHTTPSig(reqSig);
+
+  const parsedSig = /(.*)=\"(.*)\",?/mg.exec(reqSig)[2];
+
+  let postSignature = str2ab(atob(parsedSig));
+
   const validSig = await simpleVerify(
     foreignKey,
     msg,
-    str2ab(atob(parsedSig.signature)),
+    postSignature,
   );
 
   if (!validSig) {
@@ -167,7 +178,7 @@ users.post("/u/:id/inbox", async function (ctx) {
       },
     );
 
-    ctx.response.status = acceptJSON;
+    ctx.response.body = acceptJSON;
     ctx.response.status = 201;
     ctx.response.type = "application/json";
 
@@ -176,13 +187,9 @@ users.post("/u/:id/inbox", async function (ctx) {
     req.type === "Create" ||
     req.type === "Update"
   ) {
-    // Message should be the URL to an Activity object
-
     if (!follows.orderedItems.includes(req.actor)) {
       return throwAPIError(ctx, "Recipient is not following user", 400);
     }
-
-    // Put HTTP signature middleware shit here.
 
     inbox.orderedItems.push(req.id);
     inbox.totalItems = inbox.orderedItems.length;

@@ -1,5 +1,7 @@
 import { Application } from "https://deno.land/x/oak/mod.ts";
 import { settings } from "../settings.ts";
+
+import { actions } from "./actions.ts";
 import { auth } from "./auth.ts";
 import { comments } from "./comments.ts";
 import { lists } from "./lists.ts";
@@ -9,6 +11,8 @@ import { users } from "./users.ts";
 
 const app = new Application();
 
+app.use(actions.routes());
+app.use(actions.allowedMethods());
 app.use(auth.routes());
 app.use(auth.allowedMethods());
 app.use(comments.routes());

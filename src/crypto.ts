@@ -199,6 +199,7 @@ export function genHTTPSigBoilerplate(params: string = {}) {
   let hosstr = `(request-target): ${params.target}
 host: ${params.host}
 date: ${params.date}`;
+  return hosstr;
 }
 
 export async function simpleSign(msg: string, privateKey: any) {

@@ -193,12 +193,14 @@ export async function sendToFollowers(id: string, obj: any) {
   */
 }
 
-function parseHTTPSig(msg: string) {
+export function parseHTTPSig(msg: string) {
   let res: any = {};
 
   msg.split(",").map((x) => {
     let c = x.split("=");
+    console.log(c[1]);
     c[1] = c[1].substring(1, c[1].length - 1);
+    console.log(c[1]);
     res[`${c[0]}`] = c[1];
   });
 
