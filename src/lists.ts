@@ -6,6 +6,14 @@ import {
   wrapperUpdate,
 } from "./activity.ts";
 import {
+  extractKey,
+  genHTTPSigBoilerplate,
+  genKeyPair,
+  getJWTKey,
+  simpleSign,
+  simpleVerify,
+} from "./crypto.ts";
+import {
   addToDB,
   basicObjectUpdate,
   deleteList,
@@ -111,6 +119,7 @@ lists.post("/l/", async function (ctx) {
     "id": `${url}/activity`,
     "actor": obj.attributedTo,
     "object": obj,
+    "to": info.followers,
   });
 
   await addToDB("lists", {
@@ -132,7 +141,77 @@ lists.post("/l/", async function (ctx) {
     "outbox": userOutbox,
   }, data.decoded.name);
 
-  // sendToFollowers(data.decoded.name, activity);
+    const followers = await getUActivity(data.decoded.name, "followers");
+
+  let i = 0;
+    
+  for (const follower of followers.orderedItems) {
+    const u = new URL(follower);
+
+    if (u.origin === settings.siteURL) {
+      // Deliver locally, and nothing more.
+      const username = u.pathname.split("/").pop();
+      // Add to inbox of local user.
+      let inbox = await getUActivity(username, "inbox");
+
+      inbox.orderedItems.push(activity.id);
+      inbox.totalItems = inbox.orderedItems.length;
+
+      await basicObjectUpdate("users", {
+        "inbox": inbox,
+      }, username);
+    } else {
+      // REMINDER:
+      // Add HTTP headers, and whatnot.
+      // Read below for more details:
+      // https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/
+
+      const actorKeys = await getUActivity(data.decoded.name, "keys");
+      const priv = await extractKey("private", actorKeys[1]);
+      const time = d.toUTCString();
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${u.pathname}`,
+        "host": u.host,
+        "date": time,
+      });
+
+      const signed = await simpleSign(msg, priv);
+
+      const b64sig = btoa(
+        String.fromCharCode.apply(null, new Uint8Array(signed)),
+      );
+      const header =
+        `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+
+      const actInfo = await fetch(follower, {
+        headers: {
+          "Accept": "application/activity+json",
+          "Content-Type": "application/activity+json",
+        },
+        method: "GET",
+      });
+      actInfo = await actInfo.json();
+
+      let r = await fetch(actInfo.inbox, {
+        method: "POST",
+        headers: {
+          "Accept": "application/activity+json",
+          "Content-Type": "application/json",
+          "Signature": header,
+          "Date": time,
+          "Host": u.host,
+        },
+        body: JSON.stringify(activity),
+      });
+
+	r = await r.json();
+
+	if (r.err) {
+	    i++;
+	}
+    }
+  }
 
   ctx.response.body = { "msg": `List uploaded at ${url}` };
   ctx.response.status = 201;
@@ -239,6 +318,8 @@ lists.post("/l/:id", async function (ctx) {
       break;
     }
     // Creating a comment.
+    // TODO: Totally overhaul this.
+    // Maybe go through /x/, too?	  
     case "Create": {
       const id: string = await genUUID(14);
       const url = `${settings.siteURL}/c/${id}`;
@@ -255,6 +336,7 @@ lists.post("/l/:id", async function (ctx) {
         "id": `${url}/activity`,
         "actor": comment.attributedTo,
         "object": comment,
+        "to": userActivity.followers,
       });
 
       await addToDB("comments", {

@@ -147,7 +147,6 @@ export async function authData(ctx: Context) {
 }
 
 export async function sendToFollowers(id: string, obj: any) {
-  console.log(id, obj);
   /*
   const follows = await getUActivity(id, "followers");
   console.log(follows);

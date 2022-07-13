@@ -100,6 +100,7 @@ actions.post("/x/follow", async function (ctx) {
   const followAttempt = await fetch(fActor.inbox, {
     method: "POST",
     headers: {
+      "Accept": "application/activity+json",
       "Content-Type": "application/json",
       "Signature": header,
       "Date": time,
@@ -121,6 +122,10 @@ actions.post("/x/follow", async function (ctx) {
     await basicObjectUpdate("users", {
       "following": userFollowers,
     }, data.decoded.name);
+  } else {
+    ctx.response.body = res;
+    ctx.response.status = 400;
+    ctx.response.type = "application/json";
   }
 });
 

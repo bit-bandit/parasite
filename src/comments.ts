@@ -103,6 +103,7 @@ comments.post("/c/:id", async function (ctx) {
         "id": `${url}/activity`,
         "actor": comment.attributedTo,
         "object": comment,
+        "to": userActivity.followers,
       });
 
       await addToDB(

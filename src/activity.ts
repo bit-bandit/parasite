@@ -258,8 +258,7 @@ export function wrapperCreate(params = {}): ActivityWrapper {
     "actor": params.actor,
     "object": params.object,
     "published": params.object.published,
-    "to": params.object.to,
-    "cc": ["https://www.w3.org/ns/activitystreams#Public"],
+    "cc": params.to,
   };
 }
 
@@ -272,8 +271,7 @@ export function wrapperUpdate(params = {}): ActivityWrapper {
     "actor": params.actor,
     "object": params.object,
     "published": params.object.published,
-    "to": params.object.to,
-    "cc": ["https://www.w3.org/ns/activitystreams#Public"],
+    "cc": params.to,
   };
 }
 

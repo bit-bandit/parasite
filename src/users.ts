@@ -146,6 +146,10 @@ users.post("/u/:id/inbox", async function (ctx) {
       return throwAPIError(ctx, "'actor' parameter not present", 400);
     }
 
+    if (follows.orderedItems.includes(req.actor)) {
+      return throwAPIError(ctx, "Already following actor.", 400);
+    }
+
     follows.orderedItems.push(req.actor);
     follows.totalItems = follows.orderedItems.length;
 
@@ -181,8 +185,6 @@ users.post("/u/:id/inbox", async function (ctx) {
     ctx.response.body = acceptJSON;
     ctx.response.status = 201;
     ctx.response.type = "application/json";
-
-    return;
   } else if (
     req.type === "Create" ||
     req.type === "Update"
