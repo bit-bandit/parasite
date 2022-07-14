@@ -1,5 +1,13 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
 import {
+  extractKey,
+  genHTTPSigBoilerplate,
+  genKeyPair,
+  simpleSign,
+  simpleVerify,
+  str2ab,
+} from "./crypto.ts";
+import {
   addToDB,
   basicObjectUpdate,
   deleteComment,
@@ -91,6 +99,36 @@ comments.post("/c/:id", async function (ctx) {
       const commentReplies = await getCommentJSON(ctx.params.id, "replies");
       commentReplies[0].orderedItems.push(requestJSON.object.id);
       commentReplies[0].totalItems = commentReplies[0].orderedItems.length;
+
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
+
+      const u = new URL(foreignActorInfo.id);
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      let postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
+      }
 
       await basicObjectUpdate("comments", {
         "replies": commentReplies[0],
