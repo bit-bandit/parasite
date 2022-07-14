@@ -12,6 +12,7 @@ import {
   getJWTKey,
   simpleSign,
   simpleVerify,
+  str2ab,
 } from "./crypto.ts";
 import {
   addToDB,
@@ -213,7 +214,13 @@ lists.post("/l/", async function (ctx) {
     }
   }
 
-  ctx.response.body = { "msg": `List uploaded at ${url}` };
+  let errNo = "";
+
+  if (0 < i) {
+    errNo = ` with ${i} followers failing to recieve it`; // Keep the space at the start.
+  }
+
+  ctx.response.body = { "msg": `List uploaded at ${url}${errNo}` };
   ctx.response.status = 201;
   ctx.response.type =
     'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
@@ -221,16 +228,8 @@ lists.post("/l/", async function (ctx) {
 });
 
 lists.post("/l/:id", async function (ctx) {
-  const data = await authData(ctx);
-
   const raw = await ctx.request.body();
   const requestJSON = await raw.value;
-
-  const userInfo = await getUMetaInfo(data.decoded.name);
-
-  const userActivity = await getUActivity(data.decoded.name, "info");
-
-  const userRole = userInfo[2];
 
   let json, uploader;
   const d = new Date();
@@ -247,66 +246,154 @@ lists.post("/l/:id", async function (ctx) {
       // If user is local: Add user to torrent likes. Add post URL to user 'likes'.
       // Else: Webfinger to check if user actually exists. If not, send err. If so,
       // add user to `likes`.
-      if (!userRole.vote) {
-        return throwAPIError(ctx, "Voting not allowed", 400);
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
+
+      const u = new URL(foreignActorInfo.id);
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      let postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
       }
-      const userLikes = await getUActivity(data.decoded.name, "likes");
+
       const listLikes = (await getListJSON(ctx.params.id, "likes"))[0];
 
-      if (userLikes.orderedItems.includes(json.id)) {
+      if (listLikes.orderedItems.includes(requestJSON.actor)) {
         throwAPIError(ctx, "Already voted on item", 400);
         break;
       }
-      userLikes.orderedItems.push(json.id);
-      userLikes.totalItems = userLikes.orderedItems.length;
 
-      listLikes.orderedItems.push(userActivity.id);
+      listLikes.orderedItems.push(requestJSON.actor);
       listLikes.totalItems = listLikes.orderedItems.length;
-
-      await basicObjectUpdate("users", {
-        "likes": userLikes,
-      }, data.decoded.name);
 
       await basicObjectUpdate("lists", {
         "likes": listLikes,
       }, ctx.params.id);
 
       ctx.response.body = {
-        "msg": `List ${ctx.params.id} added to likes collection`,
+        "msg": `List ${ctx.request.url} added to likes collection`,
       };
       // TODO: Actually add federation support.
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-      ctx.response.headers.set("Location", userActivity.liked);
+      ctx.response.headers.set("Location", ctx.request.url);
 
       break;
     }
 
     case "Dislike": {
-      // Same as above, but with dislikes instead of likes.
-      if (!userRole.vote) {
-        return throwAPIError(ctx, "Voting not allowed", 400);
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
+
+      const u = new URL(foreignActorInfo.id);
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      let postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
       }
-      const userDislikes = await getUActivity(data.decoded.name, "dislikes");
+
       const listDislikes = (await getListJSON(ctx.params.id, "dislikes"))[0];
 
-      if (userDislikes.orderedItems.includes(json.id)) {
+      if (listDislikes.orderedItems.includes(requestJSON.actor)) {
         throwAPIError(ctx, "Already voted on item", 400);
         break;
       }
-      userDislikes.orderedItems.push(json.id);
-      userDislikes.totalItems = userDislikes.orderedItems.length;
 
-      listDislikes.orderedItems.push(userActivity.id);
+      listDislikes.orderedItems.push(requestJSON.actor);
       listDislikes.totalItems = listDislikes.orderedItems.length;
-
-      await basicObjectUpdate("users", {
-        "dislikes": userDislikes,
-      }, data.decoded.name);
 
       await basicObjectUpdate("lists", {
         "dislikes": listDislikes,
+      }, ctx.params.id);
+
+      ctx.response.body = {
+        "msg": `Torrent ${ctx.params.id} added to Dislikes collection`,
+      };
+      ctx.response.status = 201;
+      ctx.response.type =
+        'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+      ctx.response.headers.set("Location", ctx.request.url);
+      break;
+    }
+    // Adding a comment.
+    case "Create": {
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
+
+      const u = new URL(foreignActorInfo.id);
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      let postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
+      }
+      const listReplies = (await getListJSON(ctx.params.id, "replies"))[0];
+
+      listReplies.orderedItems.push(requestJSON.object.id);
+      listReplies.totalItems = listReplies.orderedItems.length;
+
+      await basicObjectUpdate("lists", {
+        "replies": listReplies,
       }, ctx.params.id);
 
       ctx.response.body = {
@@ -316,33 +403,17 @@ lists.post("/l/:id", async function (ctx) {
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-      ctx.response.headers.set("Location", userActivity.liked);
-      break;
-    }
-    // Creating a comment.
-    // TODO: Totally overhaul this.
-    // Maybe go through /x/, too?
-    case "Create": {
-      const listReplies = await getListJSON(ctx.params.id, "replies");
-      listReplies[0].orderedItems.push(requestJSON.object.id);
-      listReplies[0].totalItems = listReplies[0].orderedItems.length;
-
-      await basicObjectUpdate("lists", {
-        "replies": listReplies[0],
-      }, ctx.params.id);
-
-      ctx.response.body = {
-        "msg":
-          `Reply ${requestJSON.object.id} added to comment ${ctx.params.id}`,
-      };
-      ctx.response.status = 201;
-      ctx.response.type =
-        'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
       ctx.response.headers.set("Location", ctx.request.url);
       break;
     }
+
     // Updating
+
     case "Update": {
+      const data = await authData(ctx);
+      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userRole = userInfo[2];
+
       if (
         uploader !== data.decoded.name ||
         !userRole.editUploads
@@ -394,14 +465,10 @@ lists.post("/l/:id", async function (ctx) {
     // Delete/Remove
     case "Remove":
     case "Delete": {
-      // In AP, servers can choose to not exactly delete the content,
-      // but just replace everything with a tombstone.
-      // We think that's stupid, so we're not doing it - Plus we can
-      // get away with it, as it's not part of the standard.
-      // See Section 6.4 of the ActivityPub standard.
+      const data = await authData(ctx);
+      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userRole = userInfo[2];
 
-      // Ensure that the user is either the original poster, or has total deletion privs.
-      // Also made sure that the user has the proper role to delete.
       if (!userRole.deleteOwnLists || uploader !== data.decoded.name) {
         throwAPIError(ctx, "You aren't allowed to delete this list", 400);
       } else if (
@@ -417,18 +484,22 @@ lists.post("/l/:id", async function (ctx) {
     }
 
     case "Flag": {
+      const data = await authData(ctx);
+      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userRole = userInfo[2];
+
       if (!userInfo[2].flag) {
         return throwAPIError(ctx, "Flagging not allowed", 400);
       }
 
       const listFlags = (await getListJSON(ctx.params.id, "flags"))[0];
 
-      if (listFlags.orderedItems.includes(userActivity.id)) {
+      if (listFlags.orderedItems.includes(requestJSON.actor)) {
         throwAPIError(ctx, "Already flagged item", 400);
         break;
       }
 
-      listFlags.orderedItems.push(userActivity.id);
+      listFlags.orderedItems.push(requestJSON.actor);
       listFlags.totalItems = listFlags.orderedItems.length;
 
       await basicObjectUpdate("lists", {

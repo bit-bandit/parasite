@@ -53,8 +53,7 @@ for (let i = 0; i < 10; i++) {
 const listData = {
   "type": "Create",
   "name": "A list!",
-  "summary":
-    "It's a fucking list! Wow! I'm going to drown myself in battery acid!",
+  "summary": "Woah! A list! Wow! I'm going to drown myself in battery acid!",
   "tags": "horror,birds,2010",
   "orderedItems": torrents,
 };
@@ -109,7 +108,7 @@ Deno.test("Update list", async () => {
 });
 
 Deno.test("Comment on list", async () => {
-  const r = await fetch(listURL, {
+  const r = await fetch("http://localhost:8080/x/comment", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -118,6 +117,7 @@ Deno.test("Comment on list", async () => {
     body: JSON.stringify({
       "type": "Create",
       "content": "Something different",
+      "inReplyTo": listURL,
     }),
   });
 
@@ -132,7 +132,8 @@ Deno.test("Reply to list Comment", async () => {
   res = await r.json();
   r = await fetch(res.orderedItems[0]);
   res = await r.json();
-  const req = await fetch(res.id, {
+
+  const req = await fetch("http://localhost:8080/x/comment", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -140,7 +141,8 @@ Deno.test("Reply to list Comment", async () => {
     },
     body: JSON.stringify({
       "type": "Create",
-      "content": "Something even stranger!",
+      "content": "Worms!",
+      "inReplyTo": res.id,
     }),
   });
   await req.json();
@@ -158,7 +160,7 @@ Deno.test("Like Comment", async () => {
   r = await fetch(res.orderedItems[0]);
   res = await r.json();
 
-  const req = await fetch(res.id, {
+  const req = await fetch("http://localhost:8080/x/like", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -166,6 +168,7 @@ Deno.test("Like Comment", async () => {
     },
     body: JSON.stringify({
       "type": "Like",
+      "object": res.id,
     }),
   });
   await req.json();
@@ -176,7 +179,7 @@ Deno.test("Like Comment", async () => {
 });
 
 Deno.test("Like List", async () => {
-  const r = await fetch(listURL, {
+  const r = await fetch("http://localhost:8080/x/like", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -184,6 +187,7 @@ Deno.test("Like List", async () => {
     },
     body: JSON.stringify({
       "type": "Like",
+      "object": listURL,
     }),
   });
 
@@ -208,7 +212,7 @@ Deno.test("Flag list", async () => {
 });
 
 Deno.test("Try to like list twice", async () => {
-  const r = await fetch(listURL, {
+  const r = await fetch("http://localhost:8080/x/like", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -216,6 +220,7 @@ Deno.test("Try to like list twice", async () => {
     },
     body: JSON.stringify({
       "type": "Like",
+      "object": listURL,
     }),
   });
 
@@ -224,7 +229,7 @@ Deno.test("Try to like list twice", async () => {
 });
 
 Deno.test("Dislike list", async () => {
-  const r = await fetch(listURL, {
+  const r = await fetch("http://localhost:8080/x/dislike", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -232,6 +237,7 @@ Deno.test("Dislike list", async () => {
     },
     body: JSON.stringify({
       "type": "Dislike",
+      "object": listURL,
     }),
   });
 
@@ -240,7 +246,7 @@ Deno.test("Dislike list", async () => {
 });
 
 Deno.test("Try to dislike list twice", async () => {
-  const r = await fetch(listURL, {
+  const r = await fetch("http://localhost:8080/x/dislike", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -248,6 +254,7 @@ Deno.test("Try to dislike list twice", async () => {
     },
     body: JSON.stringify({
       "type": "Dislike",
+      "object": listURL,
     }),
   });
 

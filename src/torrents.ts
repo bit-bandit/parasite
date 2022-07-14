@@ -186,11 +186,6 @@ torrents.post("/t/", async function (ctx) {
         "inbox": inbox,
       }, username);
     } else {
-      // REMINDER:
-      // Add HTTP headers, and whatnot.
-      // Read below for more details:
-      // https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/
-
       const actorKeys = await getUActivity(data.decoded.name, "keys");
       const priv = await extractKey("private", actorKeys[1]);
       const time = d.toUTCString();
@@ -254,11 +249,6 @@ torrents.post("/t/", async function (ctx) {
 torrents.post("/t/:id", async function (ctx) {
   const raw = await ctx.request.body();
   const requestJSON = await raw.value;
-
-  //const userInfo = await getUMetaInfo(data.decoded.name);
-  //const userActivity = await getUActivity(data.decoded.name, "info");
-
-  //const userRole = userInfo[2];
 
   let json, uploader;
   const d = new Date();
@@ -382,7 +372,7 @@ torrents.post("/t/:id", async function (ctx) {
       ctx.response.headers.set("Location", ctx.request.url);
       break;
     }
-    // Creating a comment.
+    // Adding a comment.
     case "Create": {
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
@@ -557,6 +547,8 @@ torrents.post("/t/:id", async function (ctx) {
 
       if (likesIndex !== -1) {
         torrentLikes.orderedItems.splice(likesIndex, 1);
+        torrentLikes.totalItems = torrentLikes.orderedItems.length;
+
         await basicObjectUpdate("torrents", {
           "likes": torrentLikes,
         }, data.decoded.name);
@@ -564,6 +556,8 @@ torrents.post("/t/:id", async function (ctx) {
 
       if (dislikesIndex !== -1) {
         torrentDislikes.orderedItems.splice(dislikesIndex, 1);
+        torrentDislikes.totalItems = torrentDislikes.orderedItems.length;
+
         await basicObjectUpdate("torrents", {
           "dislikes": torrentDislikes,
         }, data.decoded.name);
@@ -578,6 +572,7 @@ torrents.post("/t/:id", async function (ctx) {
 
       break;
     }
+
     case "Flag": {
       const data = await authData(ctx);
       const userInfo = await getUMetaInfo(data.decoded.name);
@@ -604,7 +599,7 @@ torrents.post("/t/:id", async function (ctx) {
       ctx.response.body = {
         "msg": `Torrent ${ctx.params.id} flagged`,
       };
-      // TODO: Actually add federation support.
+
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';

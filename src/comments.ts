@@ -76,14 +76,8 @@ comments.get("/c/:id/flags", async function (ctx) {
 });
 
 comments.post("/c/:id", async function (ctx) {
-  const data = await authData(ctx);
-  const requestJSON = data.request;
-
-  const userInfo = await getUMetaInfo(data.decoded.name);
-
-  const userActivity = await getUActivity(data.decoded.name, "info");
-
-  const userRole = userInfo[2];
+  const raw = await ctx.request.body();
+  const requestJSON = await raw.value;
 
   let json, uploader;
   const d = new Date();
@@ -96,10 +90,6 @@ comments.post("/c/:id", async function (ctx) {
 
   switch (requestJSON.type) {
     case "Create": {
-      const commentReplies = await getCommentJSON(ctx.params.id, "replies");
-      commentReplies[0].orderedItems.push(requestJSON.object.id);
-      commentReplies[0].totalItems = commentReplies[0].orderedItems.length;
-
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
         "public",
@@ -130,6 +120,10 @@ comments.post("/c/:id", async function (ctx) {
         return throwAPIError(ctx, "Invalid HTTP Signature", 400);
       }
 
+      const commentReplies = await getCommentJSON(ctx.params.id, "replies");
+      commentReplies[0].orderedItems.push(requestJSON.object.id);
+      commentReplies[0].totalItems = commentReplies[0].orderedItems.length;
+
       await basicObjectUpdate("comments", {
         "replies": commentReplies[0],
       }, ctx.params.id);
@@ -146,70 +140,112 @@ comments.post("/c/:id", async function (ctx) {
     }
     case "Like": {
       // Same as above, but with dislikes instead of likes.
-      if (!userRole.vote) {
-        return throwAPIError(ctx, "Voting not allowed", 400);
-      }
-      const userLikes = await getUActivity(data.decoded.name, "likes");
-      const commentLikes = (await getCommentJSON(ctx.params.id, "dislikes"))[0];
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
 
-      if (userLikes.orderedItems.includes(json.id)) {
+      const u = new URL(foreignActorInfo.id);
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      let postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
+      }
+
+      const commentLikes = (await getCommentJSON(ctx.params.id, "likes"))[0];
+
+      if (commentLikes.orderedItems.includes(requestJSON.actor)) {
         throwAPIError(ctx, "Already voted on item", 400);
         break;
       }
-      userLikes.orderedItems.push(json.id);
-      userLikes.totalItems = userLikes.orderedItems.length;
 
-      commentLikes.orderedItems.push(userActivity.id);
+      commentLikes.orderedItems.push(requestJSON.actor);
       commentLikes.totalItems = commentLikes.orderedItems.length;
-
-      await basicObjectUpdate("users", {
-        "likes": userLikes,
-      }, data.decoded.name);
 
       await basicObjectUpdate("comments", {
         "likes": commentLikes,
       }, ctx.params.id);
 
       ctx.response.body = {
-        "msg": `Comment ${ctx.params.id} added to dislikes collection`,
+        "msg":
+          `${requestJSON.actor} added to comment ${ctx.request.url}'s like collection`,
       };
       // TODO: Actually add federation support.
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-      ctx.response.headers.set("Location", userActivity.liked);
+      ctx.response.headers.set("Location", ctx.request.url);
       break;
     }
 
     case "Dislike": {
       // Same as above, but with dislikes instead of likes.
-      if (!userRole.vote) {
-        return throwAPIError(ctx, "Voting not allowed", 400);
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
+
+      const u = new URL(foreignActorInfo.id);
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      let postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
       }
-      const userDislikes = await getUActivity(data.decoded.name, "dislikes");
+
       const commentDislikes =
         (await getCommentJSON(ctx.params.id, "dislikes"))[0];
 
-      if (userDislikes.orderedItems.includes(json.id)) {
+      if (commentDislikes.orderedItems.includes(requestJSON.actor)) {
         throwAPIError(ctx, "Already voted on item", 400);
         break;
       }
-      userDislikes.orderedItems.push(json.id);
-      userDislikes.totalItems = userDislikes.orderedItems.length;
 
-      commentDislikes.orderedItems.push(userActivity.id);
-      commentDislikes.totalItems = torrentDislikes.orderedItems.length;
-
-      await basicObjectUpdate("users", {
-        "dislikes": userDislikes,
-      }, data.decoded.name);
+      commentDislikes.orderedItems.push(requestJSON.actor);
+      commentDislikes.totalItems = commentLikes.orderedItems.length;
 
       await basicObjectUpdate("comments", {
         "dislikes": commentDislikes,
       }, ctx.params.id);
 
       ctx.response.body = {
-        "msg": `Comment ${ctx.params.id} added to dislikes collection`,
+        "msg":
+          `${requestJSON.actor} added to comment ${ctx.request.url}'s dislike collection`,
       };
       // TODO: Actually add federation support.
       ctx.response.status = 201;
@@ -219,6 +255,10 @@ comments.post("/c/:id", async function (ctx) {
       break;
     }
     case "Update": {
+      const data = await authData(ctx);
+      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userActivity = await getUActivity(data.decoded.name, "info");
+
       if (
         uploader !== data.decoded.name ||
         !userRole.editUploads
@@ -252,6 +292,11 @@ comments.post("/c/:id", async function (ctx) {
     }
     case "Remove":
     case "Delete": {
+      const data = await authData(ctx);
+      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userActivity = await getUActivity(data.decoded.name, "info");
+      const userRole = userInfo[2];
+
       if (!userRole.deleteOwnComments || uploader !== data.decoded.name) {
         return throwAPIError(
           ctx,
@@ -267,6 +312,81 @@ comments.post("/c/:id", async function (ctx) {
         await deleteComment(ctx.params.id);
         boilerplateDeleteStatement(ctx);
       }
+      break;
+    }
+    case "Undo": {
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
+
+      const u = new URL(foreignActorInfo.id);
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      let postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
+      }
+
+      const commentLikes = (await getCommentJSON(ctx.params.id, "likes"))[0];
+      const commentDislikes =
+        (await getCommentJSON(ctx.params.id, "dislikes"))[0];
+
+      if (
+        !commentLikes.orderedItems.includes(requestJSON.actor) &&
+        !commentDislikes.orderedItems.includes(requestJSON.actor)
+      ) {
+        throwAPIError(ctx, "No activity on item found", 400);
+        break;
+      }
+
+      const likesIndex = commentLikes.orderedItems.indexOf(requestJSON.object);
+      const dislikesIndex = commentDislikes.orderedItems.indexOf(
+        requestJSON.object,
+      );
+
+      if (likesIndex !== -1) {
+        commentLikes.orderedItems.splice(likesIndex, 1);
+        commentLikes.totalItems = commentLikes.orderedItems.length;
+
+        await basicObjectUpdate("comments", {
+          "likes": commentLikes,
+        }, data.decoded.name);
+      }
+
+      if (dislikesIndex !== -1) {
+        commentDislikes.orderedItems.splice(likesIndex, 1);
+        commentDislikes.totalItems = commentDislikes.orderedItems.length;
+
+        await basicObjectUpdate("comments", {
+          "dislikes": commentDislikes,
+        }, data.decoded.name);
+      }
+
+      ctx.response.body = {
+        "msg":
+          `Actions by ${requestJSON.actor} on object ${ctx.request.url} undone`,
+      };
+      ctx.response.status = 200;
+      ctx.response.type = "application/json";
+
       break;
     }
     default: {
