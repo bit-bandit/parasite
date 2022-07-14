@@ -212,8 +212,8 @@ export function genVote(params = {}) {
     "actor": params.actor,
     "summary": `Voted: ${params.actor}`,
     "object": params.object,
-    "to": params.to,
-    "cc": ["https://www.w3.org/ns/activitystreams#Public"],
+    "to": ["https://www.w3.org/ns/activitystreams#Public"],
+    "cc": params.to,
   };
 }
 

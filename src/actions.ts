@@ -11,7 +11,8 @@ import {
   genInvitationReply,
   genOrderedCollection,
   genReply,
-  wrapperCreate,
+    wrapperCreate,
+    genVote
 } from "./activity.ts";
 import {
   extractKey,
@@ -25,6 +26,12 @@ import { authData, genUUID, sendToFollowers, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 
 export const actions = new Router();
+
+/*
+Design Notes:
+- Check role abilities before request gets sent out.
+*/
+
 
 actions.get("/x/:id", async function (ctx) {
   const res = await getActionJSON(ctx.params.id);
@@ -139,11 +146,208 @@ actions.post("/x/undo", async function (ctx) {
 });
 
 actions.post("/x/like", async function (ctx) {
+  const data = await authData(ctx);
+  const requestJSON = await data.request;
+
+  if (!requestJSON.object) {
+    return throwAPIError(
+      ctx,
+      "'object' field must be present and contain a URL",
+      400,
+    );
+  }
+
+  const userActivity = await getUActivity(data.decoded.name, "info");
+  const userLikes = await getUActivity(data.decoded.name, "likes");
+
+  if (userLikes.orderedItems.includes(requestJSON.object)){
+   return throwAPIError(ctx, "Already voted on item.", 400);
+  }
+    
+  const id: string = await genUUID(14);
+  const url = `${settings.siteURL}/x/${id}`;
+
+  let obj = await genVote({
+      "type": "Like",
+      "actor": userActivity.id,
+      "object": requestJSON.object,
+      "to": [userActivity.followers],
+  })
+
+    await addToDB(
+    "actions",
+    {
+      "id": id,
+      "json": obj,
+      "activity": {},
+      "uploader": data.decoded.name,
+      "likes": {},
+      "dislikes": {},
+      "replies": {},
+      "flags": {},
+    },
+    );
+
+    userLikes.orderedItems.push(requestJSON.object);
+    userLikes.totalItems = userLikes.orderedItems.length;
+    // Send to object
+
+  const d = new Date();
+
+  const u = new URL(requestJSON.object);
+  const time = d.toUTCString();
+  // Send to object in question
+  const msg = genHTTPSigBoilerplate({
+    "target": `post ${u.pathname}`,
+    "host": u.host,
+    "date": time,
+  });
+
+  const actorKeys = await getUActivity(data.decoded.name, "keys");
+  const priv = await extractKey("private", actorKeys[1]);
+
+  const signed = await simpleSign(msg, priv);
+
+  const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
+  const header =
+    `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+
+  // We should really specify the `Accept` header because:
+  // 1) It's in the standard
+  // 2) Reverse proxies exist
+
+  const sendToObject = await fetch(requestJSON.object, {
+    method: "POST",
+    headers: {
+      "Accept": "application/activity+json",
+      "Content-Type": "application/json",
+      "Signature": header,
+      "Date": time,
+      "Host": u.host,
+      "Authorization": await ctx.request.headers.get("Authorization"),
+    },
+    body: JSON.stringify(obj),
+  });
+
+  const res = await sendToObject.json();
+
+  if(res.err){
+      return throwAPIError(ctx, res.msg, 400)
+  }
+    
+    await basicObjectUpdate("users", {
+        "likes": userLikes,
+    }, data.decoded.name);
+
+    ctx.response.body = res
+    ctx.response.status = 201;
+    ctx.response.type =
+        'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+    ctx.response.headers.set("Location", url);
 });
 
 actions.post("/x/dislike", async function (ctx) {
+  const data = await authData(ctx);
+  const requestJSON = await data.request;
+
+  if (!requestJSON.object) {
+    return throwAPIError(
+      ctx,
+      "'object' field must be present and contain a URL",
+      400,
+    );
+  }
+
+  const userActivity = await getUActivity(data.decoded.name, "info");
+  const userDislikes = await getUActivity(data.decoded.name, "dislikes");
+
+  if (userDislikes.orderedItems.includes(requestJSON.object)){
+   return throwAPIError(ctx, "Already voted on item.", 400);
+  }
+    
+  const id: string = await genUUID(14);
+  const url = `${settings.siteURL}/x/${id}`;
+
+  let obj = await genVote({
+      "type": "Dislike",
+      "actor": userActivity.id,
+      "object": requestJSON.object,
+      "to": [userActivity.followers],
+  })
+
+    await addToDB(
+    "actions",
+    {
+      "id": id,
+      "json": obj,
+      "activity": {},
+      "uploader": data.decoded.name,
+      "likes": {},
+      "dislikes": {},
+      "replies": {},
+      "flags": {},
+    },
+    );
+
+    userDislikes.orderedItems.push(requestJSON.object);
+    userDislikes.totalItems = userDislikes.orderedItems.length;
+    // Send to object
+
+  const d = new Date();
+
+  const u = new URL(requestJSON.object);
+  const time = d.toUTCString();
+  // Send to object in question
+  const msg = genHTTPSigBoilerplate({
+    "target": `post ${u.pathname}`,
+    "host": u.host,
+    "date": time,
+  });
+
+  const actorKeys = await getUActivity(data.decoded.name, "keys");
+  const priv = await extractKey("private", actorKeys[1]);
+
+  const signed = await simpleSign(msg, priv);
+
+  const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
+  const header =
+    `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+
+  // We should really specify the `Accept` header because:
+  // 1) It's in the standard
+  // 2) Reverse proxies exist
+
+  const sendToObject = await fetch(requestJSON.object, {
+    method: "POST",
+    headers: {
+      "Accept": "application/activity+json",
+      "Content-Type": "application/json",
+      "Signature": header,
+      "Date": time,
+      "Host": u.host,
+      "Authorization": await ctx.request.headers.get("Authorization"),
+    },
+    body: JSON.stringify(obj),
+  });
+
+  const res = await sendToObject.json();
+
+  if(res.err){
+      return throwAPIError(ctx, res.msg, 400)
+  }
+    
+    await basicObjectUpdate("users", {
+        "dislikes": userDislikes,
+    }, data.decoded.name);
+
+    ctx.response.body = res
+    ctx.response.status = 201;
+    ctx.response.type =
+        'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+    ctx.response.headers.set("Location", url);
 });
 
+// Send a comment.
 actions.post("/x/comment", async function (ctx) {
   const data = await authData(ctx);
   const requestJSON = await data.request;

@@ -152,14 +152,15 @@ Deno.test("Like Comment", async () => {
 });
 
 Deno.test("Like Torrent", async () => {
-  const r = await fetch(torrentURL, {
+  const r = await fetch('http://localhost:8080/x/like', {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
     },
     body: JSON.stringify({
-      "type": "Like",
+        "type": "Like",
+	"object": torrentURL
     }),
   });
 
@@ -184,14 +185,15 @@ Deno.test("Flag Torrent", async () => {
 });
 
 Deno.test("Try to like Torrent twice", async () => {
-  const r = await fetch(torrentURL, {
+    const r = await fetch('http://localhost:8080/x/like', {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
     },
     body: JSON.stringify({
-      "type": "Like",
+        "type": "Like",
+	"object": torrentURL
     }),
   });
 
@@ -200,14 +202,15 @@ Deno.test("Try to like Torrent twice", async () => {
 });
 
 Deno.test("Dislike Torrent", async () => {
-  const r = await fetch(torrentURL, {
+  const r = await fetch('http://localhost:8080/x/dislike', {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
     },
     body: JSON.stringify({
-      "type": "Dislike",
+	"type": "Dislike",
+	"object": torrentURL
     }),
   });
 
@@ -216,7 +219,7 @@ Deno.test("Dislike Torrent", async () => {
 });
 
 Deno.test("Try to dislike Torrent twice", async () => {
-  const r = await fetch(torrentURL, {
+  const r = await fetch('http://localhost:8080/x/dislike', {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -224,6 +227,7 @@ Deno.test("Try to dislike Torrent twice", async () => {
     },
     body: JSON.stringify({
       "type": "Dislike",
+      "object": torrentURL
     }),
   });
 

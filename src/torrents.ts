@@ -252,16 +252,13 @@ torrents.post("/t/", async function (ctx) {
 });
 
 torrents.post("/t/:id", async function (ctx) {
-  const data = await authData(ctx);
-
   const raw = await ctx.request.body();
   const requestJSON = await raw.value;
 
-  const userInfo = await getUMetaInfo(data.decoded.name);
+  //const userInfo = await getUMetaInfo(data.decoded.name);
+  //const userActivity = await getUActivity(data.decoded.name, "info");
 
-  const userActivity = await getUActivity(data.decoded.name, "info");
-
-  const userRole = userInfo[2];
+  //const userRole = userInfo[2];
 
   let json, uploader;
   const d = new Date();
@@ -275,28 +272,45 @@ torrents.post("/t/:id", async function (ctx) {
   switch (requestJSON.type) {
     // Voting
     case "Like": {
-      // If user is local: Add user to torrent likes. Add post URL to user 'likes'.
-      // Else: Webfinger to check if user actually exists. If not, send err. If so,
-      // add user to `likes`.
-      if (!userRole.vote) {
-        return throwAPIError(ctx, "Voting not allowed", 400);
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
+
+      const u = new URL(foreignActorInfo.id);
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      let postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
       }
-      const userLikes = await getUActivity(data.decoded.name, "likes");
+
       const torrentLikes = (await getTorrentJSON(ctx.params.id, "likes"))[0];
 
-      if (userLikes.orderedItems.includes(json.id)) {
+      if (torrentLikes.orderedItems.includes(requestJSON.actor)) {
         throwAPIError(ctx, "Already voted on item", 400);
         break;
       }
-      userLikes.orderedItems.push(json.id);
-      userLikes.totalItems = userLikes.orderedItems.length;
 
-      torrentLikes.orderedItems.push(userActivity.id);
+      torrentLikes.orderedItems.push(requestJSON.actor);
       torrentLikes.totalItems = torrentLikes.orderedItems.length;
-
-      await basicObjectUpdate("users", {
-        "likes": userLikes,
-      }, data.decoded.name);
 
       await basicObjectUpdate("torrents", {
         "likes": torrentLikes,
@@ -305,50 +319,66 @@ torrents.post("/t/:id", async function (ctx) {
       ctx.response.body = {
         "msg": `Torrent ${ctx.params.id} added to likes collection`,
       };
-      // TODO: Actually add federation support.
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-      ctx.response.headers.set("Location", userActivity.liked);
+      ctx.response.headers.set("Location", ctx.request.url);
 
       break;
     }
 
     case "Dislike": {
-      // Same as above, but with dislikes instead of likes.
-      if (!userRole.vote) {
-        return throwAPIError(ctx, "Voting not allowed", 400);
-      }
-      const userDislikes = await getUActivity(data.decoded.name, "dislikes");
-      const torrentDislikes =
-        (await getTorrentJSON(ctx.params.id, "dislikes"))[0];
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
 
-      if (userDislikes.orderedItems.includes(json.id)) {
+      const u = new URL(foreignActorInfo.id);
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      let postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
+      }
+
+      const torrentDislikes = (await getTorrentJSON(ctx.params.id, "dislikes"))[0];
+
+      if (torrentDislikes.orderedItems.includes(requestJSON.actor)) {
         throwAPIError(ctx, "Already voted on item", 400);
         break;
       }
-      userDislikes.orderedItems.push(json.id);
-      userDislikes.totalItems = userDislikes.orderedItems.length;
 
-      torrentDislikes.orderedItems.push(userActivity.id);
+      torrentDislikes.orderedItems.push(requestJSON.actor);
       torrentDislikes.totalItems = torrentDislikes.orderedItems.length;
-
-      await basicObjectUpdate("users", {
-        "dislikes": userDislikes,
-      }, data.decoded.name);
 
       await basicObjectUpdate("torrents", {
         "dislikes": torrentDislikes,
       }, ctx.params.id);
 
       ctx.response.body = {
-        "msg": `Torrent ${ctx.params.id} added to dislikes collection`,
+        "msg": `Torrent ${ctx.params.id} added to Dislikes collection`,
       };
-      // TODO: Actually add federation support.
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-      ctx.response.headers.set("Location", userActivity.liked);
+      ctx.response.headers.set("Location", ctx.request.url);
       break;
     }
     // Creating a comment.
@@ -402,6 +432,10 @@ torrents.post("/t/:id", async function (ctx) {
     }
     // Updating
     case "Update": {
+      const data = await authData(ctx)
+      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userRole = userInfo[2];
+
       if (
         uploader !== data.decoded.name ||
         !userRole.editUploads
@@ -454,12 +488,9 @@ torrents.post("/t/:id", async function (ctx) {
     // Delete/Remove
     case "Remove":
     case "Delete": {
-      // In AP, servers can choose to not exactly delete the content,
-      // but just replace everything with a tombstone.
-      // We think that's stupid, so we're not doing it - Plus we can
-      // get away with it, as it's not part of the standard.
-      // See Section 6.4 of the ActivityPub standard.
-
+      const data = await authData(ctx)
+      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userRole = userInfo[2];	  
       // Ensure that the user is either the original poster, or has total deletion privs.
       // Also made sure that the user has the proper role to delete.
       if (!userRole.deleteOwnTorrents || uploader !== data.decoded.name) {
@@ -477,12 +508,18 @@ torrents.post("/t/:id", async function (ctx) {
     }
 
     case "Flag": {
-      if (!userInfo[2].flag) {
+      const data = await authData(ctx)
+      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userRole = userInfo[2];
+      const userActivity = await getUActivity(data.decoded.name, "info");
+
+	
+     if (!userInfo[2].flag) {
         return throwAPIError(ctx, "Flagging not allowed", 400);
       }
 
       const torrentFlags = (await getTorrentJSON(ctx.params.id, "flags"))[0];
-
+	
       if (torrentFlags.orderedItems.includes(userActivity.id)) {
         throwAPIError(ctx, "Already flagged item", 400);
         break;
