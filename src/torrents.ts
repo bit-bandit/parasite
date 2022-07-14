@@ -358,7 +358,8 @@ torrents.post("/t/:id", async function (ctx) {
         return throwAPIError(ctx, "Invalid HTTP Signature", 400);
       }
 
-      const torrentDislikes = (await getTorrentJSON(ctx.params.id, "dislikes"))[0];
+      const torrentDislikes =
+        (await getTorrentJSON(ctx.params.id, "dislikes"))[0];
 
       if (torrentDislikes.orderedItems.includes(requestJSON.actor)) {
         throwAPIError(ctx, "Already voted on item", 400);
@@ -432,7 +433,7 @@ torrents.post("/t/:id", async function (ctx) {
     }
     // Updating
     case "Update": {
-      const data = await authData(ctx)
+      const data = await authData(ctx);
       const userInfo = await getUMetaInfo(data.decoded.name);
       const userRole = userInfo[2];
 
@@ -488,9 +489,9 @@ torrents.post("/t/:id", async function (ctx) {
     // Delete/Remove
     case "Remove":
     case "Delete": {
-      const data = await authData(ctx)
+      const data = await authData(ctx);
       const userInfo = await getUMetaInfo(data.decoded.name);
-      const userRole = userInfo[2];	  
+      const userRole = userInfo[2];
       // Ensure that the user is either the original poster, or has total deletion privs.
       // Also made sure that the user has the proper role to delete.
       if (!userRole.deleteOwnTorrents || uploader !== data.decoded.name) {
@@ -506,23 +507,91 @@ torrents.post("/t/:id", async function (ctx) {
       }
       break;
     }
+    case "Undo": {
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
 
+      const u = new URL(foreignActorInfo.id);
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      let postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
+      }
+
+      const torrentLikes = (await getTorrentJSON(ctx.params.id, "likes"))[0];
+      const torrentDislikes =
+        (await getTorrentJSON(ctx.params.id, "dislikes"))[0];
+
+      if (
+        !torrentLikes.orderedItems.includes(requestJSON.actor) &&
+        !torrentDislikes.orderedItems.includes(requestJSON.actor)
+      ) {
+        throwAPIError(ctx, "No activity on item found", 400);
+        break;
+      }
+
+      const likesIndex = torrentLikes.orderedItems.indexOf(requestJSON.object);
+      const dislikesIndex = torrentDislikes.orderedItems.indexOf(
+        requestJSON.object,
+      );
+
+      if (likesIndex !== -1) {
+        torrentLikes.orderedItems.splice(likesIndex, 1);
+        await basicObjectUpdate("torrents", {
+          "likes": torrentLikes,
+        }, data.decoded.name);
+      }
+
+      if (dislikesIndex !== -1) {
+        torrentDislikes.orderedItems.splice(dislikesIndex, 1);
+        await basicObjectUpdate("torrents", {
+          "dislikes": torrentDislikes,
+        }, data.decoded.name);
+      }
+
+      ctx.response.body = {
+        "msg":
+          `Actions by ${requestJSON.actor} on Torrent ${ctx.params.id} undone`,
+      };
+      ctx.response.status = 200;
+      ctx.response.type = "application/json";
+
+      break;
+    }
     case "Flag": {
-      const data = await authData(ctx)
+      const data = await authData(ctx);
       const userInfo = await getUMetaInfo(data.decoded.name);
       const userRole = userInfo[2];
       const userActivity = await getUActivity(data.decoded.name, "info");
 
-	
-     if (!userInfo[2].flag) {
+      if (!userInfo[2].flag) {
         return throwAPIError(ctx, "Flagging not allowed", 400);
       }
 
       const torrentFlags = (await getTorrentJSON(ctx.params.id, "flags"))[0];
-	
+
       if (torrentFlags.orderedItems.includes(userActivity.id)) {
-        throwAPIError(ctx, "Already flagged item", 400);
-        break;
+        return throwAPIError(ctx, "Already flagged item", 400);
       }
 
       torrentFlags.orderedItems.push(userActivity.id);

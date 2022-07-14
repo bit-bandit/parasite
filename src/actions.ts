@@ -11,8 +11,8 @@ import {
   genInvitationReply,
   genOrderedCollection,
   genReply,
-    wrapperCreate,
-    genVote
+  genVote,
+  wrapperCreate,
 } from "./activity.ts";
 import {
   extractKey,
@@ -31,7 +31,6 @@ export const actions = new Router();
 Design Notes:
 - Check role abilities before request gets sent out.
 */
-
 
 actions.get("/x/:id", async function (ctx) {
   const res = await getActionJSON(ctx.params.id);
@@ -143,6 +142,122 @@ actions.post("/x/follow", async function (ctx) {
 
 // Send 'Undo' object type.
 actions.post("/x/undo", async function (ctx) {
+  const data = await authData(ctx);
+  const requestJSON = await data.request;
+
+  if (!requestJSON.object) {
+    return throwAPIError(
+      ctx,
+      "'object' field must be present and contain a URL",
+      400,
+    );
+  }
+
+  const userActivity = await getUActivity(data.decoded.name, "info");
+
+  const userLikes = await getUActivity(data.decoded.name, "likes");
+  const userDislikes = await getUActivity(data.decoded.name, "dislikes");
+
+  if (
+    !userLikes.orderedItems.includes(requestJSON.object) &&
+    !userDislikes.orderedItems.includes(requestJSON.object)
+  ) {
+    return throwAPIError(ctx, "No user activity on object found.", 400);
+  }
+
+  const likesIndex = userLikes.orderedItems.indexOf(requestJSON.object);
+  const dislikesIndex = userDislikes.orderedItems.indexOf(requestJSON.object);
+
+  const id: string = await genUUID(14);
+  const url = `${settings.siteURL}/x/${id}`;
+
+  let obj = await genVote({
+    "type": "Undo",
+    "actor": userActivity.id,
+    "object": requestJSON.object,
+    "to": [userActivity.followers],
+  });
+
+  await addToDB(
+    "actions",
+    {
+      "id": id,
+      "json": obj,
+      "activity": {},
+      "uploader": data.decoded.name,
+      "likes": {},
+      "dislikes": {},
+      "replies": {},
+      "flags": {},
+    },
+  );
+
+  if (likesIndex !== -1) {
+    userLikes.orderedItems.splice(likesIndex, 1);
+  }
+
+  if (dislikesIndex !== -1) {
+    userDislikes.orderedItems.splice(dislikesIndex, 1);
+  }
+
+  // Send to object
+
+  const d = new Date();
+
+  const u = new URL(requestJSON.object);
+  const time = d.toUTCString();
+  // Send to object in question
+  const msg = genHTTPSigBoilerplate({
+    "target": `post ${u.pathname}`,
+    "host": u.host,
+    "date": time,
+  });
+
+  const actorKeys = await getUActivity(data.decoded.name, "keys");
+  const priv = await extractKey("private", actorKeys[1]);
+
+  const signed = await simpleSign(msg, priv);
+
+  const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
+  const header =
+    `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+
+  const sendToObject = await fetch(requestJSON.object, {
+    method: "POST",
+    headers: {
+      "Accept": "application/activity+json",
+      "Content-Type": "application/json",
+      "Signature": header,
+      "Date": time,
+      "Host": u.host,
+      "Authorization": await ctx.request.headers.get("Authorization"),
+    },
+    body: JSON.stringify(obj),
+  });
+
+  const res = await sendToObject.json();
+
+  if (res.err) {
+    return throwAPIError(ctx, res.msg, 400);
+  }
+
+  if (likesIndex !== -1) {
+    await basicObjectUpdate("users", {
+      "likes": userLikes,
+    }, data.decoded.name);
+  }
+
+  if (dislikesIndex !== -1) {
+    await basicObjectUpdate("users", {
+      "dislikes": userDislikes,
+    }, data.decoded.name);
+  }
+
+  ctx.response.body = res;
+  ctx.response.status = 201;
+  ctx.response.type =
+    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+  ctx.response.headers.set("Location", url);
 });
 
 actions.post("/x/like", async function (ctx) {
@@ -160,21 +275,21 @@ actions.post("/x/like", async function (ctx) {
   const userActivity = await getUActivity(data.decoded.name, "info");
   const userLikes = await getUActivity(data.decoded.name, "likes");
 
-  if (userLikes.orderedItems.includes(requestJSON.object)){
-   return throwAPIError(ctx, "Already voted on item.", 400);
+  if (userLikes.orderedItems.includes(requestJSON.object)) {
+    return throwAPIError(ctx, "Already voted on item.", 400);
   }
-    
+
   const id: string = await genUUID(14);
   const url = `${settings.siteURL}/x/${id}`;
 
   let obj = await genVote({
-      "type": "Like",
-      "actor": userActivity.id,
-      "object": requestJSON.object,
-      "to": [userActivity.followers],
-  })
+    "type": "Like",
+    "actor": userActivity.id,
+    "object": requestJSON.object,
+    "to": [userActivity.followers],
+  });
 
-    await addToDB(
+  await addToDB(
     "actions",
     {
       "id": id,
@@ -186,11 +301,11 @@ actions.post("/x/like", async function (ctx) {
       "replies": {},
       "flags": {},
     },
-    );
+  );
 
-    userLikes.orderedItems.push(requestJSON.object);
-    userLikes.totalItems = userLikes.orderedItems.length;
-    // Send to object
+  userLikes.orderedItems.push(requestJSON.object);
+  userLikes.totalItems = userLikes.orderedItems.length;
+  // Send to object
 
   const d = new Date();
 
@@ -231,19 +346,19 @@ actions.post("/x/like", async function (ctx) {
 
   const res = await sendToObject.json();
 
-  if(res.err){
-      return throwAPIError(ctx, res.msg, 400)
+  if (res.err) {
+    return throwAPIError(ctx, res.msg, 400);
   }
-    
-    await basicObjectUpdate("users", {
-        "likes": userLikes,
-    }, data.decoded.name);
 
-    ctx.response.body = res
-    ctx.response.status = 201;
-    ctx.response.type =
-        'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-    ctx.response.headers.set("Location", url);
+  await basicObjectUpdate("users", {
+    "likes": userLikes,
+  }, data.decoded.name);
+
+  ctx.response.body = res;
+  ctx.response.status = 201;
+  ctx.response.type =
+    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+  ctx.response.headers.set("Location", url);
 });
 
 actions.post("/x/dislike", async function (ctx) {
@@ -261,21 +376,21 @@ actions.post("/x/dislike", async function (ctx) {
   const userActivity = await getUActivity(data.decoded.name, "info");
   const userDislikes = await getUActivity(data.decoded.name, "dislikes");
 
-  if (userDislikes.orderedItems.includes(requestJSON.object)){
-   return throwAPIError(ctx, "Already voted on item.", 400);
+  if (userDislikes.orderedItems.includes(requestJSON.object)) {
+    return throwAPIError(ctx, "Already voted on item.", 400);
   }
-    
+
   const id: string = await genUUID(14);
   const url = `${settings.siteURL}/x/${id}`;
 
   let obj = await genVote({
-      "type": "Dislike",
-      "actor": userActivity.id,
-      "object": requestJSON.object,
-      "to": [userActivity.followers],
-  })
+    "type": "Dislike",
+    "actor": userActivity.id,
+    "object": requestJSON.object,
+    "to": [userActivity.followers],
+  });
 
-    await addToDB(
+  await addToDB(
     "actions",
     {
       "id": id,
@@ -287,11 +402,11 @@ actions.post("/x/dislike", async function (ctx) {
       "replies": {},
       "flags": {},
     },
-    );
+  );
 
-    userDislikes.orderedItems.push(requestJSON.object);
-    userDislikes.totalItems = userDislikes.orderedItems.length;
-    // Send to object
+  userDislikes.orderedItems.push(requestJSON.object);
+  userDislikes.totalItems = userDislikes.orderedItems.length;
+  // Send to object
 
   const d = new Date();
 
@@ -332,19 +447,19 @@ actions.post("/x/dislike", async function (ctx) {
 
   const res = await sendToObject.json();
 
-  if(res.err){
-      return throwAPIError(ctx, res.msg, 400)
+  if (res.err) {
+    return throwAPIError(ctx, res.msg, 400);
   }
-    
-    await basicObjectUpdate("users", {
-        "dislikes": userDislikes,
-    }, data.decoded.name);
 
-    ctx.response.body = res
-    ctx.response.status = 201;
-    ctx.response.type =
-        'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-    ctx.response.headers.set("Location", url);
+  await basicObjectUpdate("users", {
+    "dislikes": userDislikes,
+  }, data.decoded.name);
+
+  ctx.response.body = res;
+  ctx.response.status = 201;
+  ctx.response.type =
+    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+  ctx.response.headers.set("Location", url);
 });
 
 // Send a comment.
