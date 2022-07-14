@@ -82,7 +82,7 @@ Deno.test("Update Torrent", async () => {
 });
 
 Deno.test("Comment on Torrent", async () => {
-  const r = await fetch(torrentURL, {
+  const r = await fetch("http://localhost:8080/x/comment", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -91,6 +91,7 @@ Deno.test("Comment on Torrent", async () => {
     body: JSON.stringify({
       "type": "Create",
       "content": "Something different",
+      "inReplyTo": torrentURL,
     }),
   });
 
@@ -106,7 +107,7 @@ Deno.test("Reply to Torrent Comment", async () => {
   r = await fetch(res.orderedItems[0]);
   res = await r.json();
 
-  const req = await fetch(res.id, {
+  const req = await fetch("http://localhost:8080/x/comment", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -114,7 +115,8 @@ Deno.test("Reply to Torrent Comment", async () => {
     },
     body: JSON.stringify({
       "type": "Create",
-      "content": "Something even stranger!",
+      "content": "Worms!",
+      "inReplyTo": res.id,
     }),
   });
   await req.json();

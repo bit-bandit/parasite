@@ -252,7 +252,9 @@ torrents.post("/t/", async function (ctx) {
 
 torrents.post("/t/:id", async function (ctx) {
   const data = await authData(ctx);
-  const requestJSON = data.request;
+
+  const raw = await ctx.request.body();
+  const requestJSON = await raw.value;
 
   const userInfo = await getUMetaInfo(data.decoded.name);
 
@@ -350,61 +352,22 @@ torrents.post("/t/:id", async function (ctx) {
     }
     // Creating a comment.
     case "Create": {
-      const id: string = await genUUID(14);
-      const url = `${settings.siteURL}/c/${id}`;
-
-      const comment = genReply({
-        "id": url,
-        "actor": userActivity.id,
-        "published": d.toISOString(),
-        "content": marked.parse(requestJSON.content),
-        "inReplyTo": json.id,
-      });
-
-      const activity = wrapperCreate({
-        "id": `${url}/activity`,
-        "actor": comment.attributedTo,
-        "object": comment,
-        "to": userActivity.followers,
-      });
-
-      await addToDB("comments", {
-        "id": id,
-        "json": comment,
-        "activity": activity,
-        "uploader": data.decoded.name,
-        "likes": genOrderedCollection(`${url}/likes`),
-        "dislikes": genOrderedCollection(`${url}/dislikes`),
-        "replies": genOrderedCollection(`${url}/r`),
-        "flags": genOrderedCollection(`${url}/flags`),
-      });
-
-      const userOutbox = await getUActivity(data.decoded.name, "outbox");
-
-      userOutbox.orderedItems.push(activity);
-      userOutbox.totalItems = userOutbox.orderedItems.length;
-
-      await basicObjectUpdate("users", {
-        "outbox": userOutbox,
-      }, data.decoded.name);
-
-      let torrentReplies = await getTorrentJSON(ctx.params.id, "replies");
-      torrentReplies[0].orderedItems.push(url);
+      const torrentReplies = await getTorrentJSON(ctx.params.id, "replies");
+      torrentReplies[0].orderedItems.push(requestJSON.object.id);
       torrentReplies[0].totalItems = torrentReplies[0].orderedItems.length;
+
       await basicObjectUpdate("torrents", {
         "replies": torrentReplies[0],
       }, ctx.params.id);
 
-      // sendToFollowers(data.decoded.name, activity);
-
       ctx.response.body = {
-        "msg": `Comment ${id} added to Torrent ${ctx.params.id}`,
+        "msg":
+          `Comment ${requestJSON.object.id} added to Torrent ${ctx.params.id}`,
       };
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-      ctx.response.headers.set("Location", url);
-      break;
+      ctx.response.headers.set("Location", ctx.request.url);
     }
     // Updating
     case "Update": {

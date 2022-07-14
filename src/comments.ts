@@ -88,65 +88,22 @@ comments.post("/c/:id", async function (ctx) {
 
   switch (requestJSON.type) {
     case "Create": {
-      const id: string = await genUUID(14);
-      const url = `${settings.siteURL}/c/${id}`;
-
-      const comment = genReply({
-        "id": url,
-        "actor": userActivity.id,
-        "published": d.toISOString(),
-        "content": marked.parse(requestJSON.content),
-        "inReplyTo": json.id,
-      });
-
-      const activity = wrapperCreate({
-        "id": `${url}/activity`,
-        "actor": comment.attributedTo,
-        "object": comment,
-        "to": userActivity.followers,
-      });
-
-      await addToDB(
-        "comments",
-        {
-          "id": id,
-          "json": comment,
-          "activity": activity,
-          "uploader": data.decoded.name,
-          "likes": genOrderedCollection(`${url}/likes`),
-          "dislikes": genOrderedCollection(`${url}/dislikes`),
-          "replies": genOrderedCollection(`${url}/r`),
-          "flags": genOrderedCollection(`${url}/flags`),
-        },
-      );
-
-      const userOutbox = await getUActivity(data.decoded.name, "outbox");
-
-      userOutbox.orderedItems.push(activity);
-      userOutbox.totalItems = userOutbox.orderedItems.length;
-
-      await basicObjectUpdate("users", {
-        "outbox": userOutbox,
-      }, data.decoded.name);
-
-      let commentReplies = await getCommentJSON(ctx.params.id, "replies");
-
-      commentReplies[0].orderedItems.push(url);
+      const commentReplies = await getCommentJSON(ctx.params.id, "replies");
+      commentReplies[0].orderedItems.push(requestJSON.object.id);
       commentReplies[0].totalItems = commentReplies[0].orderedItems.length;
 
       await basicObjectUpdate("comments", {
         "replies": commentReplies[0],
       }, ctx.params.id);
 
-      // sendToFollowers(data.decoded.name, activity);
-
       ctx.response.body = {
-        "msg": `Comment ${id} added to Torrent ${ctx.params.id}`,
+        "msg":
+          `Reply ${requestJSON.object.id} added to comment ${ctx.params.id}`,
       };
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-      ctx.response.headers.set("Location", url);
+      ctx.response.headers.set("Location", ctx.request.url);
       break;
     }
     case "Like": {

@@ -7,7 +7,12 @@ import {
   getActionJSON,
   getUActivity,
 } from "./db.ts";
-import { genInvitationReply } from "./activity.ts";
+import {
+  genInvitationReply,
+  genOrderedCollection,
+  genReply,
+  wrapperCreate,
+} from "./activity.ts";
 import {
   extractKey,
   genHTTPSigBoilerplate,
@@ -130,5 +135,188 @@ actions.post("/x/follow", async function (ctx) {
 });
 
 // Send 'Undo' object type.
-actions.post("/x/unfollow", async function (ctx) {
+actions.post("/x/undo", async function (ctx) {
+});
+
+actions.post("/x/like", async function (ctx) {
+});
+
+actions.post("/x/dislike", async function (ctx) {
+});
+
+actions.post("/x/comment", async function (ctx) {
+  const data = await authData(ctx);
+  const requestJSON = await data.request;
+
+  if (!requestJSON.inReplyTo) {
+    return throwAPIError(
+      ctx,
+      "'object' field must be present and contain a URL",
+      400,
+    );
+  }
+
+  const userActivity = await getUActivity(data.decoded.name, "info");
+  const id: string = await genUUID(14);
+  const url = `${settings.siteURL}/c/${id}`;
+  const d = new Date();
+
+  const comment = genReply({
+    "id": url,
+    "actor": userActivity.id,
+    "published": d.toISOString(),
+    "content": marked.parse(requestJSON.content),
+    "inReplyTo": requestJSON.inReplyTo,
+  });
+
+  const activity = wrapperCreate({
+    "id": `${url}/activity`,
+    "actor": comment.attributedTo,
+    "object": comment,
+    "to": userActivity.followers,
+  });
+
+  await addToDB("comments", {
+    "id": id,
+    "json": comment,
+    "activity": activity,
+    "uploader": data.decoded.name,
+    "likes": genOrderedCollection(`${url}/likes`),
+    "dislikes": genOrderedCollection(`${url}/dislikes`),
+    "replies": genOrderedCollection(`${url}/r`),
+    "flags": genOrderedCollection(`${url}/flags`),
+  });
+
+  const userOutbox = await getUActivity(data.decoded.name, "outbox");
+
+  userOutbox.orderedItems.push(activity);
+  userOutbox.totalItems = userOutbox.orderedItems.length;
+
+  await basicObjectUpdate("users", {
+    "outbox": userOutbox,
+  }, data.decoded.name);
+
+  // Send to followers
+  const followers = await getUActivity(data.decoded.name, "followers");
+
+  let i = 0;
+
+  for (const follower of followers.orderedItems) {
+    const u = new URL(follower);
+
+    if (u.origin === settings.siteURL) {
+      // Deliver locally, and nothing more.
+      const username = u.pathname.split("/").pop();
+      // Add to inbox of local user.
+      let inbox = await getUActivity(username, "inbox");
+
+      inbox.orderedItems.push(activity.id);
+      inbox.totalItems = inbox.orderedItems.length;
+
+      await basicObjectUpdate("users", {
+        "inbox": inbox,
+      }, username);
+    } else {
+      // REMINDER:
+      // Add HTTP headers, and whatnot.
+      // Read below for more details:
+      // https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/
+
+      const actorKeys = await getUActivity(data.decoded.name, "keys");
+      const priv = await extractKey("private", actorKeys[1]);
+
+      const time = d.toUTCString();
+
+      const msgToFollowers = genHTTPSigBoilerplate({
+        "target": `post ${u.pathname}`,
+        "host": u.host,
+        "date": time,
+      });
+
+      const signedFollowers = await simpleSign(msgToFollowers, priv);
+
+      const b64sigFollowers = btoa(
+        String.fromCharCode.apply(null, new Uint8Array(signedFollowers)),
+      );
+      const header =
+        `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sigFollowers}"`;
+
+      const actInfo = await fetch(follower, {
+        headers: {
+          "Accept": "application/activity+json",
+          "Content-Type": "application/activity+json",
+        },
+        method: "GET",
+      });
+      actInfo = await actInfo.json();
+
+      let r = await fetch(actInfo.inbox, {
+        method: "POST",
+        headers: {
+          "Accept": "application/activity+json",
+          "Content-Type": "application/json",
+          "Signature": header,
+          "Date": time,
+          "Host": u.host,
+        },
+        body: JSON.stringify(activity),
+      });
+
+      r = await r.json();
+
+      if (r.err) {
+        i++;
+      }
+    }
+  }
+
+  let errNo = "";
+
+  if (0 < i) {
+    errNo = ` with ${i} followers failing to recieve it`; // Keep the space at the start.
+  }
+  const u = new URL(requestJSON.inReplyTo);
+  const time = d.toUTCString();
+  // Send to object in question
+  const msg = genHTTPSigBoilerplate({
+    "target": `post ${u.pathname}`,
+    "host": u.host,
+    "date": time,
+  });
+
+  const actorKeys = await getUActivity(data.decoded.name, "keys");
+  const priv = await extractKey("private", actorKeys[1]);
+
+  const signed = await simpleSign(msg, priv);
+
+  const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
+  const header =
+    `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+
+  // We should really specify the `Accept` header because:
+  // 1) It's in the standard
+  // 2) Reverse proxies exist
+
+  const sendToObject = await fetch(requestJSON.inReplyTo, {
+    method: "POST",
+    headers: {
+      "Accept": "application/activity+json",
+      "Content-Type": "application/json",
+      "Signature": header,
+      "Date": time,
+      "Host": u.host,
+      "Authorization": await ctx.request.headers.get("Authorization"),
+    },
+    body: JSON.stringify(activity),
+  });
+
+  const res = await sendToObject.json();
+
+  ctx.response.body = {
+    "msg": `Comment ${id} added to Torrent ${requestJSON.inReplyTo}`,
+  };
+  ctx.response.status = 201;
+  ctx.response.type =
+    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+  ctx.response.headers.set("Location", url);
 });
