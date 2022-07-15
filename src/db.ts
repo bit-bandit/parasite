@@ -68,15 +68,6 @@ CREATE TABLE IF NOT EXISTS comments (
 );
 `;
 
-const tagsTableInit = `
-CREATE TABLE IF NOT EXISTS tags (
-  name     VARCHAR(37)  NOT NULL,
-  created  VARCHAR(37)  NOT NULL,
-  aliasof  VARCHAR(37),
-  allowed  BOOLEAN      NOT NULL
-);
-`;
-
 const actionsTableInit = `
 CREATE TABLE IF NOT EXISTS actions (
   PRIMARY KEY(id),
@@ -98,7 +89,6 @@ await client.queryArray(`
   ${torrentTableInit}
   ${listsTableInit}
   ${commentsTableInit}
-  ${tagsTableInit}
   ${actionsTableInit}
 `);
 
