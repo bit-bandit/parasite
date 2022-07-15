@@ -102,6 +102,8 @@ lists.post("/l/", async function (ctx) {
   const tag: string[] = [];
   if (requestJSON.tags) {
     requestJSON.tags.split(",").map((x) =>
+            x.toLowerCase();
+      x.replace(" ", "_");
       tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
     );
   }

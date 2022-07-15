@@ -20,15 +20,3 @@ tags.get("/i/:tag", async function (ctx: Context) {
   };
   ctx.response.type = "application/activity+json";
 });
-
-/*
-SELECT json FROM torrents WHERE json->>'tag' ? 'http://localhost:8080/i/action';
-
-SELECT json FROM torrents WHERE json #> '{ tag: ["http://localhost:8080/i/action"]}';
-
-SELECT json
-FROM   torrents r, json_array_elements(r.json#>'{tags}') obj
-WHERE  obj->>'src' = 'foo.png';
-
-SELECT json FROM torrents WHERE json ->> 'tag' = '["http://localhost:8080/i/action","http://localhost:8080/i/adventure","http://localhost:8080/i/fantasy"]';
-*/
