@@ -154,12 +154,13 @@ export function getCommentJSON(id: string, t?: string): Promise<> {
   );
 }
 
-export function getJSONfromTags(category: string, t?: string[]): Promise<> {
-  return basicDataQuery(
-    "No objects with that tag were found",
-    `SELECT json FROM ${category} WHERE json @> $1`,
-    JSON.stringify({ "tag": t }),
+export async function getJSONfromTags(t: string): Promise<> {
+  await client.connect();
+  const res = await client.queryArray(
+    `SELECT json FROM torrents WHERE json ->> 'tag' LIKE '[%${t}%';`,
   );
+  await client.end();
+  return res.rows;
 }
 
 // User related information

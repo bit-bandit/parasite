@@ -122,7 +122,7 @@ torrents.post("/t/", async function (ctx) {
   const tag: string[] = [];
   if (requestJSON.tags) {
     requestJSON.tags.split(",").map((x) =>
-      tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
+      tag.push(`${settings.siteURL}/i/${encodeURIComponent(x.toLowerCase())}`)
     );
   }
 
@@ -439,7 +439,9 @@ torrents.post("/t/:id", async function (ctx) {
 
       if (requestJSON.tags) {
         requestJSON.tags.split(",").map((x) =>
-          tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
+          tag.push(
+            `${settings.siteURL}/i/${encodeURIComponent(x.toLowerCase())}`,
+          )
         );
         json.tag = tag;
       }
