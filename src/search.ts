@@ -5,7 +5,7 @@ export const search = new Router();
 
 function searchTokenize(packet) {
   // Variables
-  let text = string[] = [];
+  let text: string[] = [];
   let users: string[] = [];
   let tags: string[] = [];
 
