@@ -22,7 +22,7 @@ import {
   getUActivity,
   getUMetaInfo,
 } from "./db.ts";
-import { authData, genUUID, sendToFollowers, throwAPIError } from "./utils.ts";
+import { authData, genUUID, sendToFollowers, throwAPIError, isValidChar } from "./utils.ts";
 import { settings } from "../settings.ts";
 import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
 
