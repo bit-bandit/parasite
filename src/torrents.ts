@@ -12,7 +12,6 @@ import { Context, Router } from "https://deno.land/x/oak/mod.ts";
 import {
   genObj,
   genOrderedCollection,
-  genReply,
   wrapperCreate,
   wrapperUpdate,
 } from "./activity.ts";
@@ -27,13 +26,11 @@ import {
 import {
   extractKey,
   genHTTPSigBoilerplate,
-  genKeyPair,
-  getJWTKey,
   simpleSign,
   simpleVerify,
   str2ab,
 } from "./crypto.ts";
-import { authData, genUUID, sendToFollowers, throwAPIError } from "./utils.ts";
+import { authData, genUUID, isValidChar, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import * as ammonia from "https://deno.land/x/ammonia@0.3.1/mod.ts";
 import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
@@ -118,14 +115,15 @@ torrents.post("/t/", async function (ctx) {
 
   const id: string = genUUID(12);
   const url = `${settings.siteURL}/t/${id}`;
-  // TODO: Tag checking/creation if not exists.
+
   const tag: string[] = [];
+
   if (requestJSON.tags) {
-    requestJSON.tags.split(",").map((x) =>
+    requestJSON.tags.split(",").filter((x) => isValidChar(x)).map(function (x) {
       x.toLowerCase();
       x.replace(" ", "_");
-      tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
-    );
+      tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`);
+    });
   }
 
   const d = new Date();
@@ -179,7 +177,7 @@ torrents.post("/t/", async function (ctx) {
       // Deliver locally, and nothing more.
       const username = u.pathname.split("/").pop();
       // Add to inbox of local user.
-      let inbox = await getUActivity(username, "inbox");
+      const inbox = await getUActivity(username, "inbox");
 
       inbox.orderedItems.push(activity.id);
       inbox.totalItems = inbox.orderedItems.length;
@@ -270,7 +268,6 @@ torrents.post("/t/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -282,7 +279,7 @@ torrents.post("/t/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,
@@ -326,7 +323,6 @@ torrents.post("/t/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -338,7 +334,7 @@ torrents.post("/t/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,
@@ -382,7 +378,6 @@ torrents.post("/t/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -394,7 +389,7 @@ torrents.post("/t/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,
@@ -422,6 +417,7 @@ torrents.post("/t/:id", async function (ctx) {
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
       ctx.response.headers.set("Location", ctx.request.url);
+      break;
     }
     // Updating
     case "Update": {
@@ -440,12 +436,12 @@ torrents.post("/t/:id", async function (ctx) {
       const tag: string[] = [];
 
       if (requestJSON.tags) {
-        requestJSON.tags.split(",").map((x) =>
-          tag.push(
-                  x.toLowerCase();
-      x.replace(" ", "_");
-      tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
-          )
+        requestJSON.tags.split(",").filter((x) => isValidChar(x)).map(
+          function (x) {
+            x.toLowerCase();
+            x.replace(" ", "_");
+            tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`);
+          },
         );
         json.tag = tag;
       }
@@ -510,7 +506,6 @@ torrents.post("/t/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -522,7 +517,7 @@ torrents.post("/t/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,
@@ -582,7 +577,6 @@ torrents.post("/t/:id", async function (ctx) {
     case "Flag": {
       const data = await authData(ctx);
       const userInfo = await getUMetaInfo(data.decoded.name);
-      const userRole = userInfo[2];
       const userActivity = await getUActivity(data.decoded.name, "info");
 
       if (!userInfo[2].flag) {

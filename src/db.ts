@@ -2,6 +2,7 @@
 
 import { Client } from "https://deno.land/x/postgres@v0.16.1/mod.ts";
 import { settings } from "../settings.ts";
+import { SearchQuery } from "./search.ts";
 
 const db_settings = settings.database.settings;
 const client = new Client(db_settings);
@@ -386,30 +387,22 @@ export async function deleteList(id: string) {
   }, user);
 }
 
-export async function search(query: string) {
+export async function search(query) {
   // q = Search query
   // t = tags (comma seperated(?))
   // u = Specify user
-  // s = Sort 'highest/lowest'
+    
 
-  const u = new URLPattern(query);
-
-  if (u.search.length === 0) {
-    return {
-      "err": true,
-      "msg": "Invalid search input",
-    };
-  }
-
-  const search = new URLSearchParams(u.search);
-
-  // I'm not going to even fucking bother with this, for the time being.
-  if (search.has("q")) {
-    await client.connect();
-    await client.queryArray(
-      "SELECT json WHERE json->>'title' ILIKE $1 OR json->>'content' ILIKE $1 OR id = $1;",
-      [search.get("q")],
-    );
-    await client.end();
-  }
+    // Okay here's the deal:
+    // if a user is specified - Only query the DB for posts by
+    // that user, and let the server take care of the rest.
+    //
+    // If a tag is specified, while a user isn't, just query
+    // for those tags, and let the server take care of the rest.
+    //
+    // If just text is specified, do a fuzzy full text search
+    // of the torrents, and lists DB, and then get the server
+    // involved somewhere, I don't know.
+    const req = new URL(query);
+    return req.search;
 }

@@ -101,11 +101,11 @@ lists.post("/l/", async function (ctx) {
   // TODO: Tag checking/creation if not exists.
   const tag: string[] = [];
   if (requestJSON.tags) {
-    requestJSON.tags.split(",").map((x) =>
-            x.toLowerCase();
+    requestJSON.tags.split(",").filter((x) => isValidChar(x)).map(function (x) {
+      x.toLowerCase();
       x.replace(" ", "_");
-      tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
-    );
+      tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`);
+    });
   }
 
   const d = new Date();
@@ -426,8 +426,12 @@ lists.post("/l/:id", async function (ctx) {
       const tag: string[] = [];
 
       if (requestJSON.tags) {
-        requestJSON.tags.split(",").map((x) =>
-          tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`)
+        requestJSON.tags.split(",").filter((x) => isValidChar(x)).map(
+          function (x) {
+            x.toLowerCase();
+            x.replace(" ", "_");
+            tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`);
+          },
         );
         json.tag = tag;
       }

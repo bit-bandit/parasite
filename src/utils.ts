@@ -205,3 +205,8 @@ export function parseHTTPSig(msg: string) {
 
   return res;
 }
+
+export function isValidChar(m: string): boolean {
+  const regex = /^[A-Za-z0-9_]{1,24}$/;
+  return regex.test(m);
+}
