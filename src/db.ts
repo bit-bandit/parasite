@@ -489,8 +489,8 @@ export async function search(query) {
 
     let res = fuse.search(searchText);
 
-    res.map((x) => x = x.item);
-
+    res = res[0];
+      console.log(res)
     // Return final value.
     return res;
   }
