@@ -1,11 +1,20 @@
 // Database queries and related functions.
 
 import { Client } from "https://deno.land/x/postgres@v0.16.1/mod.ts";
+import { distance } from "https://deno.land/x/damerau_levenshtein/mod.ts";
+
 import { settings } from "../settings.ts";
 import { SearchQuery } from "./search.ts";
 
 const db_settings = settings.database.settings;
 const client = new Client(db_settings);
+
+interface Res {
+  index: number;
+  titleMatch: number;
+  contentMatch: number;
+  tagMatch: number;
+}
 
 const userTableInit = `
 CREATE TABLE IF NOT EXISTS users (
@@ -150,6 +159,15 @@ export async function getJSONfromTags(t: string): Promise<> {
   const res = await client.queryArray(
     `SELECT json FROM torrents WHERE json ->> 'tag' LIKE '[%${t}%';`,
   );
+
+  const list = await client.queryArray(
+    `SELECT json FROM lists WHERE json ->> 'tag' LIKE '[%${t}%';`,
+  );
+
+  if (list.rows.length > 0) {
+    res.rows.push(list.rows[0]);
+  }
+
   await client.end();
   return res.rows;
 }
@@ -389,20 +407,138 @@ export async function deleteList(id: string) {
 
 export async function search(query) {
   // q = Search query
-  // t = tags (comma seperated(?))
+  // i = tags (comma seperated(?))
   // u = Specify user
-    
+  const q = new URL(query);
 
-    // Okay here's the deal:
-    // if a user is specified - Only query the DB for posts by
-    // that user, and let the server take care of the rest.
-    //
-    // If a tag is specified, while a user isn't, just query
-    // for those tags, and let the server take care of the rest.
-    //
-    // If just text is specified, do a fuzzy full text search
-    // of the torrents, and lists DB, and then get the server
-    // involved somewhere, I don't know.
-    const req = new URL(query);
-    return req.search;
+  // Okay here's the deal:
+  // if a user is specified - Only query the DB for posts by
+  // that user, and let the server take care of the rest.
+  if (
+    q.searchParams.has("u") &&
+    q.searchParams.has("i") &&
+    q.searchParams.has("q")
+  ) {
+    const users = q.searchParams.get("u");
+    // Connect
+    await client.connect();
+
+    let usubmissions: any[] = [];
+
+    for (const user of users.split("+")) {
+      const torrentUploads = await client.queryArray(
+        "SELECT json FROM torrents WHERE uploader = $1;",
+        [user],
+      );
+
+      const listUploads = await client.queryArray(
+        "SELECT json FROM lists WHERE uploader = $1;",
+        [user],
+      );
+
+      // Format rows properly
+      for (let i in listUploads.rows) {
+        listUploads.rows[i] = listUploads.rows[i][0];
+      }
+
+      for (let i in torrentUploads.rows) {
+        torrentUploads.rows[i] = torrentUploads.rows[i][0];
+      }
+
+      // Combine rows.
+      if (torrentUploads.rows.length > 0) {
+        usubmissions.push(...torrentUploads.rows);
+      }
+
+      if (listUploads.rows.length > 0) {
+        usubmissions.push(...listUploads.rows);
+      }
+    }
+    await client.end();
+
+    // Filter tags, and strings.
+
+    const tags = q.searchParams.get("i");
+
+    // This doesn't work.
+    for (const tag of tags.split("+")) {
+      const tagURL = new URL(`/i/${tag}`, settings.siteURL);
+      usubmissions.filter(function (x) {
+        let c: string[] = [];
+        for (const entryTag of x.tag) {
+          let k = new URL(entryTag);
+          c.push(k.pathname);
+        }
+        return c.includes(tagURL.pathname);
+      });
+    }
+
+    // Sort
+    const results: Res[] = [];
+    const searchText: string = q.searchParams.get("q");
+
+    let i = 0;
+
+    for (const entry of usubmissions) {
+      const titleRes = distance(searchText, entry.name);
+
+      let contentRes = "";
+
+      if (entry.content) {
+        contentRes = distance(
+          searchText,
+          entry.content,
+        );
+      } else {
+        contentRes = distance(searchText, entry.summary);
+      }
+
+      const tagRes = distance(
+        searchText,
+        entry.tag.join(" "),
+      );
+
+      results.push({
+        index: i,
+        titleMatch: titleRes,
+        contentMatch: contentRes,
+        tagMatch: tagRes,
+      });
+      i++;
+    }
+
+    results.sort(function (a, b) {
+      const sumA = (a.titleMatch + a.contentMatch + a.tagMatch);
+      const sumB = (b.titleMatch + b.contentMatch + b.tagMatch);
+      return sumB + sumA;
+    });
+
+    // This also doesn't work.
+    usubmissions.sort(function (a, b) {
+      return results.indexOf(a) - results.indexOf(b);
+    });
+
+    // Return final value.
+    return usubmissions;
+  }
+
+  // If a tag is specified, while a user isn't, just query
+  // for those tags, and let the server take care of the rest.
+  if (q.searchParams.has("i")) {
+    const tag = q.searchParams.get("i");
+    // Get tags.
+    // Combine rows.
+    // Fitler tags, with strings.
+    // Sort.
+    // Return.
+  }
+  // If just text is specified, do a fuzzy full text search
+  // of the torrents, and lists DB, and then get the server
+  // involved somewhere, I don't know.
+  if (q.searchParams.has("q")) {
+    return {
+      "type": "String",
+      "collection": q.searchParams.get("q"),
+    };
+  }
 }

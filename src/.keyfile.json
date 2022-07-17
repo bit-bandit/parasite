@@ -1,0 +1,11 @@
+{
+  "creationDate": 1657599276558,
+  "signedTestData": {},
+  "jwk": {
+    "kty": "oct",
+    "k": "-adzfA5uLv2CJYCoGIYDFkeZ3AOCrzVgKnAsFXswPpHEnaDJLE8KI4ZxqFB8CrUq2wJNtmr7lv7PG2M9RZCRo4ItOmw-RF7t1sBFYFzwk8sRs4sS40jthnhbmpEYBpaKX-hMKrTh4SuVSsx7TlxYWmzBZYY1Dyy0ED1yfoUCtps",
+    "alg": "HS512",
+    "key_ops": ["sign", "verify"],
+    "ext": true
+  }
+}

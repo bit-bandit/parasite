@@ -2,7 +2,7 @@ export const settings = {
   "siteURL": "http://localhost:8080",
   "sitePort": 8080,
   "defaultRole": "User",
-  "allowedCategories": [
+  "allowedTags": [
     "audio",
     "documents",
     "games",

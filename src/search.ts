@@ -52,38 +52,35 @@ search.post("/s", async function (ctx) {
 
   const token = searchTokenize(requestJSON.query);
 
-  const u = new URL('/s', settings.siteURL);
-    
+  const u = new URL("/s", settings.siteURL);
+
   if (token.text) {
     u.searchParams.append("q", token.text.join("+"));
   }
   if (token.tags) {
-    u.searchParams.append("t", token.tags.join("+"));
+    u.searchParams.append("i", token.tags.join("+"));
   }
   if (token.users) {
     u.searchParams.append("u", token.users.join("+"));
   }
 
-    ctx.response.redirect(u.href);
-    ctx.response.body = {
-	"msg": `Redirecting to ${u.href}`
-    }
-    ctx.response.status = 301;
-    ctx.response.type = "application/json";
+  ctx.response.redirect(u.href);
+  ctx.response.body = {
+    "msg": `Redirecting to ${u.href}`,
+  };
+  ctx.response.status = 301;
+  ctx.response.type = "application/json";
 });
 
 search.get("/s", async function (ctx) {
-  // const res = await search(ctx.request.url);
-    // if (!res.err) {
-    const res = await searchDB(ctx.request.url);
+  const res = await searchDB(ctx.request.url);
+  if (!res.err) {
     ctx.response.body = res;
     ctx.response.status = 200;
     ctx.response.type = "application/json";
-/*
   } else {
     ctx.response.body = res;
     ctx.response.status = 404;
     ctx.response.type = "application/json";
   }
-*/
 });
