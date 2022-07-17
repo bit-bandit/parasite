@@ -1,8 +1,7 @@
 // Database queries and related functions.
 
 import { Client } from "https://deno.land/x/postgres@v0.16.1/mod.ts";
-import { distance } from "https://deno.land/x/damerau_levenshtein/mod.ts";
-
+import Fuse from "https://deno.land/x/fuse@v6.4.1/dist/fuse.esm.min.js";
 import { settings } from "../settings.ts";
 import { SearchQuery } from "./search.ts";
 
@@ -411,6 +410,17 @@ export async function search(query) {
   // u = Specify user
   const q = new URL(query);
 
+  // Fuzzy search engine
+  const fuseOptions = {
+    threshold: 0.4,
+    keys: [
+      "name",
+      "content",
+      "summary",
+      "tag",
+    ],
+  };
+
   // Okay here's the deal:
   // if a user is specified - Only query the DB for posts by
   // that user, and let the server take care of the rest.
@@ -474,52 +484,15 @@ export async function search(query) {
     }
 
     // Sort
-    const results: Res[] = [];
     const searchText: string = q.searchParams.get("q");
+    const fuse = new Fuse(usubmissions, fuseOptions);
 
-    let i = 0;
+    let res = fuse.search(searchText);
 
-    for (const entry of usubmissions) {
-      const titleRes = distance(searchText, entry.name);
-
-      let contentRes = "";
-
-      if (entry.content) {
-        contentRes = distance(
-          searchText,
-          entry.content,
-        );
-      } else {
-        contentRes = distance(searchText, entry.summary);
-      }
-
-      const tagRes = distance(
-        searchText,
-        entry.tag.join(" "),
-      );
-
-      results.push({
-        index: i,
-        titleMatch: titleRes,
-        contentMatch: contentRes,
-        tagMatch: tagRes,
-      });
-      i++;
-    }
-
-    results.sort(function (a, b) {
-      const sumA = (a.titleMatch + a.contentMatch + a.tagMatch);
-      const sumB = (b.titleMatch + b.contentMatch + b.tagMatch);
-      return sumB + sumA;
-    });
-
-    // This also doesn't work.
-    usubmissions.sort(function (a, b) {
-      return results.indexOf(a) - results.indexOf(b);
-    });
+    res.map((x) => x = x.item);
 
     // Return final value.
-    return usubmissions;
+    return res;
   }
 
   // If a tag is specified, while a user isn't, just query
