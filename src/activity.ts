@@ -157,7 +157,7 @@ export interface ActivityImage extends ActivityLink {
 }
 
 // Generate the actual object with the magnet link (AKA; The 'Pub' part of ActivityPub)
-export function genObj(params = {}): ActivityObject {
+export function genObj(params: any = {}): ActivityObject {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": params.id,
@@ -176,7 +176,7 @@ export function genObj(params = {}): ActivityObject {
   };
 }
 // Create reply object.
-export function genReply(params = {}): ActivityObject {
+export function genReply(params: any = {}): ActivityObject {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": params.id,
@@ -190,7 +190,7 @@ export function genReply(params = {}): ActivityObject {
   };
 }
 
-export function genInvitationReply(params = {}) {
+export function genInvitationReply(params: any = {}) {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": params.id,
@@ -205,7 +205,7 @@ export function genInvitationReply(params = {}) {
 // Voting. Type should be either `like` or `dislike`, since we're going by the standard.
 // We're doing some other shit with this too (See `doc/voting.md`), but we can get away
 // with it.
-export function genVote(params = {}) {
+export function genVote(params: any = {}) {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": params.type,
@@ -219,7 +219,7 @@ export function genVote(params = {}) {
 
 // See 4.1: Actor objects for more understandings on how to do this shit.
 
-export function actorObj(params = {}) {
+export function actorObj(params: any = {}) {
   // Notes: Image is used for user banners, icons are used for, well, icons.
   // This is because Mastodon, and Pleroma do it, so we're gonna have to
   // follow the bandwagon, there.
@@ -249,7 +249,7 @@ export function actorObj(params = {}) {
 
 // We should note this isn't *required* by the standard, but due to paranoia,
 // we're adding it anyways.
-export function wrapperCreate(params = {}): ActivityWrapper {
+export function wrapperCreate(params: any = {}): ActivityWrapper {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": "Create",
@@ -262,7 +262,7 @@ export function wrapperCreate(params = {}): ActivityWrapper {
   };
 }
 
-export function wrapperUpdate(params = {}): ActivityWrapper {
+export function wrapperUpdate(params: any = {}): ActivityWrapper {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": "Update",
@@ -283,8 +283,8 @@ export function wrapperUpdate(params = {}): ActivityWrapper {
 // URLs.
 export function genOrderedCollection(
   id: string,
-  items?: (ActivityObject | ActivityLink)[] = [],
-  params = {},
+  items: (ActivityObject | ActivityLink)[] = [],
+  params: any = {},
 ) {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
