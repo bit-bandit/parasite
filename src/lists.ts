@@ -22,17 +22,7 @@ import {
   getUActivity,
   getUMetaInfo,
 } from "./db.ts";
-<<<<<<< HEAD
-import {
-  authData,
-  genUUID,
-  isValidChar,
-  sendToFollowers,
-  throwAPIError,
-} from "./utils.ts";
-=======
-import { authData, genUUID, sendToFollowers, throwAPIError } from "./utils.ts";
->>>>>>> parent of ceb6c8b (Link local export that I forgot to specify in a file)
+import { authData, genUUID, sendToFollowers, throwAPIError, isValidChar } from "./utils.ts";
 import { settings } from "../settings.ts";
 import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
 
