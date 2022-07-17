@@ -421,97 +421,91 @@ export async function search(query) {
     ],
   };
 
+  let foundObjs: any[] = [];
+
+  // Connect
+  await client.connect();
+
+  let torrentResults, listResults;
+  let torrentUploads = [], listUploads = [];
+
   // Okay here's the deal:
   // if a user is specified - Only query the DB for posts by
   // that user, and let the server take care of the rest.
-  if (
-    q.searchParams.has("u") &&
-    q.searchParams.has("i") &&
-    q.searchParams.has("q")
-  ) {
+  if (q.searchParams.has("u")) {
     const users = q.searchParams.get("u");
-    // Connect
-    await client.connect();
-
-    let usubmissions: any[] = [];
 
     for (const user of users.split("+")) {
-      const torrentUploads = await client.queryArray(
+      torrentResults = await client.queryArray(
         "SELECT json FROM torrents WHERE uploader = $1;",
         [user],
       );
 
-      const listUploads = await client.queryArray(
+      listResults = await client.queryArray(
         "SELECT json FROM lists WHERE uploader = $1;",
         [user],
       );
 
-      // Format rows properly
-      for (let i in listUploads.rows) {
-        listUploads.rows[i] = listUploads.rows[i][0];
+      if (torrentResults.rows.length) {
+        torrentUploads.push(...torrentResults.rows);
       }
 
-      for (let i in torrentUploads.rows) {
-        torrentUploads.rows[i] = torrentUploads.rows[i][0];
-      }
-
-      // Combine rows.
-      if (torrentUploads.rows.length > 0) {
-        usubmissions.push(...torrentUploads.rows);
-      }
-
-      if (listUploads.rows.length > 0) {
-        usubmissions.push(...listUploads.rows);
+      if (listResults.rows.length) {
+        listResults.push(...listResults.rows);
       }
     }
-    await client.end();
+  } else {
+    torrentResults = await client.queryArray("SELECT json FROM torrents;");
+    listResults = await client.queryArray("SELECT json FROM lists;");
 
-    // Filter tags, and strings.
+    if (torrentResults.rows.length) {
+      torrentUploads = torrentResults.rows[0];
+    }
 
+    if (listResults.rows.length) {
+      listUploads = listResults.rows[0];
+    }
+  }
+
+  await client.end();
+
+  // Unpack arrays into one results array
+  foundObjs = [...torrentUploads, ...listUploads];
+
+  // Make sure we don't waste memory here
+  torrentUploads = undefined;
+  listUploads = undefined;
+
+  if (q.searchParams.has("i")) {
+    // Filter tags
     const tags = q.searchParams.get("i");
 
-    // This doesn't work.
-    for (const tag of tags.split("+")) {
+    // Use space because + is automatically replaced with space
+    for (const tag of tags.split(" ")) {
       const tagURL = new URL(`/i/${tag}`, settings.siteURL);
-      usubmissions.filter(function (x) {
-        let c: string[] = [];
+
+      // Filter out objects that don't include the tag
+      foundObjs = foundObjs.filter((x) => {
+        let tagNames: string[] = [];
+
         for (const entryTag of x.tag) {
-          let k = new URL(entryTag);
-          c.push(k.pathname);
+          let curTagURL = new URL(entryTag);
+          tagNames.push(curTagURL.pathname);
         }
-        return c.includes(tagURL.pathname);
+
+        return tagNames.includes(tagURL.pathname);
       });
     }
-
-    // Sort
-    const searchText: string = q.searchParams.get("q");
-    const fuse = new Fuse(usubmissions, fuseOptions);
-
-    let res = fuse.search(searchText);
-
-    res = res[0];
-      console.log(res)
-    // Return final value.
-    return res;
   }
 
-  // If a tag is specified, while a user isn't, just query
-  // for those tags, and let the server take care of the rest.
-  if (q.searchParams.has("i")) {
-    const tag = q.searchParams.get("i");
-    // Get tags.
-    // Combine rows.
-    // Fitler tags, with strings.
-    // Sort.
-    // Return.
-  }
-  // If just text is specified, do a fuzzy full text search
-  // of the torrents, and lists DB, and then get the server
-  // involved somewhere, I don't know.
+  // Filter strings and sort
   if (q.searchParams.has("q")) {
-    return {
-      "type": "String",
-      "collection": q.searchParams.get("q"),
-    };
+    const searchText: string = q.searchParams.get("q");
+    const fuse = new Fuse(foundObjs, fuseOptions);
+
+    foundObjs = fuse.search(searchText);
   }
+
+  // Return final value.
+  return foundObjs;
 }
