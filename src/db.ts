@@ -404,11 +404,11 @@ export async function deleteList(id: string) {
   }, user);
 }
 
-export async function search(query) {
+export async function search(url) {
   // q = Search query
   // i = tags (comma seperated(?))
   // u = Specify user
-  const q = new URL(query);
+  const searchParams = url.searchParams;
 
   // Fuzzy search engine
   const fuseOptions = {
@@ -423,6 +423,18 @@ export async function search(query) {
 
   let foundObjs: any[] = [];
 
+  const users = searchParams.get("u");
+  const tags = searchParams.get("i");
+  const query = searchParams.get("q");
+
+  if (
+    (!users || !users.length) &&
+    (!tags || !tags.length) &&
+    (!query || !query.length)
+  ) {
+    return [];
+  }
+
   // Connect
   await client.connect();
 
@@ -432,10 +444,8 @@ export async function search(query) {
   // Okay here's the deal:
   // if a user is specified - Only query the DB for posts by
   // that user, and let the server take care of the rest.
-  if (q.searchParams.has("u")) {
-    const users = q.searchParams.get("u");
-
-    for (const user of users.split("+")) {
+  if (users && users.length) {
+    for (const user of users.split(" ")) {
       torrentResults = await client.queryArray(
         "SELECT json FROM torrents WHERE uploader = $1;",
         [user],
@@ -447,11 +457,11 @@ export async function search(query) {
       );
 
       if (torrentResults.rows.length) {
-        torrentUploads.push(...torrentResults.rows);
+        torrentUploads.push(...torrentResults.rows[0]);
       }
 
       if (listResults.rows.length) {
-        listResults.push(...listResults.rows);
+        listResults.push(...listResults.rows[0]);
       }
     }
   } else {
@@ -478,19 +488,17 @@ export async function search(query) {
   torrentUploads = undefined;
   listUploads = undefined;
 
-  if (q.searchParams.has("i")) {
-    // Filter tags
-    const tags = q.searchParams.get("i");
-
+  // Filter tags
+  if (tags && tags.length) {
     // Use space because + is automatically replaced with space
     for (const tag of tags.split(" ")) {
       const tagURL = new URL(`/i/${tag}`, settings.siteURL);
 
       // Filter out objects that don't include the tag
-      foundObjs = foundObjs.filter((x) => {
+      foundObjs = foundObjs.filter((obj) => {
         let tagNames: string[] = [];
 
-        for (const entryTag of x.tag) {
+        for (const entryTag of obj.tag) {
           let curTagURL = new URL(entryTag);
           tagNames.push(curTagURL.pathname);
         }
@@ -501,10 +509,8 @@ export async function search(query) {
   }
 
   // Filter strings and sort
-  if (q.searchParams.has("q")) {
-    const searchText: string = q.searchParams.get("q");
+  if (query && query.length) {
     const fuse = new Fuse(foundObjs, fuseOptions);
-
     foundObjs = fuse.search(searchText);
   }
   // Return final value.

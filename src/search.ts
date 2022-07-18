@@ -1,4 +1,5 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
+import { genOrderedCollection } from "./activity.ts";
 import { search as searchDB } from "./db.ts";
 import { settings } from "../settings.ts";
 
@@ -46,41 +47,54 @@ function searchTokenize(packet): SearchQuery {
 // compatible URL input, redirect to...
 // GET - Get search query server will read from
 // URL to indicate what to do.
-search.post("/s", async function (ctx) {
-  const raw = await ctx.request.body();
-  const requestJSON = await raw.value;
+search.get("/s", async function (ctx) {
+  const searchParams = ctx.request.url.searchParams;
 
-  const token = searchTokenize(requestJSON.query);
+  // Tokenize the query if it exists. (Empty string produces empty tokens obj)
+  const tokens = searchTokenize(searchParams.get("q") ?? "");
 
-  const u = new URL("/s", settings.siteURL);
-
-  if (token.text) {
-    u.searchParams.append("q", token.text.join("+"));
+  // Add existing tags and users
+  if (searchParams.has("i")) {
+    tokens.tags.unshift(...searchParams.get("i").split(" "));
   }
-  if (token.tags) {
-    u.searchParams.append("i", token.tags.join("+"));
-  }
-  if (token.users) {
-    u.searchParams.append("u", token.users.join("+"));
+  if (searchParams.has("u")) {
+    tokens.users.unshift(...searchParams.get("u").split(" "));
   }
 
-  ctx.response.redirect(u.href);
-  ctx.response.body = {
-    "msg": `Redirecting to ${u.href}`,
-  };
-  ctx.response.status = 301;
+  const parsedURL = new URL("/s", settings.siteURL);
+
+  if (tokens.text) {
+    parsedURL.searchParams.append("q", tokens.text.join("+"));
+  }
+  if (tokens.tags) {
+    parsedURL.searchParams.append("i", tokens.tags.join("+"));
+  }
+  if (tokens.users) {
+    parsedURL.searchParams.append("u", tokens.users.join("+"));
+  }
+
+  const res = await searchDB(parsedURL);
+
+  const ordColl = genOrderedCollection(parsedURL.href, res, {
+    summary: "Search results",
+  });
+
+  ctx.response.body = ordColl;
   ctx.response.type = "application/json";
+
+  if (!res.err) {
+    ctx.response.status = 200;
+  } else {
+    ctx.response.status = 404;
+  }
 });
 
-search.get("/s", async function (ctx) {
-  const res = await searchDB(ctx.request.url);
-  if (!res.err) {
-    ctx.response.body = res;
-    ctx.response.status = 200;
-    ctx.response.type = "application/json";
-  } else {
-    ctx.response.body = res;
-    ctx.response.status = 404;
-    ctx.response.type = "application/json";
-  }
+search.post("/s/r", async function (ctx) {
+  ctx.response.body = {
+    "err": true,
+    "msg": "That's illegal, you can't do that. Bad!",
+  };
+
+  ctx.response.status = 400;
+  ctx.response.type = "application/json";
 });
