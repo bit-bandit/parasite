@@ -445,7 +445,7 @@ export async function search(url) {
   // if a user is specified - Only query the DB for posts by
   // that user, and let the server take care of the rest.
   if (users && users.length) {
-    for (const user of users.split(" ")) {
+    for (const user of users.split("+")) {
       torrentResults = await client.queryArray(
         "SELECT json FROM torrents WHERE uploader = $1;",
         [user],
@@ -491,7 +491,7 @@ export async function search(url) {
   // Filter tags
   if (tags && tags.length) {
     // Use space because + is automatically replaced with space
-    for (const tag of tags.split(" ")) {
+    for (const tag of tags.split("+")) {
       const tagURL = new URL(`/i/${tag}`, settings.siteURL);
 
       // Filter out objects that don't include the tag
@@ -511,7 +511,7 @@ export async function search(url) {
   // Filter strings and sort
   if (query && query.length) {
     const fuse = new Fuse(foundObjs, fuseOptions);
-    foundObjs = fuse.search(searchText);
+    foundObjs = fuse.search(query);
   }
 
   // Return final value.
