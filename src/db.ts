@@ -457,11 +457,11 @@ export async function search(url) {
       );
 
       if (torrentResults.rows.length) {
-        torrentUploads.push(...torrentResults.rows[0]);
+        torrentUploads.push(...torrentResults.rows);
       }
 
       if (listResults.rows.length) {
-        listResults.push(...listResults.rows[0]);
+        listUploads.push(...listResults.rows);
       }
     }
   } else {
@@ -513,6 +513,7 @@ export async function search(url) {
     const fuse = new Fuse(foundObjs, fuseOptions);
     foundObjs = fuse.search(searchText);
   }
+
   // Return final value.
   return foundObjs;
 }
