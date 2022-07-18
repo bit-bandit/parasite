@@ -412,13 +412,13 @@ export async function search(query) {
 
   // Fuzzy search engine
   const fuseOptions = {
-    threshold: 0.4,
-    keys: [
-      "name",
-      "content",
-      "summary",
-      "tag",
-    ],
+    threshold: 0.5,
+  keys: [
+    "name",
+    "summary",
+    "content",
+    "tag"
+  ]
   };
 
   let foundObjs: any[] = [];
@@ -445,7 +445,7 @@ export async function search(query) {
         "SELECT json FROM lists WHERE uploader = $1;",
         [user],
       );
-
+	
       if (torrentResults.rows.length) {
         torrentUploads.push(...torrentResults.rows);
       }
@@ -459,19 +459,22 @@ export async function search(query) {
     listResults = await client.queryArray("SELECT json FROM lists;");
 
     if (torrentResults.rows.length) {
-      torrentUploads = torrentResults.rows[0];
+      torrentUploads = torrentResults.rows;
     }
 
     if (listResults.rows.length) {
-      listUploads = listResults.rows[0];
+      listUploads = listResults.rows;
     }
   }
 
   await client.end();
 
-  // Unpack arrays into one results array
+    
+  torrentUploads = torrentUploads.map(x => x = x[0])
+  listUploads = listUploads.map(x => x = x[0])
+    
   foundObjs = [...torrentUploads, ...listUploads];
-
+  
   // Make sure we don't waste memory here
   torrentUploads = undefined;
   listUploads = undefined;
@@ -502,10 +505,9 @@ export async function search(query) {
   if (q.searchParams.has("q")) {
     const searchText: string = q.searchParams.get("q");
     const fuse = new Fuse(foundObjs, fuseOptions);
-
+     
     foundObjs = fuse.search(searchText);
   }
-
   // Return final value.
   return foundObjs;
 }
