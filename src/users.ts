@@ -123,7 +123,7 @@ users.post("/u/:id/inbox", async function (ctx) {
 
   const msg = genHTTPSigBoilerplate({
     "target": `post ${reqURL.pathname}`,
-    "host": reqURL.host,
+    "host": settings.siteURL,
     "date": await ctx.request.headers.get("date"),
   });
 
