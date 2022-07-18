@@ -34,7 +34,7 @@ Design Notes:
 
 actions.get("/x/:id", async function (ctx) {
   const res = await getActionJSON(ctx.params.id);
-  ctx.response.body = res;
+  ctx.response.body = res[0];
   if (!("err" in res)) {
     ctx.response.status = 200;
     ctx.response.type =
