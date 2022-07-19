@@ -44,3 +44,33 @@ Content-Type: application/activity+json
     to: [ "https://www.w3.org/ns/activitystreams#Public" ]
 }
 ```
+
+#### POST `/x/follow`
+Description: Attempt to follow an account.
+
+Authorization: JWT Bearer Token.
+
+Sample HTTP payload:
+```
+POST /x/follow
+Content-Type: application/json
+{
+  "object": "http://localhost:8080/u/bob"
+}
+```
+
+Response:
+
+```
+POST /x/follow
+Content-Type: application/json
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  id: "http://localhost:8080/x/e0a4be5c3cd41",
+  type: "Accept",
+  actor: "http://localhost:8080/u/bob",
+  summary: "http://localhost:8080/u/larvae following bob",
+  to: [ "https://www.w3.org/ns/activitystreams#Public" ]
+}
+```
+

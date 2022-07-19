@@ -98,7 +98,7 @@ actions.post("/x/follow", async function (ctx) {
     "host": inboxURL.host,
     "date": time,
   });
-
+    
   const signed = await simpleSign(msg, priv);
 
   const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));

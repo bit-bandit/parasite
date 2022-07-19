@@ -120,16 +120,17 @@ users.post("/u/:id/inbox", async function (ctx) {
 
   const u = new URL(foreignActorInfo.id);
   const reqURL = new URL(ctx.request.url);
-
+  const settingsURL = new URL(settings.siteURL);
+    
   const msg = genHTTPSigBoilerplate({
     "target": `post ${reqURL.pathname}`,
-    "host": settings.siteURL,
+    "host": settingsURL.host,
     "date": await ctx.request.headers.get("date"),
   });
 
   const parsedSig = /(.*)=\"(.*)\",?/mg.exec(reqSig)[2];
 
-  let postSignature = str2ab(atob(parsedSig));
+  const postSignature = str2ab(atob(parsedSig));
 
   const validSig = await simpleVerify(
     foreignKey,
