@@ -95,7 +95,7 @@ Deno.test("Comment on Torrent", async () => {
     }),
   });
 
-  const res = await r.json();
+  const res = await r.json();   
   assertEquals(res.err === true, false);
 });
 
@@ -164,7 +164,6 @@ Deno.test("Like Torrent", async () => {
       "object": torrentURL,
     }),
   });
-
   const res = await r.json();
   assertNotEquals(res.err, true);
 });
@@ -181,7 +180,7 @@ Deno.test("Flag Torrent", async () => {
     }),
   });
 
-  const res = await r.json();
+  const res = await r.json();  
   assertNotEquals(res.err, true);
 });
 
@@ -286,7 +285,7 @@ Deno.test("Delete Torrent", async () => {
   assertNotEquals(res.err, true);
 });
 
-Deno.test("Get deleted torrent", async () => {
+Deno.test("Try to get deleted torrent", async () => {
   const r = await fetch(torrentURL);
   await r.json();
 

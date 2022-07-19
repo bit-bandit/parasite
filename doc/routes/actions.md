@@ -37,10 +37,10 @@ Response:
 Content-Type: application/activity+json
 {
     "@context": "https://www.w3.org/ns/activitystreams",
-    id: "http://localhost:8080/x/3cad06b52542ed42f2",
+    id: "http://www.example.com/x/3cad06b52542ed42f2",
     type: "Follow",
-    actor: "http://localhost:8080/u/larvae",
-    summary: "http://localhost:8080/u/larvae asks to follow http://localhost:8080/u/bob",
+    actor: "http://www.example.com/u/larvae",
+    summary: "http://www.example.com/u/larvae asks to follow http://sickos.social/u/bob",
     to: [ "https://www.w3.org/ns/activitystreams#Public" ]
 }
 ```
@@ -54,23 +54,151 @@ Sample HTTP payload:
 ```
 POST /x/follow
 Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
 {
-  "object": "http://localhost:8080/u/bob"
+  "object": "http://sickos.social/u/bob"
 }
 ```
 
 Response:
 
 ```
-POST /x/follow
-Content-Type: application/json
+201 CREATED
+Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  id: "http://localhost:8080/x/e0a4be5c3cd41",
+  id: "http://sickos.social/x/e0a4be5c3cd41",
   type: "Accept",
-  actor: "http://localhost:8080/u/bob",
-  summary: "http://localhost:8080/u/larvae following bob",
+  actor: "http://sickos.social/u/bob",
+  summary: "http://www.example.com/u/larvae following bob",
   to: [ "https://www.w3.org/ns/activitystreams#Public" ]
 }
 ```
 
+#### POST `/x/like`
+Description: Attempt to like an object.
+
+Authorization: JWT Bearer Token.
+
+Sample HTTP payload:
+```
+POST /x/like
+Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
+{
+  "type": "Like",
+  "object": http://www.example.com/t/cdcf46e9399a,
+}
+```
+
+Response:
+
+```
+201 CREATED
+Content-Type: application/activity+json
+{
+  msg: "Torrent 4f888f6071285d467433 added to likes collection"
+}
+```
+#### POST `/x/dislike`
+Description: Attempt to dislike an object.
+
+Authorization: JWT Bearer Token.
+
+Sample HTTP payload:
+```
+POST /x/like
+Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
+{
+  "type": "Dislike",
+  "object": http://www.example.com/t/cdcf46e9399a,
+}
+```
+
+Response:
+
+```
+201 CREATED
+Content-Type: application/activity+json
+{
+  msg: "Torrent 4f888f6071285d467433 added to dislikes collection"
+}
+```
+
+#### POST `/x/comment`
+Description: Attempt to comment on an object.
+
+Authorization: JWT Bearer Token.
+
+Sample HTTP payload:
+```
+POST /x/comment
+Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
+{
+  "type": "Create",
+  "content": "Something different",
+  "inReplyTo": http://www.example.com/t/cdcf46e9399a,
+}
+```
+
+Response:
+
+```
+201 CREATED
+Content-Type: application/activity+json
+{
+  msg: "Comment 3683e9ea39ce4650c7 added to Torrent http://www.example.com/t/cdcf46e9399a"
+}
+```
+
+#### POST `/x/comment`
+Description: Attempt to comment on an object.
+
+Authorization: JWT Bearer Token.
+
+Sample HTTP payload:
+```
+POST /x/comment
+Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
+{
+  "type": "Create",
+  "content": "Something different",
+  "inReplyTo": http://www.example.com/t/cdcf46e9399a,
+}
+```
+
+Response:
+
+```
+201 CREATED
+Content-Type: application/activity+json
+{
+  msg: "Comment 3683e9ea39ce4650c7 added to Torrent http://www.example.com/t/cdcf46e9399a"
+}
+```
+
+#### POST `/x/undo`
+Description: Attempt to undo activities (IE Likes/Dislikes) on an object.
+
+Authorization: JWT Bearer Token.
+
+Sample HTTP payload:
+```
+POST /x/undo
+Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
+{
+  "type": "Undo",
+  "object": http://www.example.com/t/cdcf46e9399a,
+}
+```
+
+Response:
+```
+{
+  msg: "Actions by http://www.example.com/u/larvae on Torrent 4f888f6071285d467433 undone"
+}
+```
