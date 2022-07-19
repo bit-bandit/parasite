@@ -200,7 +200,10 @@ Content-Type: application/activity+json
 #### GET `/t/:id/flags`
 
 Description: Get JSON object containing people who flagged the torrent.
-Authorization: None Sample HTTP payload:
+
+Authorization: None 
+
+Sample HTTP payload:
 
 ```
 GET /t/484c8038fc11f03753b5/flags
@@ -219,6 +222,38 @@ Content-Type: application/activity+json
   "orderedItems": [
     "http://www.example.com/u/bob"
   ]
+}
+```
+
+### POST /t/
+Description: Create Torrent object, and send to followers.
+
+Authorization: JWT Bearer Token
+
+Sample HTTP Payload:
+
+```
+POST /t/4dbc66e6ee4367dd62
+Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
+{
+  "type": "Create",
+  "name": "Torrent Title!",
+  "content": "Specifically, it's from the Blender Project! Cool guys!",
+  "tags": "action,adventure,fantasy",
+  "href":
+    "magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent",
+};
+}
+```
+
+Response:
+
+```
+200 OK
+Content-Type: application/activity+json
+{ 
+  msg: "Torrent 4dbc66e6ee4367dd62 created" 
 }
 ```
 
