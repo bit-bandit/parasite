@@ -50,7 +50,7 @@ Deno.test("Follow account", async () => {
   });
 
   const re = await r.json();
-  
+
   const tokenRequest = await fetch("http://0.0.0.0:8080/login", {
     method: "POST",
     headers: {

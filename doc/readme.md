@@ -1,6 +1,7 @@
 # Parasite documentation
-This is for the actual documentation of Parasite itself, describing
-how it functions in a way you'll hopefully be able to understand...
+
+This is for the actual documentation of Parasite itself, describing how it
+functions in a way you'll hopefully be able to understand...
 
 The structure of this directory is like so:
 

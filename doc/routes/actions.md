@@ -1,11 +1,13 @@
 # Actions API
 
 ## Format
+
 #### METHOD `/route/`
-Description: Description of route
-Authorization?: Required | None 
+
+Description: Description of route Authorization?: Required | None
 
 Sample HTTP payload?:
+
 ```
 POST /route/
 Content-Type: application/json
@@ -14,7 +16,9 @@ Authorization: Bearer foihvoicwojwpwihfg3970r7u3jode0c-9w8hi
   "msg": "Hello, World!"
 }
 ```
+
 Response?:
+
 ```
 200 OK
 Content-Type: application/json
@@ -22,16 +26,20 @@ Content-Type: application/json
   "res": "Hello to you too!"
 }
 ```
+
 ? = Option parameter/Section.
 
 #### GET `/x/:id`
-Description: Get JSON object containing actions.
-Authorization: None
-Sample HTTP payload:
+
+Description: Get JSON object containing actions. Authorization: None Sample HTTP
+payload:
+
 ```
 GET /x/3cad06b52542ed42f2/
 ```
+
 Response:
+
 ```
 200 OK
 Content-Type: application/activity+json
@@ -46,11 +54,13 @@ Content-Type: application/activity+json
 ```
 
 #### POST `/x/follow`
+
 Description: Attempt to follow an account.
 
 Authorization: JWT Bearer Token.
 
 Sample HTTP payload:
+
 ```
 POST /x/follow
 Content-Type: application/json
@@ -76,11 +86,13 @@ Content-Type: application/activity+json
 ```
 
 #### POST `/x/like`
+
 Description: Attempt to like an object.
 
 Authorization: JWT Bearer Token.
 
 Sample HTTP payload:
+
 ```
 POST /x/like
 Content-Type: application/json
@@ -100,12 +112,15 @@ Content-Type: application/activity+json
   msg: "Torrent 4f888f6071285d467433 added to likes collection"
 }
 ```
+
 #### POST `/x/dislike`
+
 Description: Attempt to dislike an object.
 
 Authorization: JWT Bearer Token.
 
 Sample HTTP payload:
+
 ```
 POST /x/like
 Content-Type: application/json
@@ -127,11 +142,13 @@ Content-Type: application/activity+json
 ```
 
 #### POST `/x/comment`
+
 Description: Attempt to comment on an object.
 
 Authorization: JWT Bearer Token.
 
 Sample HTTP payload:
+
 ```
 POST /x/comment
 Content-Type: application/json
@@ -154,11 +171,13 @@ Content-Type: application/activity+json
 ```
 
 #### POST `/x/comment`
+
 Description: Attempt to comment on an object.
 
 Authorization: JWT Bearer Token.
 
 Sample HTTP payload:
+
 ```
 POST /x/comment
 Content-Type: application/json
@@ -181,11 +200,13 @@ Content-Type: application/activity+json
 ```
 
 #### POST `/x/undo`
+
 Description: Attempt to undo activities (IE Likes/Dislikes) on an object.
 
 Authorization: JWT Bearer Token.
 
 Sample HTTP payload:
+
 ```
 POST /x/undo
 Content-Type: application/json
@@ -197,6 +218,7 @@ Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568c
 ```
 
 Response:
+
 ```
 {
   msg: "Actions by http://www.example.com/u/larvae on Torrent 4f888f6071285d467433 undone"

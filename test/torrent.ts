@@ -95,7 +95,7 @@ Deno.test("Comment on Torrent", async () => {
     }),
   });
 
-  const res = await r.json();   
+  const res = await r.json();
   assertEquals(res.err === true, false);
 });
 
@@ -180,7 +180,7 @@ Deno.test("Flag Torrent", async () => {
     }),
   });
 
-  const res = await r.json();  
+  const res = await r.json();
   assertNotEquals(res.err, true);
 });
 
