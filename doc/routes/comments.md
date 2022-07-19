@@ -142,7 +142,10 @@ Content-Type: application/activity+json
 #### GET `/c/:id/dislikes`
 
 Description: Get JSON object containing people who disliked the comment.
-Authorization: None Sample HTTP payload:
+
+Authorization: None
+
+Sample HTTP payload:
 
 ```
 GET /c/fg23821cadc2/dislikes
@@ -231,12 +234,81 @@ Like can be created via `/x/dislike`
 **Local only - Requires `editUploads` permission** If all is well, the content
 will overwrite the previous content of the comment.
 
-#### `Type: "Remove"`
+Description: Get JSON object containing people who disliked the comment.
+
+Authorization: None
+
+Sample HTTP payload:
+
+```
+POST /c/4dbc66e6ee4367dd62
+Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
+{
+  "type": "Update",
+  "content": "Something different",
+}
+```
+
+Response:
+
+```
+200 OK
+Content-Type: application/activity+json
+{ 
+  msg: "Comment 4dbc66e6ee4367dd62 updated" 
+}
+```
+
+#### `Type: "Remove" | "Delete"`
 
 **Headers required:** `Signature`: HTTP Signature.
 
 **Local only. Requires `deleteOwnComments` or `deleteOthersComments`
 permission** If all is well, the comment will be removed from the database.
+
+```
+POST /c/4dbc66e6ee4367dd62
+Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
+{
+  "type": "Remove",
+}
+```
+
+Response:
+
+```
+200 OK
+Content-Type: application/activity+json
+{ 
+  msg: "Comment 4dbc66e6ee4367dd62 deleted" 
+}
+```
+
+#### `Type: "Flag"`
+
+**Headers required:** `Signature`: HTTP Signature.
+
+**Local only. Requires `flag` permission** If all is well, the object will be
+flagged.
+
+```
+POST /c/4dbc66e6ee4367dd62
+Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
+{
+  "type": "Remove",
+}
+```
+
+```
+200 OK
+Content-Type: application/activity+json
+{ 
+  msg: "Comment 4f888f6071285d467433 flagged"
+}
+```
 
 #### `Type: "Undo"`
 

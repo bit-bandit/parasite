@@ -164,6 +164,7 @@ Deno.test("Like Torrent", async () => {
       "object": torrentURL,
     }),
   });
+
   const res = await r.json();
   assertNotEquals(res.err, true);
 });
