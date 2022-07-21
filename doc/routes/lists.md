@@ -1,12 +1,10 @@
-# Torrents API
+# Lists API
 
 ## Format
 
 #### METHOD `/route/`
 
-Description: Description of route 
-
-Authorization?: Required | None
+Description: Description of route Authorization?: Required | None
 
 Sample HTTP payload?:
 
@@ -33,13 +31,13 @@ Content-Type: application/json
 
 ## Routes
 
-#### GET `/t/:id`
+#### GET `/l/:id`
 
-Description: Get JSON object containing torrent. Authorization: None Sample HTTP
+Description: Get JSON object containing list. Authorization: None Sample HTTP
 payload:
 
 ```
-GET /t/484c8038fc11f03753b5
+GET /l/47f6933698521870bd96
 ```
 
 Response:
@@ -49,24 +47,31 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://www.example.com/t/484c8038fc11f03753b5",
-  "type": "Note",
-  "attributedTo": "http://www.example.com/u/larvae",
-  "name": "Torrent",
-  "content": "<p>Specifically, it&#39;s from the Blender Project! Cool guys!</p>\n",
+  "id": "http://localhost:8080/l/47f6933698521870bd96",
+  "type": "OrderedCollection",
+  "name": "A list!",
+  "attributedTo": "http://localhost:8080/u/bob",
+  "summary": "<p>Something different</p>\n",
+  "totalItems": 10,
+  "replies": "http://localhost:8080/l/47f6933698521870bd96/r",
+  "orderedItems": [
+    "http://localhost:8080/t/46d8b6134a7d9dee564d",
+    "http://localhost:8080/t/42d28331ff9921482579",
+    "http://localhost:8080/t/497b9080c890730dc8e4",
+    "http://localhost:8080/t/4b55a7db665915371be2",
+    "http://localhost:8080/t/4457aa170c4cac365d1b",
+    "http://localhost:8080/t/45f79372e19bde01d900",
+    "http://localhost:8080/t/49e385b86e0c2e44381a",
+    "http://localhost:8080/t/4b9b8026079e344ca4ab",
+    "http://localhost:8080/t/4e73a56edc3e1a1506ed",
+    "http://localhost:8080/t/48e2bad4a4beff405b70"
+  ],
   "tag": [
-    "http://www.example.com/i/action",
-    "http://www.example.com/i/adventure",
-    "http://www.example.com/i/fantasy"
+    "http://localhost:8080/i/horror",
+    "http://localhost:8080/i/birds",
+    "http://localhost:8080/i/2010"
   ],
-  "attachment": {
-    "type": "Link",
-    "href": "magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent"
-  },
-  "to": [
-    "https://www.w3.org/ns/activitystreams#Public"
-  ],
-  "replies": "http://www.example.com/t/484c8038fc11f03753b5/r"
+  "updated": "2022-07-21T01:52:23.764Z"
 }
 ```
 
@@ -79,7 +84,7 @@ Authorization: None
 Sample HTTP payload:
 
 ```
-GET /t/484c8038fc11f03753b5/r
+GET /l/47f6933698521870bd96/r
 ```
 
 Response:
@@ -89,16 +94,16 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://www.example.com/t/484c8038fc11f03753b5/r",
+  "id": "http://localhost:8080/l/47f6933698521870bd96/r",
   "type": "OrderedCollection",
   "totalItems": 1,
   "orderedItems": [
-    "http://www.example.com/c/c39a216fe7092b09ce"
+    "http://localhost:8080/c/b69f57da012c3e0b06"
   ]
 }
 ```
 
-#### GET `/t/:id/activity`
+#### GET `/l/:id/activity`
 
 Description: Get JSON object containing ActivityStreams representation of the
 creation of the torrent.
@@ -108,7 +113,7 @@ Authorization: None
 Sample HTTP payload:
 
 ```
-GET /t/484c8038fc11f03753b5/activity
+GET /l/47f6933698521870bd96/activity
 ```
 
 Response:
@@ -122,37 +127,49 @@ Content-Type: application/activity+json
   "id": "http://www.example.com/t/484c8038fc11f03753b5/activity",
   "actor": "http://www.example.com/u/bob",
   "object": {
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "type": "Update",
+  "id": "http://localhost:8080/l/47f6933698521870bd96/activity",
+  "actor": "http://localhost:8080/u/bob",
+  "object": {
     "@context": "https://www.w3.org/ns/activitystreams",
-    "id": "http://www.example.com/t/484c8038fc11f03753b5",
-    "type": "Note",
-    "attributedTo": "http://www.example.com/u/larvae",
-    "name": "Torrent",
-    "content": "<p>Specifically, it&#39;s from the Blender Project! Cool guys!</p>\n",
+    "id": "http://localhost:8080/l/47f6933698521870bd96",
+    "type": "OrderedCollection",
+    "name": "A list!",
+    "attributedTo": "http://localhost:8080/u/bob",
+    "summary": "<p>Something different</p>\n",
+    "totalItems": 10,
+    "replies": "http://localhost:8080/l/47f6933698521870bd96/r",
+    "orderedItems": [
+      "http://localhost:8080/t/46d8b6134a7d9dee564d",
+      "http://localhost:8080/t/42d28331ff9921482579",
+      "http://localhost:8080/t/497b9080c890730dc8e4",
+      "http://localhost:8080/t/4b55a7db665915371be2",
+      "http://localhost:8080/t/4457aa170c4cac365d1b",
+      "http://localhost:8080/t/45f79372e19bde01d900",
+      "http://localhost:8080/t/49e385b86e0c2e44381a",
+      "http://localhost:8080/t/4b9b8026079e344ca4ab",
+      "http://localhost:8080/t/4e73a56edc3e1a1506ed",
+      "http://localhost:8080/t/48e2bad4a4beff405b70"
+    ],
     "tag": [
-      "http://www.example.com/i/action",
-      "http://www.example.com/i/adventure",
-      "http://www.example.com/i/fantasy"
+      "http://localhost:8080/i/horror",
+      "http://localhost:8080/i/birds",
+      "http://localhost:8080/i/2010"
     ],
-    "attachment": {
-      "type": "Link",
-      "href": "magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent"
-    },
-    "to": [
-      "https://www.w3.org/ns/activitystreams#Public"
-    ],
-    "replies": "http://www.example.com/t/484c8038fc11f03753b5/r"
+    "updated": "2022-07-21T01:52:23.764Z"
   },
   "cc": "http://www.example.com/u/bob/followers"
 }
 ```
 
-#### GET `/t/:id/likes`
+#### GET `/l/:id/likes`
 
 Description: Get JSON object containing people who liked the torrent.
 Authorization: None Sample HTTP payload:
 
 ```
-GET /t/484c8038fc11f03753b5/likes
+GET /l/47f6933698521870bd96/likes
 ```
 
 Response:
@@ -162,25 +179,25 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://www.example.com/t/484c8038fc11f03753b5/likes",
+  "id": "http://localhost:8080/l/47f6933698521870bd96/likes",
   "type": "OrderedCollection",
   "totalItems": 1,
   "orderedItems": [
-    "http://www.example.com/u/bob"
+    "http://localhost:8080/u/bob"
   ]
 }
 ```
 
-#### GET `/t/:id/dislikes`
+#### GET `/l/:id/dislikes`
 
-Description: Get JSON object containing people who disliked the torrent.
+Description: Get JSON object containing people who disliked the list.
 
 Authorization: None
 
 Sample HTTP payload:
 
 ```
-GET /t/484c8038fc11f03753b5/dislikes
+GET /l/47f6933698521870bd96/dislikes
 ```
 
 Response:
@@ -190,16 +207,16 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://www.example.com/t/484c8038fc11f03753b5/dislikes",
+  "id": "http://localhost:8080/l/47f6933698521870bd96/dislikes",
   "type": "OrderedCollection",
   "totalItems": 1,
   "orderedItems": [
-    "http://www.example.com/u/bob"
+    "http://localhost:8080/u/bob"
   ]
 }
 ```
 
-#### GET `/t/:id/flags`
+#### GET `/l/:id/flags`
 
 Description: Get JSON object containing people who flagged the torrent.
 
@@ -208,7 +225,7 @@ Authorization: None
 Sample HTTP payload:
 
 ```
-GET /t/484c8038fc11f03753b5/flags
+GET /l/47f6933698521870bd96/flags
 ```
 
 Response:
@@ -218,7 +235,7 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://www.example.com/t/484c8038fc11f03753b5/flags",
+  "id": "http://localhost:8080/l/47f6933698521870bd96/flags",
   "type": "OrderedCollection",
   "totalItems": 1,
   "orderedItems": [
@@ -227,7 +244,7 @@ Content-Type: application/activity+json
 }
 ```
 
-### POST /t/
+### POST /l/
 Description: Create Torrent object, and send to followers.
 
 Authorization: JWT Bearer Token
@@ -235,16 +252,26 @@ Authorization: JWT Bearer Token
 Sample HTTP Payload:
 
 ```
-POST /t/4dbc66e6ee4367dd62
+POST /l/
 Content-Type: application/json
 Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
 {
   "type": "Create",
-  "name": "Torrent Title!",
-  "content": "Specifically, it's from the Blender Project! Cool guys!",
-  "tags": "action,adventure,fantasy",
-  "href":
-    "magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent",
+  "name": "A list!",
+  "summary": "Woah! A list! Wow!!",
+  "tags": "horror,birds,2010",
+  "orderedItems": [
+    "http://localhost:8080/t/46d8b6134a7d9dee564d",
+    "http://localhost:8080/t/42d28331ff9921482579",
+    "http://localhost:8080/t/497b9080c890730dc8e4",
+    "http://localhost:8080/t/4b55a7db665915371be2",
+    "http://localhost:8080/t/4457aa170c4cac365d1b",
+    "http://localhost:8080/t/45f79372e19bde01d900",
+    "http://localhost:8080/t/49e385b86e0c2e44381a",
+    "http://localhost:8080/t/4b9b8026079e344ca4ab",
+    "http://localhost:8080/t/4e73a56edc3e1a1506ed",
+    "http://localhost:8080/t/48e2bad4a4beff405b70",
+  ]
 }
 ```
 
@@ -254,13 +281,13 @@ Response:
 200 OK
 Content-Type: application/activity+json
 { 
-  msg: "Torrent 4dbc66e6ee4367dd62 created" 
+  msg: "List 4dbc66e6ee4367dd62 created" 
 }
 ```
 
-### POST `/t/:id` + Options
+### POST `/l/:id` + Options
 
-`POST /t/:id` is a broad route that encompasses nearly everything relating to
+`POST /l/:id` is a broad route that encompasses nearly everything relating to
 modifying a torrent/object. Much of what can be sent to it is handeled from
 within `/x/` (see `doc/actions.md` for more information about that).
 
@@ -274,7 +301,7 @@ to it. Below are the actions/options that can result from altering the value of
 
 Requires creation of a comment, with the ID of said comment in the `object`
 field. If all is well, the ID of the comment will be added to the `replies`
-object of the torrent.
+object of the list.
 
 Comments can be created via `/x/comment`
 
@@ -283,7 +310,7 @@ Comments can be created via `/x/comment`
 **Headers required:** `Signature`: HTTP Signature.
 
 Requires creation of a object indicating that the user liked the object. If all
-is well, the ID of the user will be added to the `likes` object of the torrent.
+is well, the ID of the user will be added to the `likes` object of the list.
 
 Like can be created via `/x/like`
 
@@ -293,7 +320,7 @@ Like can be created via `/x/like`
 
 Requires creation of a object indicating that the user disliked the object. If
 all is well, the ID of the user will be added to the `dislikes` object of the
-torrent.
+list.
 
 Like can be created via `/x/dislike`
 
@@ -302,20 +329,24 @@ Like can be created via `/x/dislike`
 **Headers required:** `Authorization`: JWT Bearer Token.
 
 **Local only - Requires `editUploads` permission** If all is well, the content
-will overwrite the previous content of the torrent.
+will overwrite the previous content of the list.
 
 Authorization: None
 
 Sample HTTP payload:
 
 ```
-POST /t/4dbc66e6ee4367dd62
+POST /l/4dbc66e6ee4367dd62
 Content-Type: application/json
 Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
 {
   "type": "Update",
   "name": "New Name"
   "content": "Something different",
+  "orderedItems": [
+    "http://localhost:8080/t/1247f47a9ea79b461ba2",
+    "http://localhost:8080/t/38f7a376db05fc10eca2",
+  ]
 }
 ```
 
@@ -325,7 +356,7 @@ Response:
 200 OK
 Content-Type: application/activity+json
 { 
-  msg: "Torrent 4dbc66e6ee4367dd62 updated" 
+  msg: "List 4dbc66e6ee4367dd62 updated" 
 }
 ```
 
@@ -333,11 +364,11 @@ Content-Type: application/activity+json
 
 **Headers required:** `Signature`: HTTP Signature.
 
-**Local only. Requires `deleteOwnComments` or `deleteOthersComments`
-permission** If all is well, the torrent will be removed from the database.
+**Local only. Requires `deleteOwnLists` or `deleteOwnLists`
+permission** If all is well, the list will be removed from the database.
 
 ```
-POST /t/4dbc66e6ee4367dd62
+POST /l/4dbc66e6ee4367dd62
 Content-Type: application/json
 Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
 {
@@ -351,7 +382,7 @@ Response:
 200 OK
 Content-Type: application/activity+json
 { 
-  msg: "Torrent 4dbc66e6ee4367dd62 deleted" 
+  msg: "List 4dbc66e6ee4367dd62 deleted" 
 }
 ```
 
@@ -363,7 +394,7 @@ Content-Type: application/activity+json
 flagged.
 
 ```
-POST /c/4dbc66e6ee4367dd62
+POST /l/4dbc66e6ee4367dd62
 Content-Type: application/json
 Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
 {
@@ -375,7 +406,7 @@ Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568c
 200 OK
 Content-Type: application/activity+json
 { 
-  msg: "Torrent 4f888f6071285d467433 flagged"
+  msg: "List 4f888f6071285d467433 flagged"
 }
 ```
 

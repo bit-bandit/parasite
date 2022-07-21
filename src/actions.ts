@@ -476,6 +476,12 @@ actions.post("/x/comment", async function (ctx) {
   }
 
   const userActivity = await getUActivity(data.decoded.name, "info");
+  const role = await getUActivity(data.decoded.name, "roles");  
+
+  if (!role.createComments) {
+      return throwAPIError(ctx, "Action not permitted.", 400);
+  }
+
   const id: string = await genUUID(14);
   const url = `${settings.siteURL}/c/${id}`;
   const d = new Date();
