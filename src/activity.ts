@@ -197,7 +197,7 @@ export function genInvitationReply(params: any = {}) {
     "type": params.type ?? "Note", // In case we can't be shitted to write this down, keep note in.
     "actor": params.actor,
     "summary": params.summary,
-    "object": params.inReplyTo,
+    "object": params.object,
     "to": ["https://www.w3.org/ns/activitystreams#Public"], // All posts are public; Sorry!
   };
 }

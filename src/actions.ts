@@ -70,7 +70,7 @@ actions.post("/x/follow", async function (ctx) {
     "summary": `${userActivity.id} asks to follow ${requestJSON.object}`,
     "object": requestJSON.object,
   });
-
+    
   await addToDB(
     "actions",
     {
@@ -89,13 +89,13 @@ actions.post("/x/follow", async function (ctx) {
   const priv = await extractKey("private", actorKeys[1]);
 
   const fActor = await (await fetch(requestJSON.object)).json();
-  const inboxURL = new URL(fActor.inbox);
+  const outboxURL = new URL(fActor.outbox);
   const d = new Date();
   const time = d.toUTCString();
 
   const msg = genHTTPSigBoilerplate({
-    "target": `post ${inboxURL.pathname}`,
-    "host": inboxURL.host,
+    "target": `post ${outboxURL.pathname}`,
+    "host": outboxURL.host,
     "date": time,
   });
 
@@ -108,14 +108,14 @@ actions.post("/x/follow", async function (ctx) {
   // We should really specify the `Accept` header because:
   // 1) It's in the standard
   // 2) Reverse proxies exist
-  const followAttempt = await fetch(fActor.inbox, {
+  const followAttempt = await fetch(fActor.outbox, {
     method: "POST",
     headers: {
       "Accept": "application/activity+json",
       "Content-Type": "application/json",
       "Signature": header,
       "Date": time,
-      "Host": inboxURL.host,
+      "Host": outboxURL.host,
     },
     body: JSON.stringify(followJSON),
   });
@@ -152,22 +152,25 @@ actions.post("/x/undo", async function (ctx) {
       400,
     );
   }
-
+    
   const userActivity = await getUActivity(data.decoded.name, "info");
 
   const userLikes = await getUActivity(data.decoded.name, "likes");
   const userDislikes = await getUActivity(data.decoded.name, "dislikes");
-
+  const userFollowing = await getUActivity(data.decoded.name, "following");
+    
   if (
-    !userLikes.orderedItems.includes(requestJSON.object) &&
-    !userDislikes.orderedItems.includes(requestJSON.object)
+      !userLikes.orderedItems.includes(requestJSON.object) &&
+	  !userDislikes.orderedItems.includes(requestJSON.object) &&
+	  !userFollowing.orderedItems.includes(requestJSON.object)
   ) {
     return throwAPIError(ctx, "No user activity on object found.", 400);
   }
 
   const likesIndex = userLikes.orderedItems.indexOf(requestJSON.object);
   const dislikesIndex = userDislikes.orderedItems.indexOf(requestJSON.object);
-
+  const followingIndex = userFollowing.orderedItems.indexOf(requestJSON.object);
+    
   const id: string = await genUUID(14);
   const url = `${settings.siteURL}/x/${id}`;
 
@@ -198,6 +201,10 @@ actions.post("/x/undo", async function (ctx) {
 
   if (dislikesIndex !== -1) {
     userDislikes.orderedItems.splice(dislikesIndex, 1);
+  }
+    
+  if (followingIndex !== -1) {
+    userFollowing.orderedItems.splice(dislikesIndex, 1);
   }
 
   // Send to object
@@ -250,6 +257,12 @@ actions.post("/x/undo", async function (ctx) {
   if (dislikesIndex !== -1) {
     await basicObjectUpdate("users", {
       "dislikes": userDislikes,
+    }, data.decoded.name);
+  }
+
+  if (followingIndex !== -1) {
+    await basicObjectUpdate("users", {
+      "following": userFollowing,
     }, data.decoded.name);
   }
 

@@ -84,18 +84,7 @@ users.get("/u/:id/main-key", async function (ctx) {
   ctx.response.type = "application/json";
 });
 
-// POST activities.
 users.post("/u/:id/outbox", async function (ctx) {
-  // Send message, basically. Side effect of `POST /t/`
-});
-
-users.post("/u/:id/inbox", async function (ctx) {
-  // Follows of an account get message upon recieving this.
-  // Check inbox content, make sure no dupes exist
-  // Maybe add max inbox length?
-  // If everything is good, add link to inbox.
-
-  // TODO: Redundancy checking
   const reqSig = await ctx.request.headers.get("Signature");
   const raw = await ctx.request.body();
 
@@ -127,8 +116,7 @@ users.post("/u/:id/inbox", async function (ctx) {
     "host": settingsURL.host,
     "date": await ctx.request.headers.get("date"),
   });
-
-  const parsedSig = /(.*)=\"(.*)\",?/mg.exec(reqSig)[2];
+    const parsedSig = /(.*)=\"(.*)\",?/mg.exec(reqSig)[2];
 
   const postSignature = str2ab(atob(parsedSig));
 
@@ -185,8 +173,72 @@ users.post("/u/:id/inbox", async function (ctx) {
 
     ctx.response.body = acceptJSON;
     ctx.response.status = 201;
-    ctx.response.type = "application/json";
-  } else if (
+      ctx.response.type = "application/activity+json";
+  } else if (req.type === "Undo") {
+      if (!follows.orderedItems.includes(requestJSON.actor)) {
+        return throwAPIError(ctx, "Already not following actor", 400);
+      }
+
+      const followsIndex = follows.orderedItems.indexOf(req.actor);
+
+      follows.orderedItems.splice(followsIndex, 1);
+
+      ctx.response.body = {
+        "msg": `${req.actor} not following ${ctx.params.id} anymore.`,
+      };
+      ctx.response.status = 200;
+      ctx.response.type = "application/json";
+  }
+})
+
+users.post("/u/:id/inbox", async function (ctx) {
+  const reqSig = await ctx.request.headers.get("Signature");
+  const raw = await ctx.request.body();
+
+  if (raw.type !== "json") {
+    return throwAPIError(
+      ctx,
+      "Invalid content type (Must be application/json)",
+      400,
+    );
+  }
+
+  const actor = await getUActivity(ctx.params.id, "info");
+  const follows = await getUActivity(ctx.params.id, "followers");
+  const inbox = await getUActivity(ctx.params.id, "inbox");
+  const req = await raw.value;
+
+  const foreignActorInfo = await (await fetch(req.actor)).json();
+  const foreignKey = await extractKey(
+    "public",
+    foreignActorInfo.publicKey.publicKeyPem,
+  );
+
+  const u = new URL(foreignActorInfo.id);
+  const reqURL = new URL(ctx.request.url);
+  const settingsURL = new URL(settings.siteURL);
+
+  const msg = genHTTPSigBoilerplate({
+    "target": `post ${reqURL.pathname}`,
+    "host": settingsURL.host,
+    "date": await ctx.request.headers.get("date"),
+  });
+
+  const parsedSig = /(.*)=\"(.*)\",?/mg.exec(reqSig)[2];
+
+  const postSignature = str2ab(atob(parsedSig));
+
+  const validSig = await simpleVerify(
+    foreignKey,
+    msg,
+    postSignature,
+  );
+
+  if (!validSig) {
+    return throwAPIError(ctx, "Invalid HTTP Signature", 400);
+  }
+
+  if (
     req.type === "Create" ||
     req.type === "Update"
   ) {

@@ -29,9 +29,17 @@ Content-Type: application/json
 
 ? = Option parameter/Section.
 
+## Routes
+
 #### GET `/x/:id`
 
-Description: Get JSON object containing actions. Authorization: None Sample HTTP
+Description: Get JSON object containing actions. 
+
+
+Authorization: None 
+
+
+Sample HTTP
 payload:
 
 ```
