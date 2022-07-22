@@ -465,6 +465,11 @@ export async function search(url) {
       }
     }
   } else {
+      // These methods are pretty hackish, all things considered, and may
+      // end up causing issues with scalability later on, considering
+      // the time it takes for Postgres to spit out all this data for
+      // seperate requests.
+      // We should probably fix this.
     torrentResults = await client.queryArray("SELECT json FROM torrents;");
     listResults = await client.queryArray("SELECT json FROM lists;");
 
