@@ -70,7 +70,7 @@ actions.post("/x/follow", async function (ctx) {
     "summary": `${userActivity.id} asks to follow ${requestJSON.object}`,
     "object": requestJSON.object,
   });
-    
+
   await addToDB(
     "actions",
     {
@@ -152,17 +152,17 @@ actions.post("/x/undo", async function (ctx) {
       400,
     );
   }
-    
+
   const userActivity = await getUActivity(data.decoded.name, "info");
 
   const userLikes = await getUActivity(data.decoded.name, "likes");
   const userDislikes = await getUActivity(data.decoded.name, "dislikes");
   const userFollowing = await getUActivity(data.decoded.name, "following");
-    
+
   if (
-      !userLikes.orderedItems.includes(requestJSON.object) &&
-	  !userDislikes.orderedItems.includes(requestJSON.object) &&
-	  !userFollowing.orderedItems.includes(requestJSON.object)
+    !userLikes.orderedItems.includes(requestJSON.object) &&
+    !userDislikes.orderedItems.includes(requestJSON.object) &&
+    !userFollowing.orderedItems.includes(requestJSON.object)
   ) {
     return throwAPIError(ctx, "No user activity on object found.", 400);
   }
@@ -170,7 +170,7 @@ actions.post("/x/undo", async function (ctx) {
   const likesIndex = userLikes.orderedItems.indexOf(requestJSON.object);
   const dislikesIndex = userDislikes.orderedItems.indexOf(requestJSON.object);
   const followingIndex = userFollowing.orderedItems.indexOf(requestJSON.object);
-    
+
   const id: string = await genUUID(14);
   const url = `${settings.siteURL}/x/${id}`;
 
@@ -202,7 +202,7 @@ actions.post("/x/undo", async function (ctx) {
   if (dislikesIndex !== -1) {
     userDislikes.orderedItems.splice(dislikesIndex, 1);
   }
-    
+
   if (followingIndex !== -1) {
     userFollowing.orderedItems.splice(dislikesIndex, 1);
   }

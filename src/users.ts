@@ -116,7 +116,7 @@ users.post("/u/:id/outbox", async function (ctx) {
     "host": settingsURL.host,
     "date": await ctx.request.headers.get("date"),
   });
-    const parsedSig = /(.*)=\"(.*)\",?/mg.exec(reqSig)[2];
+  const parsedSig = /(.*)=\"(.*)\",?/mg.exec(reqSig)[2];
 
   const postSignature = str2ab(atob(parsedSig));
 
@@ -173,23 +173,23 @@ users.post("/u/:id/outbox", async function (ctx) {
 
     ctx.response.body = acceptJSON;
     ctx.response.status = 201;
-      ctx.response.type = "application/activity+json";
+    ctx.response.type = "application/activity+json";
   } else if (req.type === "Undo") {
-      if (!follows.orderedItems.includes(requestJSON.actor)) {
-        return throwAPIError(ctx, "Already not following actor", 400);
-      }
+    if (!follows.orderedItems.includes(requestJSON.actor)) {
+      return throwAPIError(ctx, "Already not following actor", 400);
+    }
 
-      const followsIndex = follows.orderedItems.indexOf(req.actor);
+    const followsIndex = follows.orderedItems.indexOf(req.actor);
 
-      follows.orderedItems.splice(followsIndex, 1);
+    follows.orderedItems.splice(followsIndex, 1);
 
-      ctx.response.body = {
-        "msg": `${req.actor} not following ${ctx.params.id} anymore.`,
-      };
-      ctx.response.status = 200;
-      ctx.response.type = "application/json";
+    ctx.response.body = {
+      "msg": `${req.actor} not following ${ctx.params.id} anymore.`,
+    };
+    ctx.response.status = 200;
+    ctx.response.type = "application/json";
   }
-})
+});
 
 users.post("/u/:id/inbox", async function (ctx) {
   const reqSig = await ctx.request.headers.get("Signature");

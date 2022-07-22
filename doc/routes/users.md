@@ -1,17 +1,21 @@
 # Users API
 
 ## Routes
+
 #### `GET /u/:id`
+
 Description: Get JSON object representing user.
 
 Authorization: None.
 
 Sample HTTP Payload:
+
 ```
 GET http://localhost:8080/u/bob
 ```
 
 Response:
+
 ```
 200 OK
 Content-Type: application/activity+json
@@ -42,11 +46,13 @@ Content-Type: application/activity+json
 ```
 
 #### `GET /u/:id/outbox`
+
 Description: Get JSON object containing posts created by the user.
 
 Authorization: None.
 
 Sample HTTP Payload:
+
 ```
 GET http://localhost:8080/u/bob/outbox
 ```
@@ -86,16 +92,19 @@ Content-Type: application/activity+json
 ```
 
 #### `GET /u/:id/inbox`
+
 Description: Get JSON object containing posts created by followed users.
 
 Authorization: None.
 
 Sample HTTP Payload:
+
 ```
 GET http://localhost:8080/u/bob/inbox
 ```
 
 Response:
+
 ```
 200 OK
 Content-Type: application/activity+json
@@ -129,16 +138,19 @@ Content-Type: application/activity+json
 ```
 
 #### `GET /u/:id/following`
+
 Description: Get JSON object containing individuals that the user follows.
 
 Authorization: None.
 
 Sample HTTP Payload:
+
 ```
 GET http://localhost:8080/u/larvae/following
 ```
 
 Response:
+
 ```
 200 OK
 Content-Type: application/activity+json
@@ -154,16 +166,19 @@ Content-Type: application/activity+json
 ```
 
 #### `GET /u/:id/followers`
+
 Description: Get JSON object containing individuals that are following the user.
 
 Authorization: None.
 
 Sample HTTP Payload:
+
 ```
 GET http://localhost:8080/u/bob/followers
 ```
 
 Response:
+
 ```
 200 OK
 Content-Type: application/activity+json
@@ -179,16 +194,19 @@ Content-Type: application/activity+json
 ```
 
 #### `GET /u/:id/main-key`
+
 Description: Get user public key - For cryptography purposes. Plain text.
 
 Authorization: None.
 
 Sample HTTP Payload:
+
 ```
 GET http://localhost:8080/u/bob/main-key
 ```
 
 Response:
+
 ```
 200 OK
 Content-Type: text/plain
@@ -201,24 +219,28 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2lRJx5zw9babXkfEJNrjF4vFFTnXKU0kZ1kl
 
 ##### `type: "Follow"`
 
-Used to indicate that the actor who sent the request wants to recieve posts
-sent by the user. We reccomend you do this via. `/x/follow` 
+Used to indicate that the actor who sent the request wants to recieve posts sent
+by the user. We reccomend you do this via. `/x/follow`
 
 ##### `type: "Undo"`
 
-Used to indicate that the actor who sent the request no longer wants to recieve posts
-sent by the user. We reccomend you do this via. `/x/undo` 
+Used to indicate that the actor who sent the request no longer wants to recieve
+posts sent by the user. We reccomend you do this via. `/x/undo`
 
 #### `POST /u/:id/inbox` + Types
+
 ##### `type: "Create" | "Update"`
-Will add URL of recieved object to inbox - Will occur with the creation
-of a comment, list, or torrent.
+
+Will add URL of recieved object to inbox - Will occur with the creation of a
+comment, list, or torrent.
 
 #### `POST /u/:id/` + Types
+
 ##### `type "Update"`
+
 Will overwrite data with provided. The available types are as follows:
 
-* `name`: Name of the user (Not the ID!). Text only.
-* `summary`: Summary of the user. Text only.
-* `icon`: User avatar. Must be an image (JPG/PNG) encoded as a `UInt8Array`.
-* `banner`: User banner. Must be an image (JPG/PNG) encoded as a `UInt8Array`.
+- `name`: Name of the user (Not the ID!). Text only.
+- `summary`: Summary of the user. Text only.
+- `icon`: User avatar. Must be an image (JPG/PNG) encoded as a `UInt8Array`.
+- `banner`: User banner. Must be an image (JPG/PNG) encoded as a `UInt8Array`.

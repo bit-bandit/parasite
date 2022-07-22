@@ -33,14 +33,11 @@ Content-Type: application/json
 
 #### GET `/x/:id`
 
-Description: Get JSON object containing actions. 
+Description: Get JSON object containing actions.
 
+Authorization: None
 
-Authorization: None 
-
-
-Sample HTTP
-payload:
+Sample HTTP payload:
 
 ```
 GET /x/3cad06b52542ed42f2/
