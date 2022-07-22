@@ -35,8 +35,11 @@ Content-Type: application/json
 
 #### GET `/t/:id`
 
-Description: Get JSON object containing torrent. Authorization: None Sample HTTP
-payload:
+Description: Get JSON object containing torrent. 
+
+Authorization: None 
+
+Sample HTTP payload:
 
 ```
 GET /t/484c8038fc11f03753b5
