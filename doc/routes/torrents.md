@@ -4,7 +4,7 @@
 
 #### METHOD `/route/`
 
-Description: Description of route 
+Description: Description of route
 
 Authorization?: Required | None
 
@@ -203,7 +203,7 @@ Content-Type: application/activity+json
 
 Description: Get JSON object containing people who flagged the torrent.
 
-Authorization: None 
+Authorization: None
 
 Sample HTTP payload:
 
@@ -228,6 +228,7 @@ Content-Type: application/activity+json
 ```
 
 ### POST /t/
+
 Description: Create Torrent object, and send to followers.
 
 Authorization: JWT Bearer Token

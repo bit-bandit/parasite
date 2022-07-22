@@ -98,7 +98,7 @@ actions.post("/x/follow", async function (ctx) {
     "host": inboxURL.host,
     "date": time,
   });
-    
+
   const signed = await simpleSign(msg, priv);
 
   const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
@@ -476,10 +476,10 @@ actions.post("/x/comment", async function (ctx) {
   }
 
   const userActivity = await getUActivity(data.decoded.name, "info");
-  const role = await getUActivity(data.decoded.name, "roles");  
+  const role = await getUActivity(data.decoded.name, "roles");
 
   if (!role.createComments) {
-      return throwAPIError(ctx, "Action not permitted.", 400);
+    return throwAPIError(ctx, "Action not permitted.", 400);
   }
 
   const id: string = await genUUID(14);

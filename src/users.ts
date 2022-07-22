@@ -121,7 +121,7 @@ users.post("/u/:id/inbox", async function (ctx) {
   const u = new URL(foreignActorInfo.id);
   const reqURL = new URL(ctx.request.url);
   const settingsURL = new URL(settings.siteURL);
-    
+
   const msg = genHTTPSigBoilerplate({
     "target": `post ${reqURL.pathname}`,
     "host": settingsURL.host,

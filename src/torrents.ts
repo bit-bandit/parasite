@@ -110,10 +110,10 @@ torrents.post("/t/", async function (ctx) {
   // TODO: Check if magnet link is actually valid.
   // TODO: Make more spec compliant.
   const info = await getUActivity(data.decoded.name, "info");
-  const role = await getUActivity(data.decoded.name, "roles");    
+  const role = await getUActivity(data.decoded.name, "roles");
 
   if (!role.createTorrents) {
-      return throwAPIError(ctx, "Action not permitted.", 400);
+    return throwAPIError(ctx, "Action not permitted.", 400);
   }
 
   // TODO: Only allow for `p`, `em`, `strong`, and `a` tags.

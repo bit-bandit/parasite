@@ -220,7 +220,7 @@ Content-Type: application/activity+json
 
 Description: Get JSON object containing people who flagged the torrent.
 
-Authorization: None 
+Authorization: None
 
 Sample HTTP payload:
 
@@ -245,6 +245,7 @@ Content-Type: application/activity+json
 ```
 
 ### POST /l/
+
 Description: Create Torrent object, and send to followers.
 
 Authorization: JWT Bearer Token
@@ -364,8 +365,8 @@ Content-Type: application/activity+json
 
 **Headers required:** `Signature`: HTTP Signature.
 
-**Local only. Requires `deleteOwnLists` or `deleteOwnLists`
-permission** If all is well, the list will be removed from the database.
+**Local only. Requires `deleteOwnLists` or `deleteOwnLists` permission** If all
+is well, the list will be removed from the database.
 
 ```
 POST /l/4dbc66e6ee4367dd62
