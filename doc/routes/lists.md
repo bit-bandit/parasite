@@ -47,29 +47,29 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://localhost:8080/l/47f6933698521870bd96",
+  "id": "http://www.example.com/l/47f6933698521870bd96",
   "type": "OrderedCollection",
   "name": "A list!",
-  "attributedTo": "http://localhost:8080/u/bob",
+  "attributedTo": "http://www.example.com/u/bob",
   "summary": "<p>Something different</p>\n",
   "totalItems": 10,
-  "replies": "http://localhost:8080/l/47f6933698521870bd96/r",
+  "replies": "http://www.example.com/l/47f6933698521870bd96/r",
   "orderedItems": [
-    "http://localhost:8080/t/46d8b6134a7d9dee564d",
-    "http://localhost:8080/t/42d28331ff9921482579",
-    "http://localhost:8080/t/497b9080c890730dc8e4",
-    "http://localhost:8080/t/4b55a7db665915371be2",
-    "http://localhost:8080/t/4457aa170c4cac365d1b",
-    "http://localhost:8080/t/45f79372e19bde01d900",
-    "http://localhost:8080/t/49e385b86e0c2e44381a",
-    "http://localhost:8080/t/4b9b8026079e344ca4ab",
-    "http://localhost:8080/t/4e73a56edc3e1a1506ed",
-    "http://localhost:8080/t/48e2bad4a4beff405b70"
+    "http://www.example.com/t/46d8b6134a7d9dee564d",
+    "http://www.example.com/t/42d28331ff9921482579",
+    "http://www.example.com/t/497b9080c890730dc8e4",
+    "http://www.example.com/t/4b55a7db665915371be2",
+    "http://www.example.com/t/4457aa170c4cac365d1b",
+    "http://www.example.com/t/45f79372e19bde01d900",
+    "http://www.example.com/t/49e385b86e0c2e44381a",
+    "http://www.example.com/t/4b9b8026079e344ca4ab",
+    "http://www.example.com/t/4e73a56edc3e1a1506ed",
+    "http://www.example.com/t/48e2bad4a4beff405b70"
   ],
   "tag": [
-    "http://localhost:8080/i/horror",
-    "http://localhost:8080/i/birds",
-    "http://localhost:8080/i/2010"
+    "http://www.example.com/i/horror",
+    "http://www.example.com/i/birds",
+    "http://www.example.com/i/2010"
   ],
   "updated": "2022-07-21T01:52:23.764Z"
 }
@@ -94,11 +94,11 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://localhost:8080/l/47f6933698521870bd96/r",
+  "id": "http://www.example.com/l/47f6933698521870bd96/r",
   "type": "OrderedCollection",
   "totalItems": 1,
   "orderedItems": [
-    "http://localhost:8080/c/b69f57da012c3e0b06"
+    "http://www.example.com/c/b69f57da012c3e0b06"
   ]
 }
 ```
@@ -129,33 +129,33 @@ Content-Type: application/activity+json
   "object": {
   "@context": "https://www.w3.org/ns/activitystreams",
   "type": "Update",
-  "id": "http://localhost:8080/l/47f6933698521870bd96/activity",
-  "actor": "http://localhost:8080/u/bob",
+  "id": "http://www.example.com/l/47f6933698521870bd96/activity",
+  "actor": "http://www.example.com/u/bob",
   "object": {
     "@context": "https://www.w3.org/ns/activitystreams",
-    "id": "http://localhost:8080/l/47f6933698521870bd96",
+    "id": "http://www.example.com/l/47f6933698521870bd96",
     "type": "OrderedCollection",
     "name": "A list!",
-    "attributedTo": "http://localhost:8080/u/bob",
+    "attributedTo": "http://www.example.com/u/bob",
     "summary": "<p>Something different</p>\n",
     "totalItems": 10,
-    "replies": "http://localhost:8080/l/47f6933698521870bd96/r",
+    "replies": "http://www.example.com/l/47f6933698521870bd96/r",
     "orderedItems": [
-      "http://localhost:8080/t/46d8b6134a7d9dee564d",
-      "http://localhost:8080/t/42d28331ff9921482579",
-      "http://localhost:8080/t/497b9080c890730dc8e4",
-      "http://localhost:8080/t/4b55a7db665915371be2",
-      "http://localhost:8080/t/4457aa170c4cac365d1b",
-      "http://localhost:8080/t/45f79372e19bde01d900",
-      "http://localhost:8080/t/49e385b86e0c2e44381a",
-      "http://localhost:8080/t/4b9b8026079e344ca4ab",
-      "http://localhost:8080/t/4e73a56edc3e1a1506ed",
-      "http://localhost:8080/t/48e2bad4a4beff405b70"
+      "http://www.example.com/t/46d8b6134a7d9dee564d",
+      "http://www.example.com/t/42d28331ff9921482579",
+      "http://www.example.com/t/497b9080c890730dc8e4",
+      "http://www.example.com/t/4b55a7db665915371be2",
+      "http://www.example.com/t/4457aa170c4cac365d1b",
+      "http://www.example.com/t/45f79372e19bde01d900",
+      "http://www.example.com/t/49e385b86e0c2e44381a",
+      "http://www.example.com/t/4b9b8026079e344ca4ab",
+      "http://www.example.com/t/4e73a56edc3e1a1506ed",
+      "http://www.example.com/t/48e2bad4a4beff405b70"
     ],
     "tag": [
-      "http://localhost:8080/i/horror",
-      "http://localhost:8080/i/birds",
-      "http://localhost:8080/i/2010"
+      "http://www.example.com/i/horror",
+      "http://www.example.com/i/birds",
+      "http://www.example.com/i/2010"
     ],
     "updated": "2022-07-21T01:52:23.764Z"
   },
@@ -179,11 +179,11 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://localhost:8080/l/47f6933698521870bd96/likes",
+  "id": "http://www.example.com/l/47f6933698521870bd96/likes",
   "type": "OrderedCollection",
   "totalItems": 1,
   "orderedItems": [
-    "http://localhost:8080/u/bob"
+    "http://www.example.com/u/bob"
   ]
 }
 ```
@@ -207,11 +207,11 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://localhost:8080/l/47f6933698521870bd96/dislikes",
+  "id": "http://www.example.com/l/47f6933698521870bd96/dislikes",
   "type": "OrderedCollection",
   "totalItems": 1,
   "orderedItems": [
-    "http://localhost:8080/u/bob"
+    "http://www.example.com/u/bob"
   ]
 }
 ```
@@ -235,7 +235,7 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://localhost:8080/l/47f6933698521870bd96/flags",
+  "id": "http://www.example.com/l/47f6933698521870bd96/flags",
   "type": "OrderedCollection",
   "totalItems": 1,
   "orderedItems": [
@@ -262,16 +262,16 @@ Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568c
   "summary": "Woah! A list! Wow!!",
   "tags": "horror,birds,2010",
   "orderedItems": [
-    "http://localhost:8080/t/46d8b6134a7d9dee564d",
-    "http://localhost:8080/t/42d28331ff9921482579",
-    "http://localhost:8080/t/497b9080c890730dc8e4",
-    "http://localhost:8080/t/4b55a7db665915371be2",
-    "http://localhost:8080/t/4457aa170c4cac365d1b",
-    "http://localhost:8080/t/45f79372e19bde01d900",
-    "http://localhost:8080/t/49e385b86e0c2e44381a",
-    "http://localhost:8080/t/4b9b8026079e344ca4ab",
-    "http://localhost:8080/t/4e73a56edc3e1a1506ed",
-    "http://localhost:8080/t/48e2bad4a4beff405b70",
+    "http://www.example.com/t/46d8b6134a7d9dee564d",
+    "http://www.example.com/t/42d28331ff9921482579",
+    "http://www.example.com/t/497b9080c890730dc8e4",
+    "http://www.example.com/t/4b55a7db665915371be2",
+    "http://www.example.com/t/4457aa170c4cac365d1b",
+    "http://www.example.com/t/45f79372e19bde01d900",
+    "http://www.example.com/t/49e385b86e0c2e44381a",
+    "http://www.example.com/t/4b9b8026079e344ca4ab",
+    "http://www.example.com/t/4e73a56edc3e1a1506ed",
+    "http://www.example.com/t/48e2bad4a4beff405b70",
   ]
 }
 ```
@@ -345,8 +345,8 @@ Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568c
   "name": "New Name"
   "content": "Something different",
   "orderedItems": [
-    "http://localhost:8080/t/1247f47a9ea79b461ba2",
-    "http://localhost:8080/t/38f7a376db05fc10eca2",
+    "http://www.example.com/t/1247f47a9ea79b461ba2",
+    "http://www.example.com/t/38f7a376db05fc10eca2",
   ]
 }
 ```
