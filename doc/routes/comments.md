@@ -279,7 +279,7 @@ Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568c
 Response:
 
 ```
-200 OK
+201 OK
 Content-Type: application/activity+json
 { 
   msg: "Comment 4dbc66e6ee4367dd62 deleted" 

@@ -107,6 +107,7 @@ Response:
 
 ```
 201 CREATED
+Location: http://www.example.com/x/798ac40064c6d30d9c
 Content-Type: application/activity+json
 {
   msg: "Torrent 4f888f6071285d467433 added to likes collection"
@@ -135,6 +136,7 @@ Response:
 
 ```
 201 CREATED
+Location: http://www.example.com/x/d29b1c644f12ca2d03
 Content-Type: application/activity+json
 {
   msg: "Torrent 4f888f6071285d467433 added to dislikes collection"
@@ -156,7 +158,7 @@ Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568c
 {
   "type": "Create",
   "content": "Something different",
-  "inReplyTo": http://www.example.com/t/cdcf46e9399a,
+  "inReplyTo": http://sickos.social/t/cdcf46e9399a,
 }
 ```
 
@@ -164,38 +166,10 @@ Response:
 
 ```
 201 CREATED
+Location: http://www.example.com/c/12ba973e8322f71bfb
 Content-Type: application/activity+json
 {
-  msg: "Comment 3683e9ea39ce4650c7 added to Torrent http://www.example.com/t/cdcf46e9399a"
-}
-```
-
-#### POST `/x/comment`
-
-Description: Attempt to comment on an object.
-
-Authorization: JWT Bearer Token.
-
-Sample HTTP payload:
-
-```
-POST /x/comment
-Content-Type: application/json
-Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
-{
-  "type": "Create",
-  "content": "Something different",
-  "inReplyTo": http://www.example.com/t/cdcf46e9399a,
-}
-```
-
-Response:
-
-```
-201 CREATED
-Content-Type: application/activity+json
-{
-  msg: "Comment 3683e9ea39ce4650c7 added to Torrent http://www.example.com/t/cdcf46e9399a"
+  msg: "Comment 3683e9ea39ce4650c7 added to Torrent http://sickos.social/t/cdcf46e9399a"
 }
 ```
 
@@ -220,6 +194,9 @@ Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568c
 Response:
 
 ```
+201 CREATED
+Location: http://www.example.com/x/1abb02aca0f181f2a8
+Content-Type: application/json
 {
   msg: "Actions by http://www.example.com/u/larvae on Torrent 4f888f6071285d467433 undone"
 }

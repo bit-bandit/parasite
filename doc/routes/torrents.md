@@ -255,7 +255,8 @@ Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568c
 Response:
 
 ```
-200 OK
+201 CREATED
+Location: http://www.example.com/t/4dbc66e6ee4367dd62
 Content-Type: application/activity+json
 { 
   msg: "Torrent 4dbc66e6ee4367dd62 created" 

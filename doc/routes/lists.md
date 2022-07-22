@@ -279,7 +279,8 @@ Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568c
 Response:
 
 ```
-200 OK
+201 CREATED
+Location: http://www.example.com/l/4dbc66e6ee4367dd62
 Content-Type: application/activity+json
 { 
   msg: "List 4dbc66e6ee4367dd62 created" 
@@ -298,7 +299,7 @@ to it. Below are the actions/options that can result from altering the value of
 
 #### `Type: "Create"`
 
-**Headers required:** `Signature`: HTTP Signature.
+**Headers required:** `Authorization`: HTTP Signature.
 
 Requires creation of a comment, with the ID of said comment in the `object`
 field. If all is well, the ID of the comment will be added to the `replies`
@@ -308,7 +309,7 @@ Comments can be created via `/x/comment`
 
 #### `Type: "Like"`
 
-**Headers required:** `Signature`: HTTP Signature.
+**Headers required:** `Authorization`: HTTP Signature.
 
 Requires creation of a object indicating that the user liked the object. If all
 is well, the ID of the user will be added to the `likes` object of the list.
@@ -317,7 +318,7 @@ Like can be created via `/x/like`
 
 #### `Type: "Dislike"`
 
-**Headers required:** `Signature`: HTTP Signature.
+**Headers required:** `Authorization`: HTTP Signature.
 
 Requires creation of a object indicating that the user disliked the object. If
 all is well, the ID of the user will be added to the `dislikes` object of the
@@ -363,7 +364,7 @@ Content-Type: application/activity+json
 
 #### `Type: "Remove" | "Delete"`
 
-**Headers required:** `Signature`: HTTP Signature.
+**Headers required:** `Authorization`: HTTP Signature.
 
 **Local only. Requires `deleteOwnLists` or `deleteOwnLists` permission** If all
 is well, the list will be removed from the database.
@@ -389,7 +390,7 @@ Content-Type: application/activity+json
 
 #### `Type: "Flag"`
 
-**Headers required:** `Signature`: HTTP Signature.
+**Headers required:** `Authorization`: HTTP Signature.
 
 **Local only. Requires `flag` permission** If all is well, the object will be
 flagged.
@@ -413,7 +414,7 @@ Content-Type: application/activity+json
 
 #### `Type: "Undo"`
 
-**Headers required:** `Signature`: HTTP Signature.
+**Headers required:** `Authorization`: HTTP Signature.
 
 Requires user to have previously interacted with an object. If all is well, the
 ID of the user will removed from the related collect of the object that they

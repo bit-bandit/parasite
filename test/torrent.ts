@@ -76,7 +76,6 @@ Deno.test("Update Torrent", async () => {
       "content": "Something different",
     }),
   });
-
   const res = await r.json();
   assertNotEquals(res.err, true);
 });
@@ -94,7 +93,6 @@ Deno.test("Comment on Torrent", async () => {
       "inReplyTo": torrentURL,
     }),
   });
-
   const res = await r.json();
   assertEquals(res.err === true, false);
 });
@@ -214,7 +212,6 @@ Deno.test("Dislike Torrent", async () => {
       "object": torrentURL,
     }),
   });
-
   const res = await r.json();
   assertNotEquals(res.err, true);
 });
@@ -248,7 +245,6 @@ Deno.test("Try to undo Torrent activities", async () => {
       "object": torrentURL,
     }),
   });
-
   const res = await r.json();
   assertNotEquals(res.err, true);
 });
