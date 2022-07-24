@@ -88,7 +88,9 @@ actions.post("/x/follow", async function (ctx) {
   const actorKeys = await getUActivity(data.decoded.name, "keys");
   const priv = await extractKey("private", actorKeys[1]);
 
-  const fActor = await (await fetch(requestJSON.object)).json();
+  const fActor = await (await fetch(requestJSON.object, {
+    headers: { "Accept": "application/activity+json" },
+  })).json();
   const outboxURL = new URL(fActor.outbox);
   const d = new Date();
   const time = d.toUTCString();

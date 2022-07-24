@@ -73,7 +73,7 @@ auth.post("/login", async function (ctx) {
 
   ctx.response.body = jwt;
   ctx.response.status = 200;
-  ctx.response.type = "application/json";
+  ctx.response.type = "text/plain";
 });
 
 auth.post("/register", async function (ctx) {

@@ -74,12 +74,14 @@ users.get("/u/:id/followers", async function (ctx) {
 
 users.get("/u/:id/main-key", async function (ctx) {
   const res = await getUActivity(ctx.params.id, "keys");
-  ctx.response.body = res[0];
+
   if (!("err" in res)) {
+    ctx.response.body = res[0];
     ctx.response.status = 200;
     ctx.response.type = "text/plain";
   }
 
+  ctx.response.body = res;
   ctx.response.status = 404;
   ctx.response.type = "application/json";
 });
