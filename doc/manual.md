@@ -1,4 +1,4 @@
-# Parasite Manuel
+# Parasite Manual
 
 ## Introduction
 
@@ -60,7 +60,7 @@ Parasite, in its default state, requires the following dependancies:
 
 Note: The database MUST be running in the background.
 
-```
+```sh
 # Clone the source code
 git clone --depth=1 https://github.com/bit-bandit/parasite
 
