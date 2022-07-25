@@ -210,3 +210,9 @@ export function isValidChar(m: string): boolean {
   const regex = /^[A-Za-z0-9_]{1,24}$/;
   return regex.test(m);
 }
+
+export function isBlockedInstance(str: string, ctx: Context) {
+  if (settings.federationParams.blockedInstances.includes(str)) {
+    throwAPIError(ctx, "Your instance is banned", 400);
+  }
+}

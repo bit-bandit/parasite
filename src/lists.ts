@@ -25,6 +25,7 @@ import {
 import {
   authData,
   genUUID,
+  isBlockedInstance,
   isValidChar,
   sendToFollowers,
   throwAPIError,
@@ -259,6 +260,10 @@ lists.post("/l/:id", async function (ctx) {
       // If user is local: Add user to torrent likes. Add post URL to user 'likes'.
       // Else: Webfinger to check if user actually exists. If not, send err. If so,
       // add user to `likes`.
+
+      const externalActorURL = new URL(requestJSON.actor);
+      isBlockedInstance(externalActorURL.host);
+
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
         "public",
@@ -316,6 +321,9 @@ lists.post("/l/:id", async function (ctx) {
     }
 
     case "Dislike": {
+      const externalActorURL = new URL(requestJSON.actor);
+      isBlockedInstance(externalActorURL.host);
+
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
         "public",
@@ -371,6 +379,9 @@ lists.post("/l/:id", async function (ctx) {
     }
     // Adding a comment.
     case "Create": {
+      const externalActorURL = new URL(requestJSON.actor);
+      isBlockedInstance(externalActorURL.host);
+
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
         "public",

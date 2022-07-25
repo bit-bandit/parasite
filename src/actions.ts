@@ -22,15 +22,16 @@ import {
   simpleSign,
   simpleVerify,
 } from "./crypto.ts";
-import { authData, genUUID, sendToFollowers, throwAPIError } from "./utils.ts";
+import {
+  authData,
+  genUUID,
+  isBlockedInstance,
+  sendToFollowers,
+  throwAPIError,
+} from "./utils.ts";
 import { settings } from "../settings.ts";
 
 export const actions = new Router();
-
-/*
-Design Notes:
-- Check role abilities before request gets sent out.
-*/
 
 actions.get("/x/:id", async function (ctx) {
   const res = await getActionJSON(ctx.params.id);
@@ -57,6 +58,9 @@ actions.post("/x/follow", async function (ctx) {
       400,
     );
   }
+
+  const externalActorURL = new URL(requestJSON.object);
+  isBlockedInstance(externalActorURL.host);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
 
@@ -154,6 +158,9 @@ actions.post("/x/undo", async function (ctx) {
       400,
     );
   }
+
+  const externalActorURL = new URL(requestJSON.object);
+  isBlockedInstance(externalActorURL.host);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
 
@@ -388,6 +395,9 @@ actions.post("/x/dislike", async function (ctx) {
     );
   }
 
+  const externalActorURL = new URL(requestJSON.object);
+  isBlockedInstance(externalActorURL.host);
+
   const userActivity = await getUActivity(data.decoded.name, "info");
   const userDislikes = await getUActivity(data.decoded.name, "dislikes");
 
@@ -443,10 +453,6 @@ actions.post("/x/dislike", async function (ctx) {
   const header =
     `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
 
-  // We should really specify the `Accept` header because:
-  // 1) It's in the standard
-  // 2) Reverse proxies exist
-
   const sendToObject = await fetch(requestJSON.object, {
     method: "POST",
     headers: {
@@ -489,6 +495,9 @@ actions.post("/x/comment", async function (ctx) {
       400,
     );
   }
+
+  const externalActorURL = new URL(requestJSON.inReplyTo);
+  isBlockedInstance(externalActorURL.host);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
   const role = await getUActivity(data.decoded.name, "roles");

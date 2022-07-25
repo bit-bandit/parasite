@@ -15,7 +15,13 @@ import {
   getUActivity,
   getUMetaInfo,
 } from "./db.ts";
-import { authData, genUUID, sendToFollowers, throwAPIError } from "./utils.ts";
+import {
+  authData,
+  genUUID,
+  isBlockedInstance,
+  sendToFollowers,
+  throwAPIError,
+} from "./utils.ts";
 import { settings } from "../settings.ts";
 import {
   genOrderedCollection,
@@ -90,6 +96,9 @@ comments.post("/c/:id", async function (ctx) {
 
   switch (requestJSON.type) {
     case "Create": {
+      const externalActorURL = new URL(requestJSON.actor);
+      isBlockedInstance(externalActorURL.host);
+
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
         "public",
@@ -139,7 +148,9 @@ comments.post("/c/:id", async function (ctx) {
       break;
     }
     case "Like": {
-      // Same as above, but with dislikes instead of likes.
+      const externalActorURL = new URL(requestJSON.actor);
+      isBlockedInstance(externalActorURL.host);
+
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
         "public",
@@ -197,7 +208,9 @@ comments.post("/c/:id", async function (ctx) {
     }
 
     case "Dislike": {
-      // Same as above, but with dislikes instead of likes.
+      const externalActorURL = new URL(requestJSON.actor);
+      isBlockedInstance(externalActorURL.host);
+
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
         "public",
@@ -315,6 +328,9 @@ comments.post("/c/:id", async function (ctx) {
       break;
     }
     case "Undo": {
+      const externalActorURL = new URL(requestJSON.actor);
+      isBlockedInstance(externalActorURL.host);
+
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
         "public",

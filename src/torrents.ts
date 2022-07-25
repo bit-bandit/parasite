@@ -30,7 +30,13 @@ import {
   simpleVerify,
   str2ab,
 } from "./crypto.ts";
-import { authData, genUUID, isValidChar, throwAPIError } from "./utils.ts";
+import {
+  authData,
+  genUUID,
+  isBlockedInstance,
+  isValidChar,
+  throwAPIError,
+} from "./utils.ts";
 import { settings } from "../settings.ts";
 import * as ammonia from "https://deno.land/x/ammonia@0.3.1/mod.ts";
 import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
@@ -274,7 +280,10 @@ torrents.post("/t/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
+      const externalActorURL = new URL(requestJSON.actor);
       const reqURL = new URL(ctx.request.url);
+
+      isBlockedInstance(externalActorURL.host);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${reqURL.pathname}`,
@@ -323,6 +332,9 @@ torrents.post("/t/:id", async function (ctx) {
     }
 
     case "Dislike": {
+      const externalActorURL = new URL(requestJSON.actor);
+      isBlockedInstance(externalActorURL.host);
+
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
         "public",
@@ -378,6 +390,9 @@ torrents.post("/t/:id", async function (ctx) {
     }
     // Adding a comment.
     case "Create": {
+      const externalActorURL = new URL(requestJSON.actor);
+      isBlockedInstance(externalActorURL.host);
+
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
         "public",

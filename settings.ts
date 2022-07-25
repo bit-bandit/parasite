@@ -33,6 +33,9 @@ export const settings = {
     "readAccess": true,
     "writeAccess": true,
     "maxHourlyInteractions": 5,
+    // Must be the host of the instance.
+    // EG - example.com, torrents.sickos.social, etc.
+    "pooledInstances": [],
     "blockedInstances": [],
   },
   "jwt": {
