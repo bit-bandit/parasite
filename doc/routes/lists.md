@@ -75,9 +75,9 @@ Content-Type: application/activity+json
 }
 ```
 
-#### GET `/t/:id/r`
+#### GET `/l/:id/r`
 
-Description: Get JSON object containing replies to torrent.
+Description: Get JSON object containing replies to the list.
 
 Authorization: None
 
@@ -106,7 +106,7 @@ Content-Type: application/activity+json
 #### GET `/l/:id/activity`
 
 Description: Get JSON object containing ActivityStreams representation of the
-creation of the torrent.
+creation of the list.
 
 Authorization: None
 
@@ -165,7 +165,7 @@ Content-Type: application/activity+json
 
 #### GET `/l/:id/likes`
 
-Description: Get JSON object containing people who liked the torrent.
+Description: Get JSON object containing people who liked the list.
 Authorization: None Sample HTTP payload:
 
 ```
@@ -218,7 +218,7 @@ Content-Type: application/activity+json
 
 #### GET `/l/:id/flags`
 
-Description: Get JSON object containing people who flagged the torrent.
+Description: Get JSON object containing people who flagged the list.
 
 Authorization: None
 
@@ -246,7 +246,7 @@ Content-Type: application/activity+json
 
 ### POST /l/
 
-Description: Create Torrent object, and send to followers.
+Description: Create list object, and send to followers.
 
 Authorization: JWT Bearer Token
 
@@ -290,8 +290,8 @@ Content-Type: application/activity+json
 ### POST `/l/:id` + Options
 
 `POST /l/:id` is a broad route that encompasses nearly everything relating to
-modifying a torrent/object. Much of what can be sent to it is handeled from
-within `/x/` (see `doc/actions.md` for more information about that).
+modifying a list. Much of what can be sent to it is handeled from within `/x/`
+(see `doc/actions.md` for more information about that).
 
 Every object sent to this route requires a `Type` parameter within the JSON sent
 to it. Below are the actions/options that can result from altering the value of
