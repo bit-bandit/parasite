@@ -2,6 +2,61 @@
 
 ## Routes
 
+#### `POST /register`
+
+Description: Add an account to the instance registry.
+
+Authorization: None.
+
+Sample HTTP payload:
+
+```
+POST /register
+Content-Type: application/json
+{ 
+  "username": "bob", 
+  "password": "subgenius" 
+}
+```
+
+Response:
+```
+201 CREATED
+Content-Type: application/json
+{
+  "msg": "User bob created"
+}
+```
+
+#### `POST /login`
+
+Description: Get a JWT key associated 
+with an account in the instance registry.
+
+Authorization: None.
+
+Sample HTTP payload:
+
+```
+POST /login
+Content-Type: application/json
+
+{ 
+  "username": "bob", 
+  "password": "subgenius" 
+}
+```
+
+Response:
+
+Response:
+```
+200 OK
+Content-Type: text/plain
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+```
+
 #### `GET /u/:id`
 
 Description: Get JSON object representing user.
