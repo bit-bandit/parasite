@@ -13,6 +13,7 @@ interface Role {
   flag: boolean;
   login: boolean;
   vote: boolean;
+  assignableRoles: string[];  
 }
 
 export const roles: Record<string, Role> = {
@@ -30,6 +31,7 @@ export const roles: Record<string, Role> = {
     flag: true,
     login: false,
     vote: true,
+    assignableRoles: [ "Admin", "User", "Banned"]  
   },
   "User": {
     createTorrents: true,
@@ -45,6 +47,7 @@ export const roles: Record<string, Role> = {
     flag: true,
     login: false,
     vote: true,
+    assignableRoles: [],    
   },
   "Banned": {
     createTorrents: false,
@@ -60,5 +63,6 @@ export const roles: Record<string, Role> = {
     flag: true,
     login: false,
     vote: false,
+    assignableRoles: [],  
   },
 };
