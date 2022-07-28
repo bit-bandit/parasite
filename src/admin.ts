@@ -2,11 +2,11 @@ import { Context, Router } from "https://deno.land/x/oak/mod.ts";
 
 import {
   basicObjectUpdate,
+  deleteComment,
+  deleteList,
+  deleteTorrent,
   getUActivity,
   getUMetaInfo,
-  deleteTorrent,
-  deleteList,
-  deleteComment,  
 } from "./db.ts";
 
 import {
@@ -22,39 +22,119 @@ import { roles } from "../roles.ts";
 export const admin = new Router();
 
 // Add instance
-admin.post('/a/federate/', async function(ctx: Context){
-    // Ban API:
-    // type: "Ban" | "Unban",
-    // range: "User" | "Instance",
-    // id: string
-    // if instance:
-    //   add to 'banned'
+admin.post("/a/federate/", async function (ctx: Context) {
+  // Ban API:
+  // type: "Ban" | "Unban" | "Pool",
+  // range: "User" | "Instance",
+  // id: "https://www.example.com/"
+  const data = await authData(ctx);
+  const requestJSON = data.request;
+
+  const requesterRole = await getUActivity(data.decoded.name, "roles");
+  const targetURL = new URL(requestJSON.id);
+
+  if (!requesterRole.manageFederation) {
+    return throwAPIError(
+      ctx,
+      "Not permitted to manage federation settings",
+      400,
+    );
+  }
+
+  // TODO: Make this shit persistant.
+  switch (requestJSON.type) {
+    case ("Ban"): {
+      const u = new URL(requestJSON.id);
+
+      if (
+        settings.federationParams.blocked.includes(u.host) ||
+        settings.federationParams.blocked.includes(u.href)
+      ) {
+        return throwAPIError(ctx, "Item already banned", 400);
+      }
+
+      settings.federationParams.blocked.push(u.origin);
+      ctx.response.body = {
+        "msg": `'${u.href}' banned.`,
+      };
+      ctx.response.type = "application/json";
+      ctx.response.status = 200;
+      break;
+    }
+    case ("Unban"): {
+      const u = new URL(requestJSON.id);
+      if (
+        !settings.federationParams.blocked.includes(u.host) ||
+        !settings.federationParams.blocked.includes(u.href)
+      ) {
+        return throwAPIError(ctx, "Item not banned", 400);
+      }
+
+      // There really shouldn't be two of this, but whatever.
+      const hrefIndex = userLikes.orderedItems.indexOf(u.href);
+      const hostIndex = userLikes.orderedItems.indexOf(u.host);
+
+      // Yuck.
+      if (hrefIndex !== -1) {
+        settings.federationParams.blocked.splice(hrefIndex, 1);
+      } else if (hostIndex !== -1) {
+        settings.federationParams.blocked.splice(hostIndex, 1);
+      }
+      ctx.response.body = {
+        "msg": `'${u.href}' unbanned.`,
+      };
+      ctx.response.type = "application/json";
+      ctx.response.status = 200;
+      break;
+    }
+    case ("Pool"): {
+      if (requestJSON.range === "User") {
+        return throwAPIError(ctx, "Cannot pool with individual user", 400);
+      }
+
+      const u = new URL(requestJSON.id);
+      settings.federationParams.pooled.push(u.origin);
+      ctx.response.body = {
+        "msg": `'${u.href}' pooled.`,
+      };
+      ctx.response.type = "application/json";
+      ctx.response.status = 200;
+      break;
+    }
+    default: {
+      return throwAPIError(ctx, "Invalid type", 400);
+    }
+  }
 });
 
 // Reassign user role - Via URL
-admin.post('/a/reassign', async function(ctx: Context){
+admin.post("/a/reassign", async function (ctx: Context) {
   /**
     expected HTTP payload (Not including headers):
     {
       id: "https://www.example.com/u/bill",
       role: "Role"
     }
-  */ 
-    
+  */
+
   const data = await authData(ctx);
   const requestJSON = data.request;
 
   const requesterRole = await getUActivity(data.decoded.name, "roles");
-  const targetURL = new URL(requestJSON.id)
+  const targetURL = new URL(requestJSON.id);
 
-    if (targetURL.origin !== settings.siteURL) {
-	return throwAPIError(ctx, "You can't assign roles to users outside of your local instance", 400);
-    }
-    
+  if (targetURL.origin !== settings.siteURL) {
+    return throwAPIError(
+      ctx,
+      "You can't assign roles to users outside of your local instance",
+      400,
+    );
+  }
+
   if (requesterRole.assignableRoles.length === 0) {
     return throwAPIError(ctx, "You can't assign roles", 400);
   }
-    
+
   if (!requesterRole.assignableRoles.includes(requestJSON.role)) {
     return throwAPIError(ctx, "You can't assign the specified role", 400);
   }
@@ -63,13 +143,17 @@ admin.post('/a/reassign', async function(ctx: Context){
     return throwAPIError(ctx, `Role '${requestJSON.role}' does not exist`, 400);
   }
   // I should probably do something better than this...
-  const targetUsername = targetURL.pathname.split('/')[2]
-    
+  const targetUsername = targetURL.pathname.split("/")[2];
+
   const targetRole = await getUActivity(targetUsername, "roles");
 
   // This blows but it's as far as I'm gonna go with this at the moment.
   if (JSON.stringify(targetRole) === JSON.stringify(roles[requestJSON.role])) {
-    return throwAPIError(ctx, `User '${targetUsername}' already has role '${requestJSON.role}'`, 400);
+    return throwAPIError(
+      ctx,
+      `User '${targetUsername}' already has role '${requestJSON.role}'`,
+      400,
+    );
   }
 
   await basicObjectUpdate("users", {
@@ -77,9 +161,10 @@ admin.post('/a/reassign', async function(ctx: Context){
   }, targetUsername);
 
   ctx.response.body = {
-      "msg": "User '${targetUsername}' role successfully changed to '${requestJSON.role}'"
+    "msg":
+      `User '${targetUsername}' role successfully changed to '${requestJSON.role}'`,
   };
-  ctx.response.type = 'application/json';
+  ctx.response.type = "application/json";
   ctx.response.status = 200;
 });
 
@@ -88,7 +173,7 @@ admin.post('/a/reassign', async function(ctx: Context){
 // to make deleting objects easier, if sending
 // a POST request w/ the `remove` type was somehow
 // too difficult...
-admin.post('/a/delete/', async function(ctx: Context){
+admin.post("/a/delete/", async function (ctx: Context) {
   /**
     expected HTTP payload (Not including headers):
     {
@@ -100,28 +185,41 @@ admin.post('/a/delete/', async function(ctx: Context){
   const requestJSON = data.request;
 
   const requesterRole = await getUActivity(data.decoded.name, "roles");
-  const targetURL = new URL(requestJSON.id)
+  const targetURL = new URL(requestJSON.id);
 
-  const targetURL = new URL(requestJSON.id)
+  const targetURL = new URL(requestJSON.id);
 
   if (targetURL.origin !== settings.siteURL) {
-	return throwAPIError(ctx, "You can't delete content outside of your local instance", 400);
+    return throwAPIError(
+      ctx,
+      "You can't delete content outside of your local instance",
+      400,
+    );
   }
 
-  const targetID = targetURL.pathname.split('/')[2]
-    
+  const targetID = targetURL.pathname.split("/")[2];
+
   switch (requestJSON.type) {
-    case "Torrent" {
-        await deleteTorrent(targetID)	  	  
-	break;
+    case "Torrent": {
+      if (!requesterRole.deleteOthersTorrents) {
+        return throwAPIError(ctx, "Deletion not permitted", 400);
+      }
+      await deleteTorrent(targetID);
+      break;
     }
-    case "List" {
-        await deleteList(targetID)	  	  
-	break;
+    case "List": {
+      if (!requesterRole.deleteOthersLists) {
+        return throwAPIError(ctx, "Deletion not permitted", 400);
+      }
+      await deleteList(targetID);
+      break;
     }
-    case "Comment" {
-        await deleteComment(targetID)	  
-	break;
+    case "Comment": {
+      if (!requesterRole.deleteOthersComments) {
+        return throwAPIError(ctx, "Deletion not permitted", 400);
+      }
+      await deleteComment(targetID);
+      break;
     }
     default: {
       throwAPIError(ctx, "Invalid content type", 400);

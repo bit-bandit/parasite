@@ -1,5 +1,6 @@
 // Roles for Parasite
 interface Role {
+  assignableRoles: string[];
   createTorrents: boolean;
   createLists: boolean;
   createComments: boolean;
@@ -12,12 +13,13 @@ interface Role {
   editUploads: boolean;
   flag: boolean;
   login: boolean;
+  manageFederation: boolean;
   vote: boolean;
-  assignableRoles: string[];  
 }
 
 export const roles: Record<string, Role> = {
   "Admin": {
+    assignableRoles: ["Admin", "User", "Banned"],
     createTorrents: true,
     createLists: true,
     createComments: true,
@@ -30,10 +32,11 @@ export const roles: Record<string, Role> = {
     editUploads: true,
     flag: true,
     login: false,
+    manageFederation: true,
     vote: true,
-    assignableRoles: [ "Admin", "User", "Banned"]  
   },
   "User": {
+    assignableRoles: [],
     createTorrents: true,
     createLists: true,
     createComments: true,
@@ -46,10 +49,11 @@ export const roles: Record<string, Role> = {
     editUploads: true,
     flag: true,
     login: false,
+    manageFederation: false,
     vote: true,
-    assignableRoles: [],    
   },
   "Banned": {
+    assignableRoles: [],
     createTorrents: false,
     createLists: false,
     createComments: false,
@@ -62,7 +66,7 @@ export const roles: Record<string, Role> = {
     editUploads: false,
     flag: true,
     login: false,
+    manageFederation: false,
     vote: false,
-    assignableRoles: [],  
   },
 };

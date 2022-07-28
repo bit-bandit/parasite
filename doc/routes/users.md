@@ -20,6 +20,7 @@ Content-Type: application/json
 ```
 
 Response:
+
 ```
 201 CREATED
 Content-Type: application/json
@@ -30,8 +31,7 @@ Content-Type: application/json
 
 #### `POST /login`
 
-Description: Get a JWT key associated 
-with an account in the instance registry.
+Description: Get a JWT key associated with an account in the instance registry.
 
 Authorization: None.
 
@@ -50,6 +50,7 @@ Content-Type: application/json
 Response:
 
 Response:
+
 ```
 200 OK
 Content-Type: text/plain

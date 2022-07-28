@@ -212,7 +212,7 @@ export function isValidChar(m: string): boolean {
 }
 
 export function isBlockedInstance(str: string, ctx: Context) {
-  if (settings.federationParams.blockedInstances.includes(str)) {
+  if (settings.federationParams.blocked.includes(str)) {
     throwAPIError(ctx, "Your instance is banned", 400);
   }
 }
