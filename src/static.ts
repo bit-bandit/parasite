@@ -1,4 +1,6 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
+import { settings } from "../settings.ts";
+import { throwAPIError } from "./utils.ts";
 
 export const media = new Router();
 
@@ -12,6 +14,6 @@ media.get("/m/(.*)", async function (ctx) {
       root: `${settings.staticFileDir}`,
     });
   } catch {
-    ctx.response.status = 404;
+    throwAPIError(ctx, "File not found", 404);
   }
 });

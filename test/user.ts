@@ -60,7 +60,7 @@ Deno.test("Follow account", async () => {
   });
 
   const userJWT = await tokenRequest.text();
-    
+
   const followAttempt = await fetch("http://localhost:8080/x/follow", {
     method: "POST",
     headers: {

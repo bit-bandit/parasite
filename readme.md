@@ -6,7 +6,7 @@ This is the core API source code for the Parasite torrent indexer. See
 ## License
 
 The source code and documention of Parasite is licensed under the 0BSD license.
-Read `LICENSE` for more information, if you're curious. 
+Read `LICENSE` for more information, if you're curious.
 
 ### Some exceptions
 
