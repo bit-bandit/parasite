@@ -48,7 +48,7 @@ export const roles: Record<string, Role> = {
     deleteOthersLists: false,
     editUploads: true,
     flag: true,
-    login: false,
+    login: true,
     manageFederation: false,
     vote: true,
   },

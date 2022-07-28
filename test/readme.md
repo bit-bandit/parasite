@@ -36,5 +36,3 @@ Add and remove tests to your liking.
 
 - Add CSV sample file to import/export data. (see
   https://skyvia.com/blog/complete-guide-on-how-to-import-and-export-csv-files-to-postgresql)
-- Add tests for user authentication.
-- Add tests for comment/list/torrent creation/updating/deletion.
