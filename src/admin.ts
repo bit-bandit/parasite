@@ -12,7 +12,7 @@ import {
 import {
   authData,
   genUUID,
-  isBlockedInstance,
+  checkInstanceBlocked,
   throwAPIError,
 } from "./utils.ts";
 
@@ -209,7 +209,7 @@ admin.post("/a/delete", async function (ctx: Context) {
 
   switch (targetType) {
     case "t": {
-      if (!requesterRole.deleteOthersTorrents) {
+      if (!requesterRole.deleteAnyTorrents) {
         return throwAPIError(ctx, "Deletion not permitted", 400);
       }
       await deleteTorrent(targetID);
@@ -222,7 +222,7 @@ admin.post("/a/delete", async function (ctx: Context) {
       break;
     }
     case "l": {
-      if (!requesterRole.deleteOthersLists) {
+      if (!requesterRole.deleteAnyLists) {
         return throwAPIError(ctx, "Deletion not permitted", 400);
       }
       await deleteList(targetID);
@@ -235,7 +235,7 @@ admin.post("/a/delete", async function (ctx: Context) {
       break;
     }
     case "c": {
-      if (!requesterRole.deleteOthersComments) {
+      if (!requesterRole.deleteAnyComments) {
         return throwAPIError(ctx, "Deletion not permitted", 400);
       }
       await deleteComment(targetID);

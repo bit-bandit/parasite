@@ -18,7 +18,7 @@ import {
 import {
   authData,
   genUUID,
-  isBlockedInstance,
+  checkInstanceBlocked,
   sendToFollowers,
   throwAPIError,
 } from "./utils.ts";
@@ -97,7 +97,7 @@ comments.post("/c/:id", async function (ctx) {
   switch (requestJSON.type) {
     case "Create": {
       const externalActorURL = new URL(requestJSON.actor);
-      isBlockedInstance(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
@@ -149,7 +149,7 @@ comments.post("/c/:id", async function (ctx) {
     }
     case "Like": {
       const externalActorURL = new URL(requestJSON.actor);
-      isBlockedInstance(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
@@ -209,7 +209,7 @@ comments.post("/c/:id", async function (ctx) {
 
     case "Dislike": {
       const externalActorURL = new URL(requestJSON.actor);
-      isBlockedInstance(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
@@ -317,7 +317,7 @@ comments.post("/c/:id", async function (ctx) {
           400,
         );
       } else if (
-        userRole.deleteOthersComments
+        userRole.deleteAnyComments
       ) {
         await deleteComment(ctx.params.id);
         boilerplateDeleteStatement(ctx);
@@ -329,7 +329,7 @@ comments.post("/c/:id", async function (ctx) {
     }
     case "Undo": {
       const externalActorURL = new URL(requestJSON.actor);
-      isBlockedInstance(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(

@@ -25,7 +25,7 @@ import {
 import {
   authData,
   genUUID,
-  isBlockedInstance,
+  checkInstanceBlocked,
   sendToFollowers,
   throwAPIError,
 } from "./utils.ts";
@@ -60,7 +60,7 @@ actions.post("/x/follow", async function (ctx) {
   }
 
   const externalActorURL = new URL(requestJSON.object);
-  isBlockedInstance(externalActorURL.host);
+  checkInstanceBlocked(externalActorURL.host);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
 
@@ -160,7 +160,7 @@ actions.post("/x/undo", async function (ctx) {
   }
 
   const externalActorURL = new URL(requestJSON.object);
-  isBlockedInstance(externalActorURL.host);
+  checkInstanceBlocked(externalActorURL.host);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
 
@@ -396,7 +396,7 @@ actions.post("/x/dislike", async function (ctx) {
   }
 
   const externalActorURL = new URL(requestJSON.object);
-  isBlockedInstance(externalActorURL.host);
+  checkInstanceBlocked(externalActorURL.host);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
   const userDislikes = await getUActivity(data.decoded.name, "dislikes");
@@ -497,7 +497,7 @@ actions.post("/x/comment", async function (ctx) {
   }
 
   const externalActorURL = new URL(requestJSON.inReplyTo);
-  isBlockedInstance(externalActorURL.host);
+  checkInstanceBlocked(externalActorURL.host);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
   const role = await getUActivity(data.decoded.name, "roles");

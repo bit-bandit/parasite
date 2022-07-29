@@ -6,11 +6,11 @@ interface Role {
   createLists: boolean;
   createComments: boolean;
   deleteOwnTorrents: boolean;
-  deleteOthersTorrents: boolean;
+  deleteAnyTorrents: boolean;
   deleteOwnComments: boolean;
-  deleteOthersComments: boolean;
+  deleteAnyComments: boolean;
   deleteOwnLists: boolean;
-  deleteOthersLists: boolean;
+  deleteAnyLists: boolean;
   editUploads: boolean;
   flag: boolean;
   login: boolean;
@@ -26,11 +26,11 @@ export const roles: Record<string, Role> = {
     createLists: true,
     createComments: true,
     deleteOwnTorrents: true,
-    deleteOthersTorrents: true,
+    deleteAnyTorrents: true,
     deleteOwnComments: true,
-    deleteOthersComments: true,
+    deleteAnyComments: true,
     deleteOwnLists: true,
-    deleteOthersLists: true,
+    deleteAnyLists: true,
     editUploads: true,
     flag: true,
     login: true,
@@ -44,11 +44,11 @@ export const roles: Record<string, Role> = {
     createLists: true,
     createComments: true,
     deleteOwnTorrents: true,
-    deleteOthersTorrents: false,
+    deleteAnyTorrents: false,
     deleteOwnComments: true,
-    deleteOthersComments: false,
+    deleteAnyComments: false,
     deleteOwnLists: true,
-    deleteOthersLists: false,
+    deleteAnyLists: false,
     editUploads: true,
     flag: true,
     login: true,
@@ -62,11 +62,11 @@ export const roles: Record<string, Role> = {
     createLists: false,
     createComments: false,
     deleteOwnTorrents: false,
-    deleteOthersTorrents: false,
+    deleteAnyTorrents: false,
     deleteOwnComments: false,
-    deleteOthersComments: false,
+    deleteAnyComments: false,
     deleteOwnLists: false,
-    deleteOthersLists: false,
+    deleteAnyLists: false,
     editUploads: false,
     flag: true,
     login: false,

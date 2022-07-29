@@ -25,7 +25,7 @@ import {
 import {
   authData,
   genUUID,
-  isBlockedInstance,
+  checkInstanceBlocked,
   isValidChar,
   sendToFollowers,
   throwAPIError,
@@ -262,7 +262,7 @@ lists.post("/l/:id", async function (ctx) {
       // add user to `likes`.
 
       const externalActorURL = new URL(requestJSON.actor);
-      isBlockedInstance(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
@@ -322,7 +322,7 @@ lists.post("/l/:id", async function (ctx) {
 
     case "Dislike": {
       const externalActorURL = new URL(requestJSON.actor);
-      isBlockedInstance(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
@@ -380,7 +380,7 @@ lists.post("/l/:id", async function (ctx) {
     // Adding a comment.
     case "Create": {
       const externalActorURL = new URL(requestJSON.actor);
-      isBlockedInstance(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
@@ -500,7 +500,7 @@ lists.post("/l/:id", async function (ctx) {
       if (!userRole.deleteOwnLists || uploader !== data.decoded.name) {
         throwAPIError(ctx, "You aren't allowed to delete this list", 400);
       } else if (
-        userRole.deleteOthersLists
+        userRole.deleteAnyLists
       ) {
         await deleteList(ctx.params.id);
         boilerplateDeleteStatement(ctx);

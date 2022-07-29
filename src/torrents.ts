@@ -33,7 +33,7 @@ import {
 import {
   authData,
   genUUID,
-  isBlockedInstance,
+  checkInstanceBlocked,
   isValidChar,
   throwAPIError,
 } from "./utils.ts";
@@ -283,7 +283,7 @@ torrents.post("/t/:id", async function (ctx) {
       const externalActorURL = new URL(requestJSON.actor);
       const reqURL = new URL(ctx.request.url);
 
-      isBlockedInstance(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${reqURL.pathname}`,
@@ -333,7 +333,7 @@ torrents.post("/t/:id", async function (ctx) {
 
     case "Dislike": {
       const externalActorURL = new URL(requestJSON.actor);
-      isBlockedInstance(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
@@ -391,7 +391,7 @@ torrents.post("/t/:id", async function (ctx) {
     // Adding a comment.
     case "Create": {
       const externalActorURL = new URL(requestJSON.actor);
-      isBlockedInstance(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
@@ -510,7 +510,7 @@ torrents.post("/t/:id", async function (ctx) {
       if (!userRole.deleteOwnTorrents || uploader !== data.decoded.name) {
         throwAPIError(ctx, "You aren't allowed to delete this torrent", 400);
       } else if (
-        userRole.deleteOthersTorrents
+        userRole.deleteAnyTorrents
       ) {
         await deleteTorrent(ctx.params.id);
         boilerplateDeleteStatement(ctx);
