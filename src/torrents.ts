@@ -100,7 +100,7 @@ torrents.get("/t/:id/flags", async function (ctx) {
 });
 
 // Posting
-torrents.post("/t/", async function (ctx) {
+torrents.post("/t", async function (ctx) {
   const data = await authData(ctx);
 
   const requestJSON = data.request;

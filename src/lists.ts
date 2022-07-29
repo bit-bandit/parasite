@@ -84,7 +84,7 @@ lists.get("/l/:id/flags", async function (ctx) {
   await boilerplateListGet(ctx, res);
 });
 
-lists.post("/l/", async function (ctx) {
+lists.post("/l", async function (ctx) {
   const data = await authData(ctx);
 
   const requestJSON = data.request;

@@ -22,7 +22,7 @@ import { roles } from "../roles.ts";
 export const admin = new Router();
 
 // Add instance
-admin.post("/a/federate/", async function (ctx: Context) {
+admin.post("/a/federate", async function (ctx: Context) {
   // Ban API:
   // type: "Ban" | "Unban" | "Pool",
   // range: "User" | "Instance",
@@ -173,7 +173,7 @@ admin.post("/a/reassign", async function (ctx: Context) {
 // to make deleting objects easier, if sending
 // a POST request w/ the `remove` type was somehow
 // too difficult...
-admin.post("/a/delete/", async function (ctx: Context) {
+admin.post("/a/delete", async function (ctx: Context) {
   /**
     expected HTTP payload (Not including headers):
     {

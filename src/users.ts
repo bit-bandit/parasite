@@ -36,7 +36,7 @@ async function basicGETActivity(ctx: Context, id: string, act: string) {
 }
 
 // GET activities
-users.get("/u/", async function (ctx) {
+users.get("/u", async function (ctx) {
   // Get information about logged-in user
 });
 
