@@ -1,5 +1,6 @@
 // Roles for Parasite
 interface Role {
+  adminAPI: boolean;
   assignableRoles: string[];
   createTorrents: boolean;
   createLists: boolean;
@@ -19,6 +20,7 @@ interface Role {
 
 export const roles: Record<string, Role> = {
   "Admin": {
+    adminAPI: true,
     assignableRoles: ["Admin", "User", "Banned"],
     createTorrents: true,
     createLists: true,
@@ -36,6 +38,7 @@ export const roles: Record<string, Role> = {
     vote: true,
   },
   "User": {
+    adminAPI: false,
     assignableRoles: [],
     createTorrents: true,
     createLists: true,
@@ -53,6 +56,7 @@ export const roles: Record<string, Role> = {
     vote: true,
   },
   "Banned": {
+    adminAPI: false,
     assignableRoles: [],
     createTorrents: false,
     createLists: false,
