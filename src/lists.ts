@@ -26,7 +26,7 @@ import {
   authData,
   genUUID,
   checkInstanceBlocked,
-  isValidChar,
+  properCharRange,
   sendToFollowers,
   throwAPIError,
 } from "./utils.ts";
@@ -113,7 +113,7 @@ lists.post("/l", async function (ctx) {
   // TODO: Tag checking/creation if not exists.
   const tag: string[] = [];
   if (requestJSON.tags) {
-    requestJSON.tags.split(",").filter((x) => isValidChar(x)).map(function (x) {
+    requestJSON.tags.split(",").filter((x) => properCharRange(x)).map(function (x) {
       x.toLowerCase();
       x.replace(" ", "_");
       tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`);
@@ -448,7 +448,7 @@ lists.post("/l/:id", async function (ctx) {
       const tag: string[] = [];
 
       if (requestJSON.tags) {
-        requestJSON.tags.split(",").filter((x) => isValidChar(x)).map(
+        requestJSON.tags.split(",").filter((x) => properCharRange(x)).map(
           function (x) {
             x.toLowerCase();
             x.replace(" ", "_");

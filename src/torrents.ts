@@ -34,7 +34,7 @@ import {
   authData,
   genUUID,
   checkInstanceBlocked,
-  isValidChar,
+  properCharRange,
   throwAPIError,
 } from "./utils.ts";
 import { settings } from "../settings.ts";
@@ -131,7 +131,7 @@ torrents.post("/t", async function (ctx) {
   const tag: string[] = [];
 
   if (requestJSON.tags) {
-    requestJSON.tags.split(",").filter((x) => isValidChar(x)).map(function (x) {
+    requestJSON.tags.split(",").filter((x) => properCharRange(x)).map(function (x) {
       x.toLowerCase();
       x.replace(" ", "_");
       tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`);
@@ -457,7 +457,7 @@ torrents.post("/t/:id", async function (ctx) {
       const tag: string[] = [];
 
       if (requestJSON.tags) {
-        requestJSON.tags.split(",").filter((x) => isValidChar(x)).map(
+        requestJSON.tags.split(",").filter((x) => properCharRange(x)).map(
           function (x) {
             x.toLowerCase();
             x.replace(" ", "_");
