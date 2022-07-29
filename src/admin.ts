@@ -187,8 +187,6 @@ admin.post("/a/delete/", async function (ctx: Context) {
   const requesterRole = await getUActivity(data.decoded.name, "roles");
   const targetURL = new URL(requestJSON.id);
 
-  const targetURL = new URL(requestJSON.id);
-
   if (targetURL.origin !== settings.siteURL) {
     return throwAPIError(
       ctx,
