@@ -27,8 +27,8 @@ export const settings = {
     "maxLists": Infinity,
     "maxUsers": Infinity,
   },
-  "allowFederation": true,
   "federationParams": {
+    "allowed": true,
     "minMembers": 10,
     "readAccess": true,
     "writeAccess": true,
