@@ -23,12 +23,22 @@ export const admin = new Router();
 
 // Add instance
 admin.post("/a/federate", async function (ctx: Context) {
-  // Ban API:
-  // type: "Ban" | "Unban" | "Pool",
-  // range: "User" | "Instance",
-  // id: "https://www.example.com/"
+  // expected HTTP payload:
+  // {
+  //   type: "Ban" | "Unban" | "Pool",
+  //   range: "User" | "Instance",
+  //   id: "https://www.example.com/"
+  // }
+
   const data = await authData(ctx);
   const requestJSON = data.request;
+
+  if (
+    requestJSON.range === undefined ||
+    requestJSON.id === undefined
+  ) {
+    return throwAPIError(ctx, "Invalid data", 400);
+  }
 
   const requesterRole = await getUActivity(data.decoded.name, "roles");
   const targetURL = new URL(requestJSON.id);
@@ -178,7 +188,6 @@ admin.post("/a/delete", async function (ctx: Context) {
     expected HTTP payload (Not including headers):
     {
       id: "https://www.example.com/p/298402",
-      type: "Torrent" | "List" | "Comment"
     }
   */
   const data = await authData(ctx);
@@ -195,28 +204,47 @@ admin.post("/a/delete", async function (ctx: Context) {
     );
   }
 
+  const targetType = targetURL.pathname.split("/")[1];
   const targetID = targetURL.pathname.split("/")[2];
 
-  switch (requestJSON.type) {
-    case "Torrent": {
+  switch (targetType) {
+    case "t": {
       if (!requesterRole.deleteOthersTorrents) {
         return throwAPIError(ctx, "Deletion not permitted", 400);
       }
       await deleteTorrent(targetID);
+
+      ctx.response.body = {
+        "msg": `'${requestJSON.id}' deleted.`,
+      };
+      ctx.response.type = "application/json";
+      ctx.response.status = 200;
       break;
     }
-    case "List": {
+    case "l": {
       if (!requesterRole.deleteOthersLists) {
         return throwAPIError(ctx, "Deletion not permitted", 400);
       }
       await deleteList(targetID);
+
+      ctx.response.body = {
+        "msg": `'${requestJSON.id}' deleted.`,
+      };
+      ctx.response.type = "application/json";
+      ctx.response.status = 200;
       break;
     }
-    case "Comment": {
+    case "c": {
       if (!requesterRole.deleteOthersComments) {
         return throwAPIError(ctx, "Deletion not permitted", 400);
       }
       await deleteComment(targetID);
+
+      ctx.response.body = {
+        "msg": `'${requestJSON.id}' deleted.`,
+      };
+      ctx.response.type = "application/json";
+      ctx.response.status = 200;
       break;
     }
     default: {
