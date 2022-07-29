@@ -1,3 +1,6 @@
+// Mess with these in their own seperate files.
+import instances from "./federation.json" assert { type: "json" };
+
 export const settings = {
   "siteURL": "http://localhost:8080",
   "sitePort": 8080,
@@ -35,8 +38,8 @@ export const settings = {
     "maxHourlyInteractions": 5,
     // Must be the host of the instance.
     // EG - example.com, torrents.sickos.social, etc.
-    "pooled": [],
-    "blocked": [],
+    "pooled": instances.pooled,
+    "blocked": instances.blocked,
   },
   "jwt": {
     // Persistent key file.

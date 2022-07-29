@@ -24,8 +24,8 @@ import {
 } from "./crypto.ts";
 import {
   authData,
-  genUUID,
   checkInstanceBlocked,
+  genUUID,
   sendToFollowers,
   throwAPIError,
 } from "./utils.ts";

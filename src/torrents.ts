@@ -32,8 +32,8 @@ import {
 } from "./crypto.ts";
 import {
   authData,
-  genUUID,
   checkInstanceBlocked,
+  genUUID,
   properCharRange,
   throwAPIError,
 } from "./utils.ts";
@@ -131,11 +131,13 @@ torrents.post("/t", async function (ctx) {
   const tag: string[] = [];
 
   if (requestJSON.tags) {
-    requestJSON.tags.split(",").filter((x) => properCharRange(x)).map(function (x) {
-      x.toLowerCase();
-      x.replace(" ", "_");
-      tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`);
-    });
+    requestJSON.tags.split(",").filter((x) => properCharRange(x)).map(
+      function (x) {
+        x.toLowerCase();
+        x.replace(" ", "_");
+        tag.push(`${settings.siteURL}/i/${encodeURIComponent(x)}`);
+      },
+    );
   }
 
   const d = new Date();

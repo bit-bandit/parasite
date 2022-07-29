@@ -17,8 +17,8 @@ import {
 } from "./db.ts";
 import {
   authData,
-  genUUID,
   checkInstanceBlocked,
+  genUUID,
   sendToFollowers,
   throwAPIError,
 } from "./utils.ts";

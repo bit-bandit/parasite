@@ -1,4 +1,5 @@
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
+import instances from "../federation.json" assert { type: "json" };
 
 import {
   basicObjectUpdate,
@@ -11,8 +12,8 @@ import {
 
 import {
   authData,
-  genUUID,
   checkInstanceBlocked,
+  genUUID,
   throwAPIError,
 } from "./utils.ts";
 
@@ -25,7 +26,7 @@ export const admin = new Router();
 admin.post("/a/federate", async function (ctx: Context) {
   // expected HTTP payload:
   // {
-  //   type: "Ban" | "Unban" | "Pool",
+  //   type: "Block" | "Unblock" | "Pool" | "Unpool",
   //   range: "User" | "Instance",
   //   id: "https://www.example.com/"
   // }
@@ -53,43 +54,55 @@ admin.post("/a/federate", async function (ctx: Context) {
 
   // TODO: Make this shit persistant.
   switch (requestJSON.type) {
-    case ("Ban"): {
+    case ("Block"): {
       const u = new URL(requestJSON.id);
 
       if (
-        settings.federationParams.blocked.includes(u.host) ||
-        settings.federationParams.blocked.includes(u.href)
+        instances.blocked.includes(u.host) ||
+        instances.blocked.includes(u.href)
       ) {
-        return throwAPIError(ctx, "Item already banned", 400);
+        return throwAPIError(ctx, "Item already blocked", 400);
       }
 
-      settings.federationParams.blocked.push(u.origin);
+      instances.blocked.push(u.origin);
+      // We don't need the formatting, but we'll do it anyways.
+      await Deno.writeTextFile(
+        "../federation.json",
+        JSON.stringify(instances, null, 2),
+      );
+
       ctx.response.body = {
-        "msg": `'${u.href}' banned.`,
+        "msg": `'${u.href}' blocked.`,
       };
       ctx.response.type = "application/json";
       ctx.response.status = 200;
       break;
     }
-    case ("Unban"): {
+    case ("Unblock"): {
       const u = new URL(requestJSON.id);
       if (
-        !settings.federationParams.blocked.includes(u.host) ||
-        !settings.federationParams.blocked.includes(u.href)
+        !instances.blocked.includes(u.host) ||
+        !instances.blocked.includes(u.href)
       ) {
-        return throwAPIError(ctx, "Item not banned", 400);
+        return throwAPIError(ctx, "Item not blocked", 400);
       }
 
       // There really shouldn't be two of this, but whatever.
-      const hrefIndex = userLikes.orderedItems.indexOf(u.href);
-      const hostIndex = userLikes.orderedItems.indexOf(u.host);
+      const hrefIndex = instances.blocked.orderedItems.indexOf(u.href);
+      const hostIndex = instances.blocked.orderedItems.indexOf(u.host);
 
       // Yuck.
       if (hrefIndex !== -1) {
-        settings.federationParams.blocked.splice(hrefIndex, 1);
+        instances.blocked.splice(hrefIndex, 1);
       } else if (hostIndex !== -1) {
-        settings.federationParams.blocked.splice(hostIndex, 1);
+        instances.blocked.splice(hostIndex, 1);
       }
+
+      await Deno.writeTextFile(
+        "../federation.json",
+        JSON.stringify(instances, null, 2),
+      );
+
       ctx.response.body = {
         "msg": `'${u.href}' unbanned.`,
       };
@@ -103,9 +116,41 @@ admin.post("/a/federate", async function (ctx: Context) {
       }
 
       const u = new URL(requestJSON.id);
-      settings.federationParams.pooled.push(u.origin);
+
+      if (instances.pooled.includes(u.origin)) {
+        return throwAPIError(ctx, "Instance already pooled.", 400);
+      }
+
+      instances.pooled.push(u.origin);
+      await Deno.writeTextFile(
+        "../federation.json",
+        JSON.stringify(instances, null, 2),
+      );
+
       ctx.response.body = {
-        "msg": `'${u.href}' pooled.`,
+        "msg": `'${u.origin}' pooled.`,
+      };
+      ctx.response.type = "application/json";
+      ctx.response.status = 200;
+      break;
+    }
+    case ("Unpool"): {
+      const u = new URL(requestJSON.id);
+      if (!instances.pooled.includes(u.origin)) {
+        return throwAPIError(ctx, "Item not pooled", 400);
+      }
+
+      const hrefIndex = instances.pooled.indexOf(u.origin);
+
+      instances.pooled.splice(hrefIndex, 1);
+
+      await Deno.writeTextFile(
+        "../federation.json",
+        JSON.stringify(instances, null, 2),
+      );
+
+      ctx.response.body = {
+        "msg": `'${u.origin}' unpooled.`,
       };
       ctx.response.type = "application/json";
       ctx.response.status = 200;
