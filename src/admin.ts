@@ -64,7 +64,12 @@ admin.post("/a/federate", async function (ctx: Context) {
         return throwAPIError(ctx, "Item already blocked", 400);
       }
 
-      instances.blocked.push(u.origin);
+      if (requestJSON.range === "User") {
+        instances.blocked.push(u.href);
+      } else {
+        instances.blocked.push(u.hostname);
+      }
+
       // We don't need the formatting, but we'll do it anyways.
       await Deno.writeTextFile(
         "../federation.json",
@@ -80,16 +85,20 @@ admin.post("/a/federate", async function (ctx: Context) {
     }
     case ("Unblock"): {
       const u = new URL(requestJSON.id);
-      if (
-        !instances.blocked.includes(u.host) ||
-        !instances.blocked.includes(u.href)
-      ) {
-        return throwAPIError(ctx, "Item not blocked", 400);
+
+      if (requestJSON.range === "User") {
+        if (!instances.blocked.includes(u.href)) {
+          return throwAPIError(ctx, "Item not blocked", 400);
+        }
+      } else {
+        if (!instances.blocked.includes(u.host)) {
+          return throwAPIError(ctx, "Item not blocked", 400);
+        }
       }
 
       // There really shouldn't be two of this, but whatever.
-      const hrefIndex = instances.blocked.orderedItems.indexOf(u.href);
-      const hostIndex = instances.blocked.orderedItems.indexOf(u.host);
+      const hrefIndex = instances.blocked.indexOf(u.href);
+      const hostIndex = instances.blocked.indexOf(u.host);
 
       // Yuck.
       if (hrefIndex !== -1) {
