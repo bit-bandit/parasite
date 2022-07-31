@@ -1,4 +1,6 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
+import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
+
 import {
   genOrderedCollection,
   genReply,
@@ -31,7 +33,6 @@ import {
   throwAPIError,
 } from "./utils.ts";
 import { settings } from "../settings.ts";
-import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
 
 export const lists = new Router();
 

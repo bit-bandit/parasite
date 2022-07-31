@@ -9,6 +9,8 @@
 //   - Add GET routes for all torrent columns.
 
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
+import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
+
 import {
   genObj,
   genOrderedCollection,
@@ -38,10 +40,7 @@ import {
   throwAPIError,
 } from "./utils.ts";
 import { settings } from "../settings.ts";
-import * as ammonia from "https://deno.land/x/ammonia@0.3.1/mod.ts";
-import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
 
-await ammonia.init();
 export const torrents = new Router();
 
 // Helper functions
