@@ -17,7 +17,7 @@ deno task start-server &
 ```
 
 ## Related Projects/Tools
-- [`wormsctl`](https://github.com/rdbyk/9front/blob/master/lib/legal/mit) - CLI tool for 
+- [`wormsctl`](https://github.com/bit-bandit/wormsctl) - CLI tool for 
   managing Parasite instances
 
 ## License
