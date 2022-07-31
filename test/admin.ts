@@ -200,7 +200,6 @@ Deno.test("Delete Torrent", async () => {
   const r = await fetch("http://0.0.0.0:8080/a/delete", {
     method: "POST",
     body: JSON.stringify({
-      "type": "Torrent",
       "id": torrentData.headers.get("Location"),
     }),
     headers: headers,
@@ -215,7 +214,6 @@ Deno.test("Delete List", async () => {
   const r = await fetch("http://0.0.0.0:8080/a/delete", {
     method: "POST",
     body: JSON.stringify({
-      "type": "List",
       "id": listData.headers.get("Location"),
     }),
     headers: headers,
@@ -230,7 +228,6 @@ Deno.test("Delete Comment", async () => {
   const r = await fetch("http://0.0.0.0:8080/a/delete", {
     method: "POST",
     body: JSON.stringify({
-      "type": "Comment",
       "id": commentData.headers.get("Location"),
     }),
     headers: headers,
