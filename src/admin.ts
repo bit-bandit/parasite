@@ -6,6 +6,7 @@ import {
   deleteComment,
   deleteList,
   deleteTorrent,
+  deleteUser,
   getUActivity,
   getUMetaInfo,
 } from "./db.ts";
@@ -294,6 +295,18 @@ admin.post("/a/delete", async function (ctx: Context) {
       }
       await deleteComment(targetID);
 
+      ctx.response.body = {
+        "msg": `'${requestJSON.id}' deleted.`,
+      };
+      ctx.response.type = "application/json";
+      ctx.response.status = 200;
+      break;
+    }
+    case "u": {
+      if (!requesterRole.deleteUsers) {
+        return throwAPIError(ctx, "Deletion not permitted", 400);
+      }
+      await deleteUser(targetID);
       ctx.response.body = {
         "msg": `'${requestJSON.id}' deleted.`,
       };

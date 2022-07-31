@@ -352,8 +352,7 @@ export async function deleteComment(id: string) {
   const json = cData[0];
 
   await client.connect();
-  // TODO:
-  // - Figure out how to delete replies.
+
   await client.queryArray(
     "DELETE FROM comments WHERE id = $1;",
     [id],
@@ -381,8 +380,7 @@ export async function deleteList(id: string) {
   const json = lData[0];
 
   await client.connect();
-  // TODO:
-  // - Figure out how to delete replies.
+
   await client.queryArray(
     "DELETE FROM lists WHERE id = $1;",
     [id],
@@ -402,6 +400,27 @@ export async function deleteList(id: string) {
   await basicObjectUpdate("users", {
     "outbox": outbox,
   }, user);
+}
+
+// Remove a user from the database.
+export async function deleteUser(id: string) {
+  const tables = ["comments", "torrents", "lists", "actions"];
+
+  await client.connect();
+
+  for await (const table of tables) {
+    await client.queryArray(
+      `DELETE FROM ${table} WHERE uploader = $1`,
+      [id],
+    );
+  }
+
+  await client.queryArray(
+    `DELETE FROM users WHERE id = $1`,
+    [id],
+  );
+
+  await client.end();
 }
 
 export async function search(url) {

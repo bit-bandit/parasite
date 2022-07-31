@@ -11,6 +11,7 @@ interface Role {
   deleteAnyComments: boolean;
   deleteOwnLists: boolean;
   deleteAnyLists: boolean;
+  deleteUsers: boolean;
   editUploads: boolean;
   flag: boolean;
   login: boolean;
@@ -31,6 +32,7 @@ export const roles: Record<string, Role> = {
     deleteAnyComments: true,
     deleteOwnLists: true,
     deleteAnyLists: true,
+    deleteUsers: true,
     editUploads: true,
     flag: true,
     login: true,
@@ -49,6 +51,7 @@ export const roles: Record<string, Role> = {
     deleteAnyComments: false,
     deleteOwnLists: true,
     deleteAnyLists: false,
+    deleteUsers: false,
     editUploads: true,
     flag: true,
     login: true,
@@ -67,6 +70,7 @@ export const roles: Record<string, Role> = {
     deleteAnyComments: false,
     deleteOwnLists: false,
     deleteAnyLists: false,
+    deleteUsers: false,
     editUploads: false,
     flag: true,
     login: false,
