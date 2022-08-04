@@ -144,7 +144,7 @@ torrents.post("/t", async function (ctx) {
   const obj = genObj({
     "id": url,
     "type": "Note",
-    "published": d.toISOString, // TODO: Set this from locale time to UTC
+    "published": d.toISOString(), // TODO: Set this from locale time to UTC
     "actor": info.id,
     "name": requestJSON.name,
     "content": parsed,

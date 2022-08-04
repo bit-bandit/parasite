@@ -126,7 +126,7 @@ lists.post("/l", async function (ctx) {
   const d = new Date();
 
   const obj = genOrderedCollection(url, requestJSON.orderedItems, {
-    "published": d.toISOString, // TODO: Set this from locale time to UTC
+    "published": d.toISOString(), // TODO: Set this from locale time to UTC
     "actor": info.id,
     "name": requestJSON.name,
     "summary": parsed,
