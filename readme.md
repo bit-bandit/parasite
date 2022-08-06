@@ -1,9 +1,10 @@
 # Parasite
 
-This is the core API code for the Parasite torrent indexer. See
-`doc/manual.md` for information about it, and how to install/use it
+This is the core API code for the Parasite torrent indexer. See `doc/manual.md`
+for information about it, and how to install/use it
 
 ...Or, for the short version:
+
 ```sh
 # A PostgreSQL database should be running in the background
 
@@ -17,17 +18,19 @@ deno task start-server &
 ```
 
 ## Related Projects/Tools
-- [`wormsctl`](https://github.com/bit-bandit/wormsctl) - CLI tool for 
-  managing Parasite instances
+
+- [`wormsctl`](https://github.com/bit-bandit/wormsctl) - CLI tool for managing
+  Parasite instances
 
 ## License
 
-The source code and documention of Parasite is wholly licensed under the 0BSD license -
-Basically, do whatever you want with this. Read `LICENSE` for more information, if you're curious.
+The source code and documention of Parasite is wholly licensed under the 0BSD
+license - Basically, do whatever you want with this. Read `LICENSE` for more
+information, if you're curious.
 
 ### Some exceptions
 
 - The default user avatar (`/static/default/avatar.png`) was taken from a
   library originating from the [9front](http://9front.org/) operating system,
-  which is licensed under the MIT license. The original license for that can be found
-  [here.](https://github.com/rdbyk/9front/blob/master/lib/legal/mit)
+  which is licensed under the MIT license. The original license for that can be
+  found [here.](https://github.com/rdbyk/9front/blob/master/lib/legal/mit)

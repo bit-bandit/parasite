@@ -27,7 +27,7 @@ async function basicGETActivity(ctx: Context, id: string, act: string) {
   ctx.response.body = res;
   if (!("err" in res)) {
     ctx.response.status = 200;
-    ctx.response.type =
+    return ctx.response.type =
       'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
   }
 

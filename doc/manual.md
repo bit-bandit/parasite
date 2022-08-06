@@ -139,8 +139,7 @@ Authorization: Bearer <JWT Bearer Token>
 }
 ```
 
-> **Notes:** 
-> `content` is formatted in Markdown, and is parsed on the server. 
+> **Notes:** `content` is formatted in Markdown, and is parsed on the server.
 > The `tags` are comma-seperated, and will be split and assigned when parsed.
 > `href` is your magnet link.
 
@@ -269,8 +268,9 @@ Content-Type: application/activity+json
 Now, that wasn't so hard - Wasn't it?
 
 ### Actions
-Actions are how you can *interact* with other items on yours, and others server, and
-are prefixed with `/x/`.
+
+Actions are how you can _interact_ with other items on yours, and others server,
+and are prefixed with `/x/`.
 
 #### Following an account.
 
@@ -284,10 +284,13 @@ Authorization: Bearer <JWT Bearer Token>
 ```
 
 If all is well, your account should be in the `followers` collection of the user
-you followed, and the user you followed should be in your `following` collection.
+you followed, and the user you followed should be in your `following`
+collection.
 
 #### Commenting on an item.
-> **Note:** 'Item' in this context refers to anything that isn't an action, or user object.
+
+> **Note:** 'Item' in this context refers to anything that isn't an action, or
+> user object.
 
 Request the following:
 
@@ -302,10 +305,11 @@ Authorization: Bearer <JWT Bearer Token>
 }
 ```
 
-If all is well, the response will indicate your comment has been created.
-The URL for the comment should be in the `replies` object of the item.
+If all is well, the response will indicate your comment has been created. The
+URL for the comment should be in the `replies` object of the item.
 
 #### Liking/Disliking an item.
+
 ```
 POST /x/like
 Content-Type: application/json
@@ -315,12 +319,15 @@ Authorization: Bearer <JWT Bearer Token>
   "object": "http://example.com/t/49e385b86e0c2e44381a",
 }
 ```
-If you want to dislike an item, replace everything here that says `Like` with `Dislike`.
-Either way, your username will be added to an array within 
-the `likes`/`dislikes` object of the item. 
+
+If you want to dislike an item, replace everything here that says `Like` with
+`Dislike`. Either way, your username will be added to an array within the
+`likes`/`dislikes` object of the item.
 
 #### Undoing a like/dislike.
+
 If you've liked/disliked an item, you can undo your actions via the following:
+
 ```
 POST /x/undo
 Content-Type: application/json
@@ -354,9 +361,10 @@ parameter, in `settings.ts`. There's a couple of ways to give yourself an
 `Admin` role, but for now, we'll talk about three ways in particular:
 
 #### Using `wormsctl`
-`wormsctl` is a command line tool (also developed by BitBandit) that allows
-for very basic managing of a Parasite instance from the command line. The link
-to its repository can be found here: 
+
+`wormsctl` is a command line tool (also developed by BitBandit) that allows for
+very basic managing of a Parasite instance from the command line. The link to
+its repository can be found here:
 
 https://github.com/bit-bandit/wormsctl
 
@@ -388,12 +396,14 @@ WHERE id = 'YourIDGoesHere'
 ```
 
 ### Reassigning roles
-Like we said before; Roles are simply a set of permissions that say what a user can/can't do.
-These can be used to set moderation roles, basic user permissions, or, as we do in the default,
-set a way to ban a user from accessing the site.
+
+Like we said before; Roles are simply a set of permissions that say what a user
+can/can't do. These can be used to set moderation roles, basic user permissions,
+or, as we do in the default, set a way to ban a user from accessing the site.
 
 If you want to ban a user, you give them the `Banned` role. Here's how you'd do
 that:
+
 ```
 POST /a/reassign
 Content-Type: application/json
@@ -406,11 +416,11 @@ Authorization: Bearer <JWT Bearer Token>
 
 ### Deleting posts
 
-Although users can delete by just `POST`ing a specific JSON object to their
-post (see `doc/routes/` for more information about how to do that), admins
-have the other option of just posting to `/a/delete`, which makes the 
-process somewhat more straightforward. To delete an item from their, just
-sumbit the following:
+Although users can delete by just `POST`ing a specific JSON object to their post
+(see `doc/routes/` for more information about how to do that), admins have the
+other option of just posting to `/a/delete`, which makes the process somewhat
+more straightforward. To delete an item from their, just sumbit the following:
+
 ```
 POST /a/delete
 Content-Type: application/json
@@ -419,8 +429,9 @@ Authorization: Bearer <JWT Bearer Token>
   "id": "https://example.com"
 }
 ```
-Note that the item MUST be on your instance. It not being so will result in
-an error.
+
+Note that the item MUST be on your instance. It not being so will result in an
+error.
 
 ## Federating
 
@@ -438,9 +449,9 @@ Here's a breif overview of what you can do with it:
 This is the default behavior for instances. Basic federated instances can
 deliver items towards an external post (Think commenting on a torrent, or liking
 a list), and they can request items from another instance (Just by adding the
-URL of the instance in their `pooled` array). However, items from one
-instance can't be put onto another, unless it also has it pooled. That kind of
-federating is covered down below:
+URL of the instance in their `pooled` array). However, items from one instance
+can't be put onto another, unless it also has it pooled. That kind of federating
+is covered down below:
 
 ### Pooled Federation
 
@@ -451,8 +462,8 @@ or lists from both instances will be combined together in searches, and tags.
 ### Blocking
 
 Blocking can be done from the user, and instance level. To block an instance,
-add the host to the `blocked` array in `federation.json`. To ban a user, 
-add the whole URL, including their username.
+add the host to the `blocked` array in `federation.json`. To ban a user, add the
+whole URL, including their username.
 
 ## Hacking
 
