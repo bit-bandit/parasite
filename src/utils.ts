@@ -26,9 +26,9 @@ export function genUUID(length: number) {
  * @param {number} date A date to salt with.
  * @return {string} A hashed password.
  */
-export async function hashPass(pass: string, date: number) {
+export async function hashPass(pass: string, date: Date) {
   // Salt pass with date then encode into bytes.
-  const salted_enc = new TextEncoder().encode(date + pass);
+  const salted_enc = new TextEncoder().encode(date.getTime() + pass);
 
   // Create hash as a byte array.
   const hash_bytes = await crypto.subtle.digest("SHA-256", salted_enc);

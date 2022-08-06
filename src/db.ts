@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
   following   JSON          NOT NULL,
   followers   JSON          NOT NULL,
   logins      JSON          NOT NULL,
-  registered  VARCHAR(256)  NOT NULL,
+  registered  TIMESTAMPTZ   NOT NULL,
   keys        JSON  NOT NULL
 );
 `;
@@ -224,7 +224,7 @@ export async function UInit(params = {}) {
   await client.connect();
   await client.queryArray(
     `INSERT INTO users (id, info, pass, roles, inbox, outbox, likes, 
-       dislikes, following, followers, logins, registered, keys) 
+       dislikes, following, followers, logins, registered, keys)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);`,
     [
       params.id,
@@ -238,7 +238,7 @@ export async function UInit(params = {}) {
       JSON.stringify(params.following),
       JSON.stringify(params.followers),
       JSON.stringify(params.logins),
-      params.registered,
+      params.registered.toISOString(),
       JSON.stringify(params.keys),
     ],
   );

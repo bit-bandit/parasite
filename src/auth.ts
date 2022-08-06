@@ -162,7 +162,7 @@ auth.post("/register", async function (ctx) {
   });
 
   // pass needs this.
-  const registered = Date.now();
+  const registered = new Date();
 
   await UInit({
     id: requestJSON.username,
