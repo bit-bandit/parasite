@@ -110,7 +110,8 @@ export async function tableCount(name: string) {
   const res = await client.queryArray(`SELECT COUNT(id) FROM ${name}`);
   await client.end();
 
-  return res.rows[0][0];
+  // We have to do this because the DB client returns a bigint by default(!)
+  return Number(res.rows[0][0]);
 }
 
 async function basicDataQuery(
