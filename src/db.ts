@@ -103,6 +103,16 @@ await client.queryArray(`
 
 await client.end();
 
+// Get number of items on a table (Mainly for the '/' endpoint)
+export async function tableCount(name: string) {
+  await client.connect();
+  // ID is present on every table, which makes it a great reference point.
+  const res = await client.queryArray(`SELECT COUNT(id) FROM ${name}`);
+  await client.end();
+
+  return res.rows[0][0];
+}
+
 async function basicDataQuery(
   msg: string,
   query: string,
