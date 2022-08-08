@@ -5,8 +5,9 @@ import {
   verify,
 } from "https://deno.land/x/djwt/mod.ts";
 import { Algorithm } from "https://deno.land/x/djwt/algorithm.ts";
+import * as scrypt from "https://deno.land/x/scrypt/mod.ts";
 import { getUActivity, getULoginInfo, UCheck, UInit, ULogin } from "./db.ts";
-import { hashPass, throwAPIError } from "./utils.ts";
+import { throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import { actorObj, genOrderedCollection } from "./activity.ts";
 import { roles } from "../roles.ts";
@@ -49,18 +50,16 @@ auth.post("/login", async function (ctx) {
     return throwAPIError(ctx, "Not permitted to login.", 400);
   }
 
-  const info = await getULoginInfo(requestJSON.username);
+  const pass = await getULoginInfo(requestJSON.username);
 
-  if (info.err) {
+  if (pass.err) {
     ctx.response.body = info;
     ctx.response.status = 404;
     ctx.response.type = "application/json";
     return;
   }
 
-  const hashed = await hashPass(requestJSON.password, info[1]);
-
-  if (hashed !== info[0]) {
+  if (!scrypt.verify(requestJSON.password, pass)) {
     return throwAPIError(ctx, "Invalid credentials", 400);
   }
 
@@ -161,13 +160,10 @@ auth.post("/register", async function (ctx) {
     "key": keys[0],
   });
 
-  // pass needs this.
-  const registered = new Date();
-
   await UInit({
     id: requestJSON.username,
     info: actorInfo,
-    pass: await hashPass(requestJSON.password, registered),
+    pass: scrypt.hash(requestJSON.password),
     roles: roles[settings.defaultRole],
     inbox: genOrderedCollection(`${userAPI}/inbox`),
     outbox: genOrderedCollection(`${userAPI}/outbox`),
@@ -176,7 +172,6 @@ auth.post("/register", async function (ctx) {
     following: genOrderedCollection(`${userAPI}/following`),
     followers: genOrderedCollection(`${userAPI}/followers`),
     logins: [], // Tokens will be added next time user logs in. See `/login/`.
-    registered: registered,
     keys: keys,
   });
 

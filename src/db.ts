@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
   PRIMARY KEY(id),
   id          VARCHAR(21)   NOT NULL,
   info        JSON          NOT NULL,
-  pass        VARCHAR(256)  NOT NULL,
+  pass        VARCHAR(128)  NOT NULL,
   roles       JSON          NOT NULL,
   inbox       JSON          NOT NULL,
   outbox      JSON          NOT NULL,
@@ -191,12 +191,18 @@ export function getUMetaInfo(id: string): Promise<> {
   );
 }
 
-export function getULoginInfo(id: string): Promise<> {
-  return basicDataQuery(
+export async function getULoginInfo(id: string): Promise<> {
+  const res = await basicDataQuery(
     `User ${id} not found`,
-    "SELECT pass, registered FROM users WHERE id = $1",
+    "SELECT pass FROM users WHERE id = $1",
     id,
   );
+
+  if (!res.err) {
+    return res[0];
+  } else {
+    return res;
+  }
 }
 
 export async function ULogin(id: string, time: number) {
@@ -235,8 +241,8 @@ export async function UInit(params = {}) {
   await client.connect();
   await client.queryArray(
     `INSERT INTO users (id, info, pass, roles, inbox, outbox, likes, 
-       dislikes, following, followers, logins, registered, keys)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);`,
+       dislikes, following, followers, logins, keys, registered)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'now');`,
     [
       params.id,
       params.info,
@@ -249,7 +255,6 @@ export async function UInit(params = {}) {
       JSON.stringify(params.following),
       JSON.stringify(params.followers),
       JSON.stringify(params.logins),
-      params.registered.toISOString(),
       JSON.stringify(params.keys),
     ],
   );

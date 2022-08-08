@@ -3,6 +3,7 @@ import { verify } from "https://deno.land/x/djwt/mod.ts";
 import { settings } from "../settings.ts";
 import { getJWTKey } from "./crypto.ts";
 import { getUActivity, getUMetaInfo } from "./db.ts";
+
 /**
  * Generates up to 32 universally-unique hex digits at a time to use as an ID.
  * @param {number} length A length, up to 32
@@ -18,28 +19,6 @@ export function genUUID(length: number) {
   length = Math.min(length, 36); // cap to 36
 
   return uuid.slice(length);
-}
-
-/**
- * Hashes a password.
- * @param {string} pass The plaintext password.
- * @param {number} date A date to salt with.
- * @return {string} A hashed password.
- */
-export async function hashPass(pass: string, date: Date) {
-  // Salt pass with date then encode into bytes.
-  const salted_enc = new TextEncoder().encode(date.getTime() + pass);
-
-  // Create hash as a byte array.
-  const hash_bytes = await crypto.subtle.digest("SHA-256", salted_enc);
-
-  // Convert the byte array to a hex string.
-  const hash_arr = Array.from(new Uint8Array(hash_bytes));
-  const hash_hex = hash_arr.map((b) => b.toString(16).padStart(2, "0")).join(
-    "",
-  );
-
-  return hash_hex;
 }
 
 /**
