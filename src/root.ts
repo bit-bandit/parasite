@@ -15,7 +15,6 @@ root.get("/", async function (ctx: Content) {
   ctx.response.body = {
     "name": settings.siteName,
     "host": u.host,
-    "allowedTags": settings.allowedTags,
     "users": userCount,
     "torrents": torrentCount,
     "lists": listCount,

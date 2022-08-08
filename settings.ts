@@ -5,12 +5,6 @@ export const settings = {
   "siteURL": "http://localhost:8080",
   "sitePort": 8080,
   "defaultRole": "User",
-  "allowedTags": [
-    "audio",
-    "documents",
-    "games",
-    "videos",
-  ],
   "database": {
     "type": "postgres",
     "settings": {
