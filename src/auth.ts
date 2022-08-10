@@ -59,7 +59,7 @@ auth.post("/login", async function (ctx) {
     return;
   }
 
-  if (!scrypt.verify(requestJSON.password, pass)) {
+  if (!await scrypt.verify(requestJSON.password, pass)) {
     return throwAPIError(ctx, "Invalid credentials", 400);
   }
 
@@ -163,7 +163,7 @@ auth.post("/register", async function (ctx) {
   await UInit({
     id: requestJSON.username,
     info: actorInfo,
-    pass: scrypt.hash(requestJSON.password),
+    pass: await scrypt.hash(requestJSON.password),
     roles: roles[settings.defaultRole],
     inbox: genOrderedCollection(`${userAPI}/inbox`),
     outbox: genOrderedCollection(`${userAPI}/outbox`),
