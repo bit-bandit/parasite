@@ -74,7 +74,7 @@ search.get("/s", async function (ctx) {
   }
 
   const res = await searchDB(parsedURL);
-
+    
   const ordColl = genOrderedCollection(parsedURL.href, res, {
     summary: "Search results",
   });

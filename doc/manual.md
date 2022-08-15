@@ -70,7 +70,7 @@ cd parasite/
 # Edit `settings.ts` here, to your liking.
 
 # Run the API server
-deno task start-server
+deno task start
 ```
 
 ## Configuring

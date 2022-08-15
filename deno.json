@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "start-server": "deno run --reload --allow-read --allow-write --allow-net --allow-env --watch ./src/main.ts",
+    "start": "deno run --allow-read --allow-write --allow-net --allow-env --watch ./src/main.ts",
     "inital-server-test": "deno test --allow-net test/user.ts test/torrent.ts test/list.ts",
     "secondary-server-test": "deno test --allow-net test/torrent.ts test/list.ts"
   }

@@ -14,7 +14,7 @@ cd parasite
 
 # Edit the `database` options in `settings.ts` to match what your database has.
 
-deno task start-server &
+deno task start &
 ```
 
 ## Related Projects/Tools
