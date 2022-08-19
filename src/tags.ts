@@ -1,5 +1,4 @@
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
-import { genOrderedCollection } from "./activity.ts";
 import { getJSONfromTags } from "./db.ts";
 import { properCharRange, throwAPIError } from "./utils.ts";
 
@@ -19,9 +18,9 @@ tags.get("/i/:tag", async function (ctx: Context) {
   ctx.response.body = {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": ctx.request.url,
-    "type": "Collection",
+    "type": "OrderedCollection",
     "totalItems": out.length,
-    "items": out,
+    "orderedItems": out,
   };
   ctx.response.type = "application/activity+json";
 });

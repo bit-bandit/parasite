@@ -6,6 +6,8 @@ import { tableCount } from "./db.ts";
 export const root = new Router();
 
 root.get("/", async function (ctx: Content) {
+  ctx.response.headers.set("Access-Control-Allow-Origin", "*");
+
   const u = new URL(settings.siteURL);
   const userCount = await tableCount("users");
   const torrentCount = await tableCount("torrents");
