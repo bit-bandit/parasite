@@ -15,6 +15,23 @@ import { torrents } from "./torrents.ts";
 import { users } from "./users.ts";
 
 const app = new Application();
+const cors = new Router(); // hack
+
+cors.options("(.*)", async function(ctx) {
+  ctx.response.headers.set("Connection", "keep-alive");
+  ctx.response.headers.set("Access-Control-Allow-Origin", "*");
+  ctx.response.headers.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  ctx.response.headers.set("Access-Control-Allow-Headers", "*,Authorization");
+  ctx.response.status = 204;
+});
+
+app.use(cors.routes());
+app.use(cors.allowedMethods());
+
+app.use((ctx, next) => {
+  ctx.response.headers.set("Access-Control-Allow-Origin", "*");
+  return next();
+});
 
 app.use(actions.routes());
 app.use(actions.allowedMethods());
