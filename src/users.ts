@@ -41,7 +41,7 @@ users.get("/u", async function (ctx) {
   // Get information about logged-in user
   let auth = await ctx.request.headers.get("Authorization");
 
-  if (ctx.request.headers.authorization) {
+  if (!auth) {
     return throwAPIError(
       ctx,
       "No Authorization header provided",
@@ -52,7 +52,12 @@ users.get("/u", async function (ctx) {
   auth = auth.split(" ")[1];
   auth = await verify(auth, await getJWTKey());
 
-  await basicGETActivity(ctx, auth.name, "info");
+  const res = await getUActivity(auth.name, "info");
+
+  ctx.response.body = res;
+  ctx.response.status = 200;
+  ctx.response.type =
+    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
 });
 
 users.get("/u/:id", async function (ctx) {
