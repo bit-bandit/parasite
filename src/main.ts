@@ -17,10 +17,13 @@ import { users } from "./users.ts";
 const app = new Application();
 const cors = new Router(); // hack
 
-cors.options("(.*)", async function(ctx) {
+cors.options("(.*)", async function (ctx) {
   ctx.response.headers.set("Connection", "keep-alive");
   ctx.response.headers.set("Access-Control-Allow-Origin", "*");
-  ctx.response.headers.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  ctx.response.headers.set(
+    "Access-Control-Allow-Methods",
+    "POST, GET, OPTIONS",
+  );
   ctx.response.headers.set("Access-Control-Allow-Headers", "*,Authorization");
   ctx.response.status = 204;
 });

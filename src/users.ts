@@ -1,8 +1,9 @@
 // User pages
-
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
+import { verify } from "https://deno.land/x/djwt/mod.ts";
 import { addToDB, basicObjectUpdate, getUActivity } from "./db.ts";
 import { genInvitationReply } from "./activity.ts";
+import { getJWTKey } from "./crypto.ts";
 import {
   authData,
   genUUID,
@@ -38,6 +39,20 @@ async function basicGETActivity(ctx: Context, id: string, act: string) {
 // GET activities
 users.get("/u", async function (ctx) {
   // Get information about logged-in user
+  let auth = await ctx.request.headers.get("Authorization");
+
+  if (ctx.request.headers.authorization) {
+    return throwAPIError(
+      ctx,
+      "No Authorization header provided",
+      400,
+    );
+  }
+
+  auth = auth.split(" ")[1];
+  auth = await verify(auth, await getJWTKey());
+
+  await basicGETActivity(ctx, auth.name, "info");
 });
 
 users.get("/u/:id", async function (ctx) {
