@@ -24,6 +24,7 @@ export const settings = {
     "maxComments": Infinity,
     "maxLists": Infinity,
     "maxUsers": Infinity,
+    "loginsPerUser": 5,
   },
   "federationParams": {
     "allowed": true,
