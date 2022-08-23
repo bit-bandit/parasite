@@ -210,7 +210,7 @@ export async function ULogin(id: string, time: number) {
   const raw = await getUMetaInfo(id);
   const logins: number[] = raw[1];
 
-  if (logins.length >= 10) {
+  if (logins.length >= 5) {
     logins.shift();
   }
 
