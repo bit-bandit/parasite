@@ -1,15 +1,5 @@
 // All torrent related functions.
-
-// Notes:
-// -  use `application/ld+json; profile="https://www.w3.org/ns/activitystreams"`
-//    for all AP/AS related responses.
-// -  Don't interact with the database directly - Use `db.ts` for that, instead.
-
-// TODO:
-//   - Add GET routes for all torrent columns.
-
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
-import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
 
 import {
   genObj,
