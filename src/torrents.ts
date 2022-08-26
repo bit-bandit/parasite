@@ -564,7 +564,7 @@ torrents.post("/t/:id", async function (ctx) {
 
         await basicObjectUpdate("torrents", {
           "likes": torrentLikes,
-        }, data.decoded.name);
+        }, ctx.params.id);
       }
 
       if (dislikesIndex !== -1) {
@@ -573,7 +573,7 @@ torrents.post("/t/:id", async function (ctx) {
 
         await basicObjectUpdate("torrents", {
           "dislikes": torrentDislikes,
-        }, data.decoded.name);
+        }, ctx.params.id);
       }
 
       ctx.response.body = {

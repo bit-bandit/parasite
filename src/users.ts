@@ -40,7 +40,6 @@ async function basicGETActivity(ctx: Context, id: string, act: string) {
 users.get("/u", async function (ctx) {
   // Get information about logged-in user
   let auth = await ctx.request.headers.get("Authorization");
-
   if (!auth) {
     return throwAPIError(
       ctx,
