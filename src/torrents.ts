@@ -553,9 +553,9 @@ torrents.post("/t/:id", async function (ctx) {
         break;
       }
 
-      const likesIndex = torrentLikes.orderedItems.indexOf(requestJSON.object);
+      const likesIndex = torrentLikes.orderedItems.indexOf(requestJSON.actor);
       const dislikesIndex = torrentDislikes.orderedItems.indexOf(
-        requestJSON.object,
+        requestJSON.actor,
       );
 
       if (likesIndex !== -1) {

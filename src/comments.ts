@@ -373,9 +373,9 @@ comments.post("/c/:id", async function (ctx) {
         break;
       }
 
-      const likesIndex = commentLikes.orderedItems.indexOf(requestJSON.object);
+      const likesIndex = commentLikes.orderedItems.indexOf(requestJSON.actor);
       const dislikesIndex = commentDislikes.orderedItems.indexOf(
-        requestJSON.object,
+        requestJSON.actor,
       );
 
       if (likesIndex !== -1) {
@@ -384,7 +384,7 @@ comments.post("/c/:id", async function (ctx) {
 
         await basicObjectUpdate("comments", {
           "likes": commentLikes,
-        }, data.decoded.name);
+        }, ctx.params.id);
       }
 
       if (dislikesIndex !== -1) {
@@ -393,7 +393,7 @@ comments.post("/c/:id", async function (ctx) {
 
         await basicObjectUpdate("comments", {
           "dislikes": commentDislikes,
-        }, data.decoded.name);
+        }, ctx.params.id);
       }
 
       ctx.response.body = {
