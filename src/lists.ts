@@ -513,6 +513,80 @@ lists.post("/l/:id", async function (ctx) {
       }
       break;
     }
+    // Undoing
+    case "Undo": {
+      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignKey = await extractKey(
+        "public",
+        foreignActorInfo.publicKey.publicKeyPem,
+      );
+
+      const reqURL = new URL(ctx.request.url);
+
+      const msg = genHTTPSigBoilerplate({
+        "target": `post ${reqURL.pathname}`,
+        "host": reqURL.host,
+        "date": await ctx.request.headers.get("date"),
+      });
+
+      const parsedSig =
+        /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
+
+      const postSignature = str2ab(atob(parsedSig));
+
+      const validSig = await simpleVerify(
+        foreignKey,
+        msg,
+        postSignature,
+      );
+
+      if (!validSig) {
+        return throwAPIError(ctx, "Invalid HTTP Signature", 400);
+      }
+
+      const listLikes = (await getListJSON(ctx.params.id, "likes"))[0];
+      const listDislikes = (await getTorrentJSON(ctx.params.id, "dislikes"))[0];
+
+      if (
+        !torrentLikes.orderedItems.includes(requestJSON.actor) &&
+        !torrentDislikes.orderedItems.includes(requestJSON.actor)
+      ) {
+        throwAPIError(ctx, "No activity on item found", 400);
+        break;
+      }
+
+      const likesIndex = listLikes.orderedItems.indexOf(requestJSON.actor);
+      const dislikesIndex = listDislikes.orderedItems.indexOf(
+        requestJSON.actor,
+      );
+
+      if (likesIndex !== -1) {
+        listLikes.orderedItems.splice(likesIndex, 1);
+        listLikes.totalItems = torrentLikes.orderedItems.length;
+
+        await basicObjectUpdate("lists", {
+          "likes": listLikes,
+        }, ctx.params.id);
+      }
+
+      if (dislikesIndex !== -1) {
+        listDislikes.orderedItems.splice(dislikesIndex, 1);
+        listDislikes.totalItems = listDislikes.orderedItems.length;
+
+        await basicObjectUpdate("lists", {
+          "dislikes": listDislikes,
+        }, ctx.params.id);
+      }
+
+      ctx.response.body = {
+        "msg":
+          `Actions by ${requestJSON.actor} on list ${ctx.params.id} undone`,
+      };
+      ctx.response.status = 200;
+      ctx.response.type = "application/json";
+
+      break;
+    }
 
     case "Flag": {
       const data = await authData(ctx);
