@@ -250,7 +250,7 @@ comments.post("/c/:id", async function (ctx) {
       }
 
       commentDislikes.orderedItems.push(requestJSON.actor);
-      commentDislikes.totalItems = commentLikes.orderedItems.length;
+      commentDislikes.totalItems = commentDislikes.orderedItems.length;
 
       await basicObjectUpdate("comments", {
         "dislikes": commentDislikes,
@@ -264,7 +264,7 @@ comments.post("/c/:id", async function (ctx) {
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-      ctx.response.headers.set("Location", userActivity.liked);
+      ctx.response.headers.set("Location", foreignActorInfo.likes);
       break;
     }
     case "Update": {
