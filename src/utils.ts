@@ -186,7 +186,7 @@ export function parseHTTPSig(msg: string) {
 }
 
 export function properCharRange(m: string): boolean {
-  const regex = /^[A-Za-z0-9_]{1,24}$/;
+  const regex = /^[A-Za-z0-9_-]{1,24}$/;
   return regex.test(m);
 }
 
