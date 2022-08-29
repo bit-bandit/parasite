@@ -172,9 +172,29 @@ admin.post("/a/federate", async function (ctx: Context) {
   }
 });
 
+admin.get("/a/roles", async function (ctx: Context) {
+  const data = await authData(ctx);
+  const requestJSON = data.request;
+
+  const requesterRole = await getUActivity(data.decoded.name, "roles");
+  const targetURL = new URL(requestJSON.id);
+
+  if (!requesterRole.adminAPI) {
+    return throwAPIError(
+      ctx,
+      "Not permitted to view this information",
+      400,
+    );
+  }
+
+  ctx.response.body = roles;
+  ctx.response.type = "application/json";
+  ctx.response.status = 200;
+});
+
 // Reassign user role - Via URL
 admin.post("/a/reassign", async function (ctx: Context) {
-  /**
+  /*
     expected HTTP payload (Not including headers):
     {
       id: "https://www.example.com/u/bill",
