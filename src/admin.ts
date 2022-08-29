@@ -1,6 +1,9 @@
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
 import instances from "../federation.json" assert { type: "json" };
 
+import { getJWTKey } from "./crypto.ts";
+import { verify } from "https://deno.land/x/djwt/mod.ts";
+
 import {
   basicObjectUpdate,
   deleteComment,
@@ -23,7 +26,39 @@ import { roles } from "../roles.ts";
 
 export const admin = new Router();
 
-// Add instance
+// Sanity check
+admin.get("/a", async function (ctx: Context) {
+  if (!ctx.request.headers.has("Authorization")) {
+    return throwAPIError(ctx, "No authorization provided", 401);
+  }
+
+  const rawAuth = await ctx.request.headers.get("Authorization");
+
+  const auth = rawAuth.split(" ")[1];
+
+  if (!auth) {
+    return throwAPIError(ctx, "No authorization provided", 401);
+  }
+
+  const decodedAuth = await verify(auth, await getJWTKey());
+  
+  const requesterRole = await getUActivity(decodedAuth.name, "roles");
+
+  if (!requesterRole.adminAPI) {
+    return throwAPIError(
+      ctx,
+      "Admin access not granted",
+      405,
+    );
+  }
+
+  ctx.response.body = {
+    "msg": "Admin access is granted.",
+  };
+  ctx.response.type = "application/json";
+});
+
+// Add/Delete instance
 admin.post("/a/federate", async function (ctx: Context) {
   // expected HTTP payload:
   // {
@@ -53,7 +88,6 @@ admin.post("/a/federate", async function (ctx: Context) {
     );
   }
 
-  // TODO: Make this shit persistant.
   switch (requestJSON.type) {
     case ("Block"): {
       const u = new URL(requestJSON.id);
@@ -177,7 +211,6 @@ admin.get("/a/roles", async function (ctx: Context) {
   const requestJSON = data.request;
 
   const requesterRole = await getUActivity(data.decoded.name, "roles");
-  const targetURL = new URL(requestJSON.id);
 
   if (!requesterRole.adminAPI) {
     return throwAPIError(
