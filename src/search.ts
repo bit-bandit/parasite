@@ -79,6 +79,16 @@ search.get("/s", async function (ctx) {
     summary: "Search results",
   });
 
+  for (let pooled of settings.federationParams.pooled) {
+    let f = await fetch(pooled, {
+      headers: {
+        "Accept": "application/activity+json",
+      },
+    });
+    f = await f.json();
+    ordColl.push(...f.orderedItems);
+  }
+
   ctx.response.body = ordColl;
   ctx.response.type = "application/json";
 
