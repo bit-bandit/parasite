@@ -41,7 +41,7 @@ admin.get("/a", async function (ctx: Context) {
   }
 
   const decodedAuth = await verify(auth, await getJWTKey());
-  
+
   const requesterRole = await getUActivity(decodedAuth.name, "roles");
 
   if (!requesterRole.adminAPI) {

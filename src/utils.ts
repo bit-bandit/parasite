@@ -98,7 +98,7 @@ export async function authData(ctx: Context) {
   if (!auth) {
     return throwAPIError(ctx, "No authorization provided", 401);
   }
-    
+
   if (!ctx.request.hasBody) {
     return throwAPIError(ctx, "No body provided.", 400);
   }
@@ -124,7 +124,7 @@ export async function authData(ctx: Context) {
   if (!userInfo[1].includes(decodedAuth.iat)) {
     return throwAPIError(ctx, "Invalid issue date.", 400);
   }
-    
+
   return {
     "decoded": decodedAuth,
     "request": requestJSON,
