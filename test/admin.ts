@@ -186,7 +186,7 @@ Deno.test("Reassign user role", async () => {
     method: "POST",
     body: JSON.stringify({
       "role": "Banned",
-      "id": "http://localhost:8080/u/larvae",
+      "id": "larvae",
     }),
     headers: headers,
   });

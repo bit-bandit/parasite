@@ -72,7 +72,7 @@ export const roles: Record<string, Role> = {
     deleteAnyLists: false,
     deleteUsers: false,
     editUploads: false,
-    flag: true,
+    flag: false,
     login: false,
     manageFederation: false,
     vote: false,

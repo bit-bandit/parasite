@@ -207,10 +207,21 @@ admin.post("/a/federate", async function (ctx: Context) {
 });
 
 admin.get("/a/roles", async function (ctx: Context) {
-  const data = await authData(ctx);
-  const requestJSON = data.request;
+  if (!ctx.request.headers.has("Authorization")) {
+    return throwAPIError(ctx, "No authorization provided", 401);
+  }
 
-  const requesterRole = await getUActivity(data.decoded.name, "roles");
+  const rawAuth = await ctx.request.headers.get("Authorization");
+
+  const auth = rawAuth.split(" ")[1];
+
+  if (!auth) {
+    return throwAPIError(ctx, "No authorization provided", 401);
+  }
+
+  const decodedAuth = await verify(auth, await getJWTKey());
+
+  const requesterRole = await getUActivity(decodedAuth.name, "roles");
 
   if (!requesterRole.adminAPI) {
     return throwAPIError(
@@ -230,7 +241,7 @@ admin.post("/a/reassign", async function (ctx: Context) {
   /*
     expected HTTP payload (Not including headers):
     {
-      id: "https://www.example.com/u/bill",
+      id: "bill",
       role: "Role"
     }
   */
@@ -239,15 +250,6 @@ admin.post("/a/reassign", async function (ctx: Context) {
   const requestJSON = data.request;
 
   const requesterRole = await getUActivity(data.decoded.name, "roles");
-  const targetURL = new URL(requestJSON.id);
-
-  if (targetURL.origin !== settings.siteURL) {
-    return throwAPIError(
-      ctx,
-      "You can't assign roles to users outside of your local instance",
-      400,
-    );
-  }
 
   if (requesterRole.assignableRoles.length === 0) {
     return throwAPIError(ctx, "You can't assign roles", 400);
@@ -260,27 +262,25 @@ admin.post("/a/reassign", async function (ctx: Context) {
   if (!roles[requestJSON.role]) {
     return throwAPIError(ctx, `Role '${requestJSON.role}' does not exist`, 400);
   }
-  // I should probably do something better than this...
-  const targetUsername = targetURL.pathname.split("/")[2];
 
-  const targetRole = await getUActivity(targetUsername, "roles");
+  const targetRole = await getUActivity(requestJSON.id, "roles");
 
   // This blows but it's as far as I'm gonna go with this at the moment.
   if (JSON.stringify(targetRole) === JSON.stringify(roles[requestJSON.role])) {
     return throwAPIError(
       ctx,
-      `User '${targetUsername}' already has role '${requestJSON.role}'`,
+      `User '${requestJSON.id}' already has role '${requestJSON.role}'`,
       400,
     );
   }
 
   await basicObjectUpdate("users", {
     "roles": roles[requestJSON.role],
-  }, targetUsername);
+  }, requestJSON.id);
 
   ctx.response.body = {
     "msg":
-      `User '${targetUsername}' role successfully changed to '${requestJSON.role}'`,
+      `User '${requestJSON.id}' role successfully changed to '${requestJSON.role}'`,
   };
   ctx.response.type = "application/json";
   ctx.response.status = 200;
