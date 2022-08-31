@@ -304,7 +304,10 @@ admin.post("/a/delete", async function (ctx: Context) {
   const requesterRole = await getUActivity(data.decoded.name, "roles");
   const targetURL = new URL(requestJSON.id);
 
-  if (targetURL.origin !== settings.siteURL) {
+  if (
+    targetURL.origin !== settings.siteURL &&
+    targetURL.origin !== settings.frontendURL
+  ) {
     return throwAPIError(
       ctx,
       "You can't delete content outside of your local instance",
