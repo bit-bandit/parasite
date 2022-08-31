@@ -102,7 +102,7 @@ admin.post("/a/federate", async function (ctx: Context) {
       if (requestJSON.range === "User") {
         instances.blocked.push(u.href);
       } else {
-        instances.blocked.push(u.hostname);
+        instances.blocked.push(u.origin);
       }
 
       // We don't need the formatting, but we'll do it anyways.
