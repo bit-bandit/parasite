@@ -1,8 +1,10 @@
+<!-- BEGIN{HTML} -->
 <div align="center">
-  <img src="static/parasite.png" width="250">
-  <br> 
-  Art by [@Road\_Horror](https://twitter.com/Road_Horror)
+  <img src="static/parasite.png" width="350">
+  <br>
+  <p>Art by <a href='https://twitter.com/Road_Horror'>@Road_Horror</a></p>
 </div>
+<!--END{HTML}-->
 
 # Parasite
 
