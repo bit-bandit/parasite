@@ -1,4 +1,8 @@
-![](static/parasite.png) Art by [@Road\_Horror](https://twitter.com/Road_Horror)
+<div align="center">
+  <img src="static/parasite.png" width="250">
+  <br> 
+  Art by [@Road\_Horror](https://twitter.com/Road_Horror)
+</div>
 
 # Parasite
 
