@@ -446,7 +446,7 @@ torrents.post("/t/:id", async function (ctx) {
         return throwAPIError(ctx, "Bad magnet link.", 400);
       }
       const tag: string[] = [];
-
+	
       if (requestJSON.tags) {
         requestJSON.tags.split(",").filter((x) => properCharRange(x)).map(
           function (x) {
@@ -460,8 +460,8 @@ torrents.post("/t/:id", async function (ctx) {
 
       // Everything here may seem extremely boilerplatey, but it's to prevent
       // people from adding bad values to a torrent.
-      if (requestJSON.title) {
-        json.name = requestJSON.title;
+      if (requestJSON.name) {
+        json.name = requestJSON.name;
       }
       if (requestJSON.content) {
         json.content = marked.parse(requestJSON.content);

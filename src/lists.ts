@@ -463,8 +463,8 @@ lists.post("/l/:id", async function (ctx) {
 
       // Everything here may seem extremely boilerplatey, but it's to prevent
       // people from adding bad values to a list.
-      if (requestJSON.title) {
-        json.name = requestJSON.title;
+      if (requestJSON.name) {
+        json.name = requestJSON.name;
       }
       if (requestJSON.summary) {
         json.summary = marked.parse(requestJSON.summary);
