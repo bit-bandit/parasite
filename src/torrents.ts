@@ -446,7 +446,7 @@ torrents.post("/t/:id", async function (ctx) {
         return throwAPIError(ctx, "Bad magnet link.", 400);
       }
       const tag: string[] = [];
-	
+
       if (requestJSON.tags) {
         requestJSON.tags.split(",").filter((x) => properCharRange(x)).map(
           function (x) {

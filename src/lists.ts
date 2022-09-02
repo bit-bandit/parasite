@@ -469,7 +469,7 @@ lists.post("/l/:id", async function (ctx) {
       if (requestJSON.summary) {
         json.summary = marked.parse(requestJSON.summary);
       }
-      if (requestJSON.href) {
+      if (requestJSON.orderedItems) {
         json.orderedItems = requestJSON.orderedItems;
       }
 
