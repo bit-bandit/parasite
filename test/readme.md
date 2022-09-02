@@ -10,7 +10,13 @@ We suggest using containers to make the process of setting it up less of a pain
 in the ass:
 
 ```sh
-docker run --rm -p 5433:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_USER=admin -e POSTGRES_DB=parasite --name pg_db_container postgres
+docker run \
+  --rm \
+  -p 5433:5432 \
+  -e POSTGRES_PASSWORD=password \ 
+  -e POSTGRES_USER=admin \
+  -e POSTGRES_DB=parasite \
+  --name pg_db_container postgres
 ```
 
 If your distribution is anal about licensing, replace `docker` with `podman`.
