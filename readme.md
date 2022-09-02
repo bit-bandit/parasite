@@ -1,9 +1,17 @@
+<figure>
+  ![](static/parasite.png)
+  <figcaption>Art by [@Road\_Horror](https://twitter.com/Road_Horror)</figcaption>
+</figure>
 # Parasite
+# About
+This is the core API for Parasite, a modern torrent indexer with some federation capacities.
 
-This is the core API code for the Parasite torrent indexer. See `doc/manual.md`
-for information about it, and how to install/use it
+## Documentation
 
-...Or, for the short version:
+All the documentation for Parasite can be found in the `doc` directory. This
+includes the API routes, and a manual for newcomers.
+
+## Installation
 
 ```sh
 # A PostgreSQL database should be running in the background
@@ -18,6 +26,9 @@ deno task start &
 ```
 
 ## Related Projects/Tools
+
+- [`caterpillar`](https://github.com/bit-bandit/caterpillar) - Primary front-end
+  for the API.
 
 - [`wormsctl`](https://github.com/bit-bandit/wormsctl) - CLI tool for managing
   Parasite instances

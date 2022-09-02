@@ -14,7 +14,6 @@ routes/  - API routes.
   |- identifiers.md
   |- torrents.md
   '- users.md
-design.md  - Explainations/Justifications for why Parasite is like this.
 manual.md  - Administrator/User manual for Parasite - For simpeltons. 
 readme.md  - This file, overviewing the directory.
 ```
