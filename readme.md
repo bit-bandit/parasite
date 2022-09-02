@@ -1,10 +1,11 @@
-<figure>
-  ![](static/parasite.png)
-  <figcaption>Art by [@Road\_Horror](https://twitter.com/Road_Horror)</figcaption>
-</figure>
+![](static/parasite.png) Art by [@Road\_Horror](https://twitter.com/Road_Horror)
+
 # Parasite
-# About
-This is the core API for Parasite, a modern torrent indexer with some federation capacities.
+
+## About
+
+This is the core API for Parasite, a modern torrent indexer with some federation
+capacities.
 
 ## Documentation
 
