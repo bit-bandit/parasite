@@ -133,6 +133,7 @@ lists.post("/l", async function (ctx) {
     "replies": `${url}/r`,
     "tags": tag,
   });
+
   const activity = wrapperCreate({
     "id": `${url}/activity`,
     "actor": obj.attributedTo,
@@ -372,7 +373,7 @@ lists.post("/l/:id", async function (ctx) {
       }, ctx.params.id);
 
       ctx.response.body = {
-        "msg": `Torrent ${ctx.params.id} added to Dislikes collection`,
+        "msg": `List ${ctx.params.id} added to Dislikes collection`,
       };
       ctx.response.status = 201;
       ctx.response.type =
@@ -545,11 +546,11 @@ lists.post("/l/:id", async function (ctx) {
       }
 
       const listLikes = (await getListJSON(ctx.params.id, "likes"))[0];
-      const listDislikes = (await getTorrentJSON(ctx.params.id, "dislikes"))[0];
+      const listDislikes = (await getListJSON(ctx.params.id, "dislikes"))[0];
 
       if (
-        !torrentLikes.orderedItems.includes(requestJSON.actor) &&
-        !torrentDislikes.orderedItems.includes(requestJSON.actor)
+        !listLikes.orderedItems.includes(requestJSON.actor) &&
+        !listDislikes.orderedItems.includes(requestJSON.actor)
       ) {
         throwAPIError(ctx, "No activity on item found", 400);
         break;
@@ -562,7 +563,7 @@ lists.post("/l/:id", async function (ctx) {
 
       if (likesIndex !== -1) {
         listLikes.orderedItems.splice(likesIndex, 1);
-        listLikes.totalItems = torrentLikes.orderedItems.length;
+        listLikes.totalItems = listLikes.orderedItems.length;
 
         await basicObjectUpdate("lists", {
           "likes": listLikes,
