@@ -85,6 +85,7 @@ actions.post("/x/follow", async function (ctx: Context) {
   const fActor = await (await fetch(requestJSON.object, {
     headers: { "Accept": "application/activity+json" },
   })).json();
+
   const outboxURL = new URL(fActor.outbox);
   const d = new Date();
   const time = d.toUTCString();
@@ -101,9 +102,6 @@ actions.post("/x/follow", async function (ctx: Context) {
   const header =
     `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
 
-  // We should really specify the `Accept` header because:
-  // 1) It's in the standard
-  // 2) Reverse proxies exist
   const followAttempt = await fetch(fActor.outbox, {
     method: "POST",
     headers: {
@@ -606,7 +604,7 @@ actions.post("/x/comment", async function (ctx: Context) {
 
   const u = new URL(requestJSON.inReplyTo);
   const time = d.toUTCString();
-  // Send to object in question
+
   const msg = genHTTPSigBoilerplate({
     "target": `post ${u.pathname}`,
     "host": u.host,
@@ -621,10 +619,6 @@ actions.post("/x/comment", async function (ctx: Context) {
   const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
   const header =
     `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
-
-  // We should really specify the `Accept` header because:
-  // 1) It's in the standard
-  // 2) Reverse proxies exist
 
   const sendToObject = await fetch(requestJSON.inReplyTo, {
     method: "POST",
@@ -648,6 +642,7 @@ actions.post("/x/comment", async function (ctx: Context) {
       sendToObject.status,
     );
   }
+
   ctx.response.body = {
     "msg": `Comment ${id} added to Torrent ${requestJSON.inReplyTo}`,
   };
