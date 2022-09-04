@@ -141,6 +141,7 @@ torrents.post("/t", async function (ctx) {
     "tags": tag,
     "link": requestJSON.href,
   });
+
   const activity = wrapperCreate({
     "id": `${url}/activity`,
     "actor": obj.attributedTo,

@@ -1,6 +1,4 @@
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
-import { verify } from "https://deno.land/x/djwt/mod.ts";
-
 import {
   addToDB,
   basicObjectUpdate,
@@ -14,19 +12,11 @@ import {
   genVote,
   wrapperCreate,
 } from "./activity.ts";
-import {
-  extractKey,
-  genHTTPSigBoilerplate,
-  genKeyPair,
-  getJWTKey,
-  simpleSign,
-  simpleVerify,
-} from "./crypto.ts";
+import { extractKey, genHTTPSigBoilerplate, simpleSign } from "./crypto.ts";
 import {
   authData,
   checkInstanceBlocked,
   genUUID,
-  sendToFollowers,
   throwAPIError,
 } from "./utils.ts";
 import { settings } from "../settings.ts";
@@ -47,7 +37,7 @@ actions.get("/x/:id", async function (ctx) {
 });
 
 // POST here to send follow request to Actor.
-actions.post("/x/follow", async function (ctx) {
+actions.post("/x/follow", async function (ctx: Context) {
   const data = await authData(ctx);
   const requestJSON = await data.request;
 
@@ -129,7 +119,7 @@ actions.post("/x/follow", async function (ctx) {
   const res = await followAttempt.json();
 
   if (res.type === "Accept") {
-    let userFollowers = await getUActivity(data.decoded.name, "following");
+    const userFollowers = await getUActivity(data.decoded.name, "following");
 
     userFollowers.orderedItems.push(requestJSON.object);
     userFollowers.totalItems = userFollowers.orderedItems.length;
@@ -183,7 +173,7 @@ actions.post("/x/undo", async function (ctx) {
   const id: string = await genUUID(14);
   const url = `${settings.siteURL}/x/${id}`;
 
-  let obj = await genVote({
+  const obj = await genVote({
     "type": "Undo",
     "actor": userActivity.id,
     "object": requestJSON.object,
@@ -282,7 +272,7 @@ actions.post("/x/undo", async function (ctx) {
   ctx.response.headers.set("Location", url);
 });
 
-actions.post("/x/like", async function (ctx) {
+actions.post("/x/like", async function (ctx: Context) {
   const data = await authData(ctx);
   const requestJSON = await data.request;
 
@@ -304,7 +294,7 @@ actions.post("/x/like", async function (ctx) {
   const id: string = await genUUID(14);
   const url = `${settings.siteURL}/x/${id}`;
 
-  let obj = await genVote({
+  const obj = await genVote({
     "type": "Like",
     "actor": userActivity.id,
     "object": requestJSON.object,
@@ -327,13 +317,12 @@ actions.post("/x/like", async function (ctx) {
 
   userLikes.orderedItems.push(requestJSON.object);
   userLikes.totalItems = userLikes.orderedItems.length;
-  // Send to object
 
   const d = new Date();
 
   const u = new URL(requestJSON.object);
   const time = d.toUTCString();
-  // Send to object in question
+
   const msg = genHTTPSigBoilerplate({
     "target": `post ${u.pathname}`,
     "host": u.host,
@@ -348,10 +337,6 @@ actions.post("/x/like", async function (ctx) {
   const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
   const header =
     `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
-
-  // We should really specify the `Accept` header because:
-  // 1) It's in the standard
-  // 2) Reverse proxies exist
 
   const sendToObject = await fetch(requestJSON.object, {
     method: "POST",
@@ -383,7 +368,7 @@ actions.post("/x/like", async function (ctx) {
   ctx.response.headers.set("Location", url);
 });
 
-actions.post("/x/dislike", async function (ctx) {
+actions.post("/x/dislike", async function (ctx: Context) {
   const data = await authData(ctx);
   const requestJSON = await data.request;
 
@@ -408,7 +393,7 @@ actions.post("/x/dislike", async function (ctx) {
   const id: string = await genUUID(14);
   const url = `${settings.siteURL}/x/${id}`;
 
-  let obj = await genVote({
+  const obj = await genVote({
     "type": "Dislike",
     "actor": userActivity.id,
     "object": requestJSON.object,
@@ -431,13 +416,12 @@ actions.post("/x/dislike", async function (ctx) {
 
   userDislikes.orderedItems.push(requestJSON.object);
   userDislikes.totalItems = userDislikes.orderedItems.length;
-  // Send to object
 
   const d = new Date();
 
   const u = new URL(requestJSON.object);
   const time = d.toUTCString();
-  // Send to object in question
+
   const msg = genHTTPSigBoilerplate({
     "target": `post ${u.pathname}`,
     "host": u.host,
@@ -484,7 +468,7 @@ actions.post("/x/dislike", async function (ctx) {
 });
 
 // Send a comment.
-actions.post("/x/comment", async function (ctx) {
+actions.post("/x/comment", async function (ctx: Context) {
   const data = await authData(ctx);
   const requestJSON = await data.request;
 
@@ -557,7 +541,7 @@ actions.post("/x/comment", async function (ctx) {
       // Deliver locally, and nothing more.
       const username = u.pathname.split("/").pop();
       // Add to inbox of local user.
-      let inbox = await getUActivity(username, "inbox");
+      const inbox = await getUActivity(username, "inbox");
 
       inbox.orderedItems.push(activity.id);
       inbox.totalItems = inbox.orderedItems.length;
@@ -566,11 +550,6 @@ actions.post("/x/comment", async function (ctx) {
         "inbox": inbox,
       }, username);
     } else {
-      // REMINDER:
-      // Add HTTP headers, and whatnot.
-      // Read below for more details:
-      // https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/
-
       const actorKeys = await getUActivity(data.decoded.name, "keys");
       const priv = await extractKey("private", actorKeys[1]);
 
@@ -624,6 +603,7 @@ actions.post("/x/comment", async function (ctx) {
   if (0 < i) {
     errNo = ` with ${i} followers failing to recieve it`; // Keep the space at the start.
   }
+
   const u = new URL(requestJSON.inReplyTo);
   const time = d.toUTCString();
   // Send to object in question
@@ -661,6 +641,13 @@ actions.post("/x/comment", async function (ctx) {
 
   const res = await sendToObject.json();
 
+  if (res.err) {
+    return throwAPIError(
+      ctx,
+      res.msg,
+      sendToObject.status,
+    );
+  }
   ctx.response.body = {
     "msg": `Comment ${id} added to Torrent ${requestJSON.inReplyTo}`,
   };
