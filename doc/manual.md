@@ -33,8 +33,7 @@ Parasite is largely meant to answer these problems efficently, and effectivly.
 
 - Free & Open-Source, under the most unrestrictive license we could think of
   (0BSD)
-- Written in a modern language (TypeScript), using a modern, secure runtime
-  (Deno)
+- Written in a modern language (TypeScript), using a secure runtime (Deno)
 - Federated, using the ActivityPub protocol - Distributing the means of
   delivering torrents to users.
 
@@ -43,7 +42,7 @@ Parasite is largely meant to answer these problems efficently, and effectivly.
 Parasite is rather minimal, compared to other torrent indexers, and especially
 compared to other federated platforms. You're expected to configure the thing
 yourself, and program/patch features you want yourself. This is easier than it
-sounds, as it's fairly lightweight - Being under 3,500 source lines of code as
+sounds, as it's fairly lightweight - Being under 4,000 source lines of code as
 of this writing. If you have anything you might want in the API, don't be afraid
 to ask!
 
@@ -51,7 +50,7 @@ to ask!
 
 ### Prerequisites
 
-Parasite, in its default state, requires the following dependancies:
+Parasite, in its default state, requires two dependancies:
 
 - Deno: Runtime
 - PostgreSQL: Primary Database

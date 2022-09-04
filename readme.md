@@ -11,7 +11,22 @@
 ## About
 
 This is the core API for Parasite, a modern torrent indexer with some federation
-capacities.
+capacities. Out of the box, you get the following:
+
+- Torrent uploading
+- Lists to organize upload more effectively
+- A search engine
+- Commenting
+- Ratings (Likes and dislikes)
+- Registration/Logins
+- User profile pages
+- (Fairly) easy to assign user roles for moderation purposes
+- Markdown support
+
+> **Warning** Parasite is currently in a _beta stage of development._ Some
+> features may not be implimented yet, and things are subject to change. As
+> such, we suggest not using it in production unless you _absolutely_ know what
+> you're doing.
 
 ## Documentation
 
