@@ -79,7 +79,7 @@ search.get("/s", async function (ctx) {
     summary: "Search results",
   });
 
-  for (let pooled of settings.federationParams.pooled) {
+  for (const pooled of settings.federationParams.pooled) {
     let f = await fetch(pooled, {
       headers: {
         "Accept": "application/activity+json",
@@ -99,7 +99,7 @@ search.get("/s", async function (ctx) {
   }
 });
 
-search.post("/s/r", async function (ctx) {
+search.post("/s/r", function (ctx) {
   ctx.response.body = {
     "err": true,
     "msg": "That's illegal, you can't do that. Bad!",

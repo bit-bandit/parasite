@@ -5,7 +5,7 @@ import { tableCount } from "./db.ts";
 
 export const root = new Router();
 
-root.get("/", async function (ctx: Content) {
+root.get("/", async function (ctx: Context) {
   ctx.response.headers.set("Access-Control-Allow-Origin", "*");
 
   const u = new URL(settings.siteURL);

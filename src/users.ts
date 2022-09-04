@@ -4,19 +4,11 @@ import { verify } from "https://deno.land/x/djwt/mod.ts";
 import { addToDB, basicObjectUpdate, getUActivity } from "./db.ts";
 import { genInvitationReply } from "./activity.ts";
 import { getJWTKey } from "./crypto.ts";
-import {
-  authData,
-  genUUID,
-  parseHTTPSig,
-  sendToFollowers,
-  throwAPIError,
-} from "./utils.ts";
+import { genUUID, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import {
   extractKey,
   genHTTPSigBoilerplate,
-  genKeyPair,
-  simpleSign,
   simpleVerify,
   str2ab,
 } from "./crypto.ts";
@@ -119,7 +111,6 @@ users.post("/u/:id/outbox", async function (ctx) {
 
   const actor = await getUActivity(ctx.params.id, "info");
   const follows = await getUActivity(ctx.params.id, "followers");
-  const inbox = await getUActivity(ctx.params.id, "inbox");
   const req = await raw.value;
 
   const foreignActorInfo = await (await fetch(req.actor)).json();
@@ -128,7 +119,6 @@ users.post("/u/:id/outbox", async function (ctx) {
     foreignActorInfo.publicKey.publicKeyPem,
   );
 
-  const u = new URL(foreignActorInfo.id);
   const reqURL = new URL(ctx.request.url);
   const settingsURL = new URL(settings.siteURL);
 
@@ -223,19 +213,20 @@ users.post("/u/:id/inbox", async function (ctx) {
       400,
     );
   }
-
-  const actor = await getUActivity(ctx.params.id, "info");
   const follows = await getUActivity(ctx.params.id, "followers");
   const inbox = await getUActivity(ctx.params.id, "inbox");
   const req = await raw.value;
 
-  const foreignActorInfo = await (await fetch(req.actor)).json();
+  const foreignActorInfo = await (await fetch(req.actor, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  })).json();
   const foreignKey = await extractKey(
     "public",
     foreignActorInfo.publicKey.publicKeyPem,
   );
 
-  const u = new URL(foreignActorInfo.id);
   const reqURL = new URL(ctx.request.url);
   const settingsURL = new URL(settings.siteURL);
 
@@ -275,7 +266,8 @@ users.post("/u/:id/inbox", async function (ctx) {
     }, ctx.params.id);
     // Look into what response should be if it's
     // successful.
-  } else if (req.type === "Undo") {
+  } else {
+    return throwAPIError(ctx, "Invalid activity type", 400);
   }
 });
 
@@ -283,7 +275,7 @@ users.post("/u/:id/", async function (ctx) {
   // If type === 'Update'
   // Update user information.
   // Seperate into json & form-content:
-  //   - JSON: name, bio, etc., icon is UInt8Array.
+  //   - JSON: name, bio, etc., icon, banner is UInt8Array.
 });
 
 // WebFinger support. See https://www.rfc-editor.org/rfc/rfc7033.

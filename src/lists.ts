@@ -3,15 +3,12 @@ import { Router } from "https://deno.land/x/oak/mod.ts";
 
 import {
   genOrderedCollection,
-  genReply,
   wrapperCreate,
   wrapperUpdate,
 } from "./activity.ts";
 import {
   extractKey,
   genHTTPSigBoilerplate,
-  genKeyPair,
-  getJWTKey,
   simpleSign,
   simpleVerify,
   str2ab,
@@ -29,9 +26,9 @@ import {
   checkInstanceBlocked,
   genUUID,
   properCharRange,
-  sendToFollowers,
   throwAPIError,
 } from "./utils.ts";
+
 import { settings } from "../settings.ts";
 
 export const lists = new Router();
@@ -171,7 +168,7 @@ lists.post("/l", async function (ctx) {
       // Deliver locally, and nothing more.
       const username = u.pathname.split("/").pop();
       // Add to inbox of local user.
-      let inbox = await getUActivity(username, "inbox");
+      const inbox = await getUActivity(username, "inbox");
 
       inbox.orderedItems.push(activity.id);
       inbox.totalItems = inbox.orderedItems.length;
@@ -180,11 +177,6 @@ lists.post("/l", async function (ctx) {
         "inbox": inbox,
       }, username);
     } else {
-      // REMINDER:
-      // Add HTTP headers, and whatnot.
-      // Read below for more details:
-      // https://blog.joinmastodon.org/2018/06/how-to-implement-a-basic-activitypub-server/
-
       const actorKeys = await getUActivity(data.decoded.name, "keys");
       const priv = await extractKey("private", actorKeys[1]);
       const time = d.toUTCString();
@@ -259,12 +251,7 @@ lists.post("/l/:id", async function (ctx) {
   }
 
   switch (requestJSON.type) {
-    // Voting
     case "Like": {
-      // If user is local: Add user to torrent likes. Add post URL to user 'likes'.
-      // Else: Webfinger to check if user actually exists. If not, send err. If so,
-      // add user to `likes`.
-
       const externalActorURL = new URL(requestJSON.actor);
       checkInstanceBlocked(externalActorURL.host);
 
@@ -274,7 +261,6 @@ lists.post("/l/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -286,7 +272,7 @@ lists.post("/l/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,
@@ -315,7 +301,6 @@ lists.post("/l/:id", async function (ctx) {
       ctx.response.body = {
         "msg": `List ${ctx.request.url} added to likes collection`,
       };
-      // TODO: Actually add federation support.
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
@@ -323,7 +308,6 @@ lists.post("/l/:id", async function (ctx) {
 
       break;
     }
-
     case "Dislike": {
       const externalActorURL = new URL(requestJSON.actor);
       checkInstanceBlocked(externalActorURL.host);
@@ -334,7 +318,6 @@ lists.post("/l/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -346,7 +329,7 @@ lists.post("/l/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,
@@ -392,7 +375,6 @@ lists.post("/l/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -404,7 +386,7 @@ lists.post("/l/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,
@@ -592,7 +574,6 @@ lists.post("/l/:id", async function (ctx) {
     case "Flag": {
       const data = await authData(ctx);
       const userInfo = await getUMetaInfo(data.decoded.name);
-      const userRole = userInfo[2];
 
       if (!userInfo[2].flag) {
         return throwAPIError(ctx, "Flagging not allowed", 400);

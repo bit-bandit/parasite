@@ -9,9 +9,9 @@ tags.get("/i/:tag", async function (ctx: Context) {
     return throwAPIError(ctx, "Invalid characters in tag name.", 400);
   }
 
-  let out = await getJSONfromTags(ctx.request.url);
+  const out = await getJSONfromTags(ctx.request.url);
 
-  for (let i in out) {
+  for (const i in out) {
     out[i] = out[i][0].id;
   }
 

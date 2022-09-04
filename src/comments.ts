@@ -2,33 +2,17 @@ import { Router } from "https://deno.land/x/oak/mod.ts";
 import {
   extractKey,
   genHTTPSigBoilerplate,
-  genKeyPair,
-  simpleSign,
   simpleVerify,
   str2ab,
 } from "./crypto.ts";
 import {
-  addToDB,
   basicObjectUpdate,
   deleteComment,
   getCommentJSON,
-  getUActivity,
   getUMetaInfo,
 } from "./db.ts";
-import {
-  authData,
-  checkInstanceBlocked,
-  genUUID,
-  sendToFollowers,
-  throwAPIError,
-} from "./utils.ts";
-import { settings } from "../settings.ts";
-import {
-  genOrderedCollection,
-  genReply,
-  wrapperCreate,
-  wrapperUpdate,
-} from "./activity.ts";
+import { authData, checkInstanceBlocked, throwAPIError } from "./utils.ts";
+import { wrapperUpdate } from "./activity.ts";
 
 export const comments = new Router();
 
@@ -105,7 +89,6 @@ comments.post("/c/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -117,7 +100,7 @@ comments.post("/c/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,
@@ -157,7 +140,6 @@ comments.post("/c/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -169,7 +151,7 @@ comments.post("/c/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,
@@ -217,7 +199,6 @@ comments.post("/c/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -229,7 +210,7 @@ comments.post("/c/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,
@@ -269,8 +250,6 @@ comments.post("/c/:id", async function (ctx) {
     }
     case "Update": {
       const data = await authData(ctx);
-      const userInfo = await getUMetaInfo(data.decoded.name);
-      const userActivity = await getUActivity(data.decoded.name, "info");
 
       if (
         uploader !== data.decoded.name ||
@@ -307,7 +286,6 @@ comments.post("/c/:id", async function (ctx) {
     case "Delete": {
       const data = await authData(ctx);
       const userInfo = await getUMetaInfo(data.decoded.name);
-      const userActivity = await getUActivity(data.decoded.name, "info");
       const userRole = userInfo[2];
 
       if (!userRole.deleteOwnComments || uploader !== data.decoded.name) {
@@ -337,7 +315,6 @@ comments.post("/c/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const u = new URL(foreignActorInfo.id);
       const reqURL = new URL(ctx.request.url);
 
       const msg = genHTTPSigBoilerplate({
@@ -349,7 +326,7 @@ comments.post("/c/:id", async function (ctx) {
       const parsedSig =
         /(.*)=\"(.*)\",?/mg.exec(await ctx.request.headers.get("Signature"))[2];
 
-      let postSignature = str2ab(atob(parsedSig));
+      const postSignature = str2ab(atob(parsedSig));
 
       const validSig = await simpleVerify(
         foreignKey,

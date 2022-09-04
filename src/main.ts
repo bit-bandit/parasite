@@ -1,6 +1,5 @@
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
-import * as ammonia from "https://deno.land/x/ammonia@0.3.1/mod.ts";
 
 import { settings } from "../settings.ts";
 
@@ -17,9 +16,10 @@ import { torrents } from "./torrents.ts";
 import { users } from "./users.ts";
 
 const app = new Application();
-const cors = new Router(); // hack
 
-cors.options("(.*)", async function (ctx) {
+// Hack to deal with CORS
+const cors = new Router();
+cors.options("(.*)", function (ctx) {
   ctx.response.headers.set("Connection", "keep-alive");
   ctx.response.headers.set("Access-Control-Allow-Origin", "*");
   ctx.response.headers.set(

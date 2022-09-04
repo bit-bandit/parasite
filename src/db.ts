@@ -3,7 +3,6 @@
 import { Client } from "https://deno.land/x/postgres@v0.16.1/mod.ts";
 import Fuse from "https://deno.land/x/fuse@v6.4.1/dist/fuse.esm.min.js";
 import { settings } from "../settings.ts";
-import { SearchQuery } from "./search.ts";
 
 const db_settings = settings.database.settings;
 const client = new Client(db_settings);
@@ -266,7 +265,7 @@ export async function getUActivity(id: string, objType: string): Promise<> {
   // NOTE: NEVER EVER EVER EVER LET USERS SUBMIT THE `OBJTYPE` IN THIS CURRENT STATE.
   // IT *WILL* LEAD TO AN SQL INJECTION BEING PERFORMED.
   // See examples in `src/users.ts` to an example on how to use it.
-  let res = await basicDataQuery(
+  const res = await basicDataQuery(
     `User ${id} not found`,
     `SELECT ${objType ?? "json"} FROM users WHERE id = $1`,
     id,
@@ -403,7 +402,7 @@ export async function deleteList(id: string) {
   );
   await client.end();
   // Modify outbox
-  let outbox = await getUActivity(user, "outbox");
+  const outbox = await getUActivity(user, "outbox");
 
   for (let i = 0; i < outbox.orderedItems.length; i++) {
     if (outbox.orderedItems[i].object.id === json.id) {
@@ -536,24 +535,22 @@ export async function search(url) {
 
       // Filter out objects that don't include the tag
       foundObjs = foundObjs.filter((obj) => {
-        let tagNames: string[] = [];
+        const tagNames: string[] = [];
 
         for (const entryTag of obj.tag) {
-          let curTagURL = new URL(entryTag);
-          tagNames.push(curTagURL.pathname);
+          tagNames.push(
+            new URL(entryTag).pathname,
+          );
         }
-
         return tagNames.includes(tagURL.pathname);
       });
     }
   }
-
   // Filter strings and sort
   if (query && query.length) {
     const fuse = new Fuse(foundObjs, fuseOptions);
     foundObjs = fuse.search(query);
   }
-
   // Return final value.
   return foundObjs;
 }

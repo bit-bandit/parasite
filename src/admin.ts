@@ -11,15 +11,9 @@ import {
   deleteTorrent,
   deleteUser,
   getUActivity,
-  getUMetaInfo,
 } from "./db.ts";
 
-import {
-  authData,
-  checkInstanceBlocked,
-  genUUID,
-  throwAPIError,
-} from "./utils.ts";
+import { authData, throwAPIError } from "./utils.ts";
 
 import { settings } from "../settings.ts";
 import { roles } from "../roles.ts";
@@ -78,7 +72,6 @@ admin.post("/a/federate", async function (ctx: Context) {
   }
 
   const requesterRole = await getUActivity(data.decoded.name, "roles");
-  const targetURL = new URL(requestJSON.id);
 
   if (!requesterRole.manageFederation) {
     return throwAPIError(

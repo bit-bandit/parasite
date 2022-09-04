@@ -147,7 +147,7 @@ export function str2ab(str) {
   return buf;
 }
 
-export async function extractKey(keyType: string, key: string) {
+export function extractKey(keyType: string, key: string) {
   if (keyType === "public") {
     const keyHeader = "-----BEGIN PUBLIC KEY-----";
     const keyFooter = "-----END PUBLIC KEY-----";
@@ -195,11 +195,11 @@ export async function extractKey(keyType: string, key: string) {
   }
 }
 
+// TODO: Add interface for these
 export function genHTTPSigBoilerplate(params: string = {}) {
-  let hosstr = `(request-target): ${params.target}
+  return (`(request-target): ${params.target}
 host: ${params.host}
-date: ${params.date}`;
-  return hosstr;
+date: ${params.date}`);
 }
 
 export async function simpleSign(msg: string, privateKey: any) {
