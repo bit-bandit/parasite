@@ -101,6 +101,38 @@ Content-Type: application/activity+json
 }
 ```
 
+### POST `/u/:id`
+
+Description: Update user profile. Parameters can include:
+
+> `name`: User display name (Not the same as the ID) [string] `summary`: Breif
+> description for user [string] `icon`: Image used for users icon. [array]
+> `banner`: Image used for users banner. [array]
+
+Authorization: JWT Bearer Token
+
+Sample HTTP payload:
+
+```
+POST /u/bob
+Content-Type: application/json
+Authorization: "Bearer 727172874583d577f674b607.0150df8c0f197555c43436b8.83b568cece6bf4c4a72ad529"
+{
+  "name": "Bobby",
+  "summary": "Rad guy"
+}
+```
+
+Response:
+
+```
+200 OK
+Content-Type: application/activity+json
+{ 
+  msg: "Profile updated successfully" 
+}
+```
+
 #### `GET /u/:id/outbox`
 
 Description: Get JSON object containing posts created by the user.
@@ -112,6 +144,8 @@ Sample HTTP Payload:
 ```
 GET http://localhost:8080/u/bob/outbox
 ```
+
+Response:
 
 ```
 200 OK
