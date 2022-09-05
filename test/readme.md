@@ -34,11 +34,5 @@ Add and remove tests to your liking.
 ## Writing tests
 
 - Limit yourself to `fetch` when doing HTTP requests.
-- Use whatever exportable function is available in `src/` whenever you may need
-  it.
-- Remember to stringify your fucking JSON.
-
-## TODO
-
-- Add CSV sample file to import/export data. (see
-  https://skyvia.com/blog/complete-guide-on-how-to-import-and-export-csv-files-to-postgresql)
+- Use whatever exportable function is available in 
+  `src/` whenever you may need it.
