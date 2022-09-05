@@ -99,9 +99,7 @@ export function parseHTTPSig(msg: string) {
 
   msg.split(",").map((x) => {
     const c = x.split("=");
-    console.log(c[1]);
     c[1] = c[1].substring(1, c[1].length - 1);
-    console.log(c[1]);
     res[`${c[0]}`] = c[1];
   });
 

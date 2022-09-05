@@ -4,7 +4,7 @@ import { verify } from "https://deno.land/x/djwt/mod.ts";
 import { addToDB, basicObjectUpdate, getUActivity } from "./db.ts";
 import { genInvitationReply } from "./activity.ts";
 import { getJWTKey } from "./crypto.ts";
-import { genUUID, throwAPIError } from "./utils.ts";
+import { authData, genUUID, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import {
   extractKey,
@@ -12,6 +12,8 @@ import {
   simpleVerify,
   str2ab,
 } from "./crypto.ts";
+// For icon/banner processing
+import * as imagescript from "https://deno.land/x/imagescript@1.2.9/mod.ts";
 
 export const users = new Router();
 
@@ -271,11 +273,108 @@ users.post("/u/:id/inbox", async function (ctx) {
   }
 });
 
-users.post("/u/:id/", async function (ctx) {
-  // If type === 'Update'
-  // Update user information.
-  // Seperate into json & form-content:
-  //   - JSON: name, bio, etc., icon, banner is UInt8Array.
+users.post("/u/:id", async function (ctx: Context) {
+  const data = await authData(ctx);
+  const requestJSON = data.request;
+  // We can get away with this, because Tokens are
+  // issued server side, and therefore, require
+  // an existing user to issue
+  // ...right?
+  if (data.decoded.name !== ctx.params.id) {
+    return throwAPIError(
+      ctx,
+      "Not permitted to edit",
+      400,
+    );
+  }
+
+  if (typeof requestJSON !== "object") {
+    return throwAPIError(
+      ctx,
+      "Invalid content type (Must be application/json)",
+      400,
+    );
+  }
+
+  const actor = await getUActivity(ctx.params.id, "info");
+
+  if (requestJSON.name && typeof requestJSON.name === "string") {
+    actor.name = requestJSON.name;
+  }
+
+  if (requestJSON.summary && typeof requestJSON.summary === "string") {
+    actor.summary = requestJSON.summary;
+  }
+
+  if (requestJSON.icon) {
+    if (!Array.isArray(requestJSON.icon)) {
+      return throwAPIError(
+        ctx,
+        "Image must be delivered as an array",
+        400,
+      );
+    }
+
+    if (requestJSON.icon.length > 2000000) {
+      return throwAPIError(
+        ctx,
+        "Image too large (Must be >2MB)",
+        400,
+      );
+    }
+
+    const rawIcon = new Uint8Array(requestJSON.icon);
+
+    let pic = await imagescript.decode(rawIcon);
+
+    pic.crop(0, 0, pic.width, pic.width);
+    pic.fit(500, 500);
+
+    pic = await pic.encode(5);
+
+    Deno.writeFile(`./static/u/${ctx.params.id}/avatar.png`, pic);
+  }
+
+  if (requestJSON.banner) {
+    if (!Array.isArray(requestJSON.banner)) {
+      return throwAPIError(
+        ctx,
+        "Image must be delivered as an array",
+        400,
+      );
+    }
+
+    if (requestJSON.banner.length > 2000000) {
+      return throwAPIError(
+        ctx,
+        "Image too large (Must be >2MB)",
+        400,
+      );
+    }
+
+    const rawBanner = new Uint8Array(requestJSON.banner);
+
+    let pic = await imagescript.decode(rawBanner);
+
+    const newHeight = Math.floor(pic.width / 1.85);
+
+    pic.crop(0, 0, pic.width, newHeight);
+    pic.fit(555, 300);
+
+    pic = await pic.encode(5);
+
+    Deno.writeFile(`./static/u/${ctx.params.id}/banner.png`, pic);
+  }
+
+  await basicObjectUpdate("users", {
+    "info": actor,
+  }, ctx.params.id);
+
+  ctx.response.body = {
+    "msg": "Profile updated successfully",
+  };
+  ctx.response.status = 200;
+  ctx.response.type = "application/json";
 });
 
 // WebFinger support. See https://www.rfc-editor.org/rfc/rfc7033.
