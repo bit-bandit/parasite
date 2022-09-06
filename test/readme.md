@@ -34,5 +34,5 @@ Add and remove tests to your liking.
 ## Writing tests
 
 - Limit yourself to `fetch` when doing HTTP requests.
-- Use whatever exportable function is available in 
-  `src/` whenever you may need it.
+- Use whatever exportable function is available in `src/` whenever you may need
+  it.

@@ -187,20 +187,6 @@ users.post("/u/:id/outbox", async function (ctx) {
     ctx.response.body = acceptJSON;
     ctx.response.status = 201;
     ctx.response.type = "application/activity+json";
-  } else if (req.type === "Undo") {
-    if (!follows.orderedItems.includes(requestJSON.actor)) {
-      return throwAPIError(ctx, "Already not following actor", 400);
-    }
-
-    const followsIndex = follows.orderedItems.indexOf(req.actor);
-
-    follows.orderedItems.splice(followsIndex, 1);
-
-    ctx.response.body = {
-      "msg": `${req.actor} not following ${ctx.params.id} anymore.`,
-    };
-    ctx.response.status = 200;
-    ctx.response.type = "application/json";
   }
 });
 
@@ -280,6 +266,29 @@ users.post("/u/:id", async function (ctx: Context) {
   // issued server side, and therefore, require
   // an existing user to issue
   // ...right?
+
+  if (requestJSON.type && requestJSON.type === "Undo") {
+    const follows = await getUActivity(ctx.params.id, "followers");
+
+    if (!follows.orderedItems.includes(requestJSON.actor)) {
+      return throwAPIError(ctx, "Already not following actor", 400);
+    }
+
+    const followsIndex = follows.orderedItems.indexOf(requestJSON.actor);
+
+    follows.orderedItems.splice(followsIndex, 1);
+
+    await basicObjectUpdate("users", {
+      "followers": follows,
+    }, ctx.params.id);
+
+    ctx.response.body = {
+      "msg": `${requestJSON.actor} not following ${ctx.params.id} anymore.`,
+    };
+    ctx.response.status = 200;
+    return ctx.response.type = "application/json";
+  }
+
   if (data.decoded.name !== ctx.params.id) {
     return throwAPIError(
       ctx,
