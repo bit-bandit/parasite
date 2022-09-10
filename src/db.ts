@@ -14,6 +14,8 @@ interface Res {
   tagMatch: number;
 }
 
+// Tables required by Parasite.
+
 const userTableInit = `
 CREATE TABLE IF NOT EXISTS users (
   PRIMARY KEY(id),
@@ -47,7 +49,6 @@ CREATE TABLE IF NOT EXISTS torrents (
 );
 `;
 
-// Literally just copying the torrent table, here...
 const listsTableInit = `
 CREATE TABLE IF NOT EXISTS lists (
   PRIMARY KEY(id),
@@ -92,6 +93,7 @@ CREATE TABLE IF NOT EXISTS actions (
 
 await client.connect();
 
+// Create tables if they are not already present. 
 await client.queryArray(`
   ${userTableInit}
   ${torrentTableInit}
@@ -102,17 +104,30 @@ await client.queryArray(`
 
 await client.end();
 
-// Get number of items on a table (Mainly for the '/' endpoint)
+/**
+ * Get total number of items present on a table.
+ * @param {string} name - Name of table. 
+ * @returns {number} Total number of items on a table.
+ */
 export async function tableCount(name: string) {
   await client.connect();
+
   // ID is present on every table, which makes it a great reference point.
   const res = await client.queryArray(`SELECT COUNT(id) FROM ${name}`);
   await client.end();
 
-  // We have to do this because the DB client returns a bigint by default(!)
+  // We have to do this because the DB client returns a bigint by default.
   return Number(res.rows[0][0]);
 }
 
+/**
+ * Simple function used to reduce boilerplate,
+ * mainly used for `SELECT` statements.
+ * @param {string} msg - Message to return upon an error.
+ * @param {string} query - Command to be given to the database.
+ * @param {string[]} args - Prepared arguments: Mainly for user submitted input.
+ * @returns Value of item in the database.
+ */
 async function basicDataQuery(
   msg: string,
   query: string,
@@ -129,8 +144,13 @@ async function basicDataQuery(
   return { "err": true, "msg": msg };
 }
 
-// Main JSON elements for objects
-export function getTorrentJSON(id: string, t: string): Promise<> {
+/**
+ * Get data from the `torrents` table
+ * @param {string} id - ID of a torrent.
+ * @param {string} t - Type of item to retrive - Defaults to `json`.
+ * @returns Column from torrent in the database.
+ */
+export function getTorrentJSON(id: string, t?: string): Promise<> {
   return basicDataQuery(
     "No torrent with id ${id} found",
     `SELECT ${t ?? "json"} FROM torrents WHERE id = $1`,
@@ -138,7 +158,13 @@ export function getTorrentJSON(id: string, t: string): Promise<> {
   );
 }
 
-export function getActionJSON(id: string, t: string): Promise<> {
+/**
+ * Get data from the `actions` table
+ * @param {string} id - ID of an action.
+ * @param {string} t - Type of item to retrive - Defaults to `json`.
+ * @returns Column from action in the database.
+ */
+export function getActionJSON(id: string, t?: string): Promise<> {
   return basicDataQuery(
     "No action with id ${id} found",
     `SELECT ${t ?? "json"} FROM actions WHERE id = $1`,
@@ -146,7 +172,13 @@ export function getActionJSON(id: string, t: string): Promise<> {
   );
 }
 
-export function getListJSON(id: string, t: string): Promise<> {
+/**
+ * Get data from the `lists` table
+ * @param {string} id - ID of a list.
+ * @param {string} t - Type of item to retrive - Defaults to `json`.
+ * @returns Column from list in the database.
+ */
+export function getListJSON(id: string, t?: string): Promise<> {
   return basicDataQuery(
     "No list with id ${id} found",
     `SELECT ${t ?? "json"} FROM lists WHERE id = $1`,
@@ -154,6 +186,12 @@ export function getListJSON(id: string, t: string): Promise<> {
   );
 }
 
+/**
+ * Get data from the `comments` table
+ * @param {string} id - ID of a comment.
+ * @param {string} t - Type of item to retrive - Defaults to `json`.
+ * @returns Column from comment in the database.
+ */
 export function getCommentJSON(id: string, t?: string): Promise<> {
   return basicDataQuery(
     "No comment with id ${id} found",
@@ -162,6 +200,11 @@ export function getCommentJSON(id: string, t?: string): Promise<> {
   );
 }
 
+/**
+ * Get data from the `comments` table
+ * @param {string} t - Name of tag.
+ * @returns {Object[]} Items that contain the tag.
+ */
 export async function getJSONfromTags(t: string): Promise<> {
   await client.connect();
   const res = await client.queryArray(
@@ -180,7 +223,11 @@ export async function getJSONfromTags(t: string): Promise<> {
   return res.rows;
 }
 
-// User related information
+/**
+ * Get basic information from a user.
+ * @param {string} id - User ID.
+ * @returns values present on the database.
+ */
 export function getUMetaInfo(id: string): Promise<> {
   return basicDataQuery(
     "User ${id} not found",
@@ -189,6 +236,11 @@ export function getUMetaInfo(id: string): Promise<> {
   );
 }
 
+/**
+ * Get hashed password of a user.
+ * @param {string} id - User ID.
+ * @returns values present on the database.
+ */
 export async function getULoginInfo(id: string): Promise<> {
   const res = await basicDataQuery(
     `User ${id} not found`,
@@ -203,6 +255,11 @@ export async function getULoginInfo(id: string): Promise<> {
   }
 }
 
+/**
+ * Register user as having logged in.
+ * @param {string} id - User ID.
+ * @param {number} time - Unix timestamp of when user logged in.
+ */
 export async function ULogin(id: string, time: number) {
   // screw it, not dealing with type shenanigans on this
   const raw = await getUMetaInfo(id);
@@ -222,6 +279,11 @@ export async function ULogin(id: string, time: number) {
   await client.end();
 }
 
+/**
+ * Check if a username is not taken.
+ * @param {string} id - User ID.
+ * @returns {boolean} True if username is available, else false.
+ */
 export async function UCheck(id: string) {
   await client.connect();
   const res = await client.queryArray(
@@ -233,8 +295,13 @@ export async function UCheck(id: string) {
   if (res.rows.length === 0) {
     return true;
   }
+  return false;
 }
 
+/**
+ * Initiate a user account.
+ * @param {Object} params - Parameters. Don't touch them.
+ */
 export async function UInit(params = {}) {
   await client.connect();
   await client.queryArray(
@@ -259,7 +326,12 @@ export async function UInit(params = {}) {
   await client.end();
 }
 
-// ActivityPub  for users.
+/**
+ * Get data from `users` table.
+ * @param {string} id - User ID.
+ * @param {string} objType - Type of object to retrive from the database. Defaults to `json`.
+ * @returns Column from user in the database.
+ */
 export async function getUActivity(id: string, objType: string): Promise<> {
   // NOTE: NEVER EVER EVER EVER LET USERS SUBMIT THE `OBJTYPE` IN THIS CURRENT STATE.
   // IT *WILL* LEAD TO AN SQL INJECTION BEING PERFORMED.
@@ -276,6 +348,13 @@ export async function getUActivity(id: string, objType: string): Promise<> {
   }
 }
 
+/**
+ * Update information on the database
+ * according to keys present on an object.
+ * @param {string} category - Table to modify.
+ * @param {Object} params - Values to modify the object.
+ * @param {string} id - Item ID.
+ */
 export async function basicObjectUpdate(
   category: string,
   params = {},
@@ -293,9 +372,11 @@ export async function basicObjectUpdate(
   await client.end();
 }
 
-// Function to add to the DB. Because all the tables - Besides users -
-// are virtually identical, we can get away with this.
-// This is so fucking ugly.
+/**
+ * Add to any table besides `users`,
+ * @param {string} category - Table to add to.
+ * @param {Object} params - Parameters. Don't touch them.
+ */
 export async function addToDB(
   category: string,
   params = {},
@@ -326,6 +407,10 @@ export async function addToDB(
   await client.end();
 }
 
+/**
+ * Delete an entry from the `torrents` table.
+ * @param {string} id - ID of the torrent.
+ */
 export async function deleteTorrent(id: string) {
   const tData = await getTorrentJSON(id, "json, uploader");
   const user = tData[1];
@@ -383,6 +468,10 @@ export async function deleteComment(id: string) {
   }, user);
 }
 
+/**
+ * Delete an entry from the `lists` table.
+ * @param {string} id - ID of the list.
+ */
 export async function deleteList(id: string) {
   const lData = await getListJSON(id, "json, uploader");
   const user = lData[1];
@@ -411,7 +500,10 @@ export async function deleteList(id: string) {
   }, user);
 }
 
-// Remove a user from the database.
+/**
+ * Delete an entry from the `users` table.
+ * @param {string} id - ID of the user.
+ */
 export async function deleteUser(id: string) {
   const tables = ["comments", "torrents", "lists", "actions"];
 
@@ -432,6 +524,10 @@ export async function deleteUser(id: string) {
   await client.end();
 }
 
+/**
+ * Query the database according to URL parameters.
+ * @param {string} url - search URL.
+ */
 export async function search(url) {
   // q = Search query
   // i = tags (comma seperated(?))
