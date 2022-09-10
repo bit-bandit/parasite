@@ -128,9 +128,8 @@ async function basicDataQuery(
 
   return { "err": true, "msg": msg };
 }
-// Main JSON elements for objects
 
-// This should probably be renamed.
+// Main JSON elements for objects
 export function getTorrentJSON(id: string, t: string): Promise<> {
   return basicDataQuery(
     "No torrent with id ${id} found",
@@ -277,9 +276,6 @@ export async function getUActivity(id: string, objType: string): Promise<> {
   }
 }
 
-// Before you do say anything:
-//   - Yes, this is probably the worst piece of code in the entire project.
-//   - Hopefully, it will become much better than...this.
 export async function basicObjectUpdate(
   category: string,
   params = {},
@@ -328,8 +324,6 @@ export async function addToDB(
     ],
   );
   await client.end();
-  // TODO: Also add to users outbox/followers inbox.
-  // Will have to figure out how to do that, though...
 }
 
 export async function deleteTorrent(id: string) {
@@ -338,13 +332,13 @@ export async function deleteTorrent(id: string) {
   const json = tData[0];
 
   await client.connect();
-  // TODO:
-  // - Figure out how to delete replies.
+
   await client.queryArray(
     "DELETE FROM torrents WHERE id = $1;",
     [id],
   );
   await client.end();
+
   // Modify outbox
   const outbox = await getUActivity(user, "outbox");
 
@@ -373,7 +367,7 @@ export async function deleteComment(id: string) {
     [id],
   );
   await client.end();
-  // Modify outbox
+
   const outbox = await getUActivity(user, "outbox");
 
   for (let i = 0; i < outbox.orderedItems.length; i++) {
@@ -401,7 +395,7 @@ export async function deleteList(id: string) {
     [id],
   );
   await client.end();
-  // Modify outbox
+
   const outbox = await getUActivity(user, "outbox");
 
   for (let i = 0; i < outbox.orderedItems.length; i++) {
