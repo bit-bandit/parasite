@@ -95,7 +95,7 @@ export async function authData(ctx: Context) {
  * @param msg HTTP signature
  */
 export function parseHTTPSig(msg: string) {
-  let res: any = {};
+  const res = {};
 
   msg.split(",").map((x) => {
     const c = x.split("=");

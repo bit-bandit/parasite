@@ -147,7 +147,9 @@ export interface ActivityCollectionPage extends Omit<ActivityObject, "type"> {
   next?: string;
 }
 
-export interface ActivityWrapper {
+export interface ActivityWrapper extends Omit<ActivityObject, "type"> {
+    type: string, // Gonna be lazy with this one...
+    object: ActivityObject
 }
 
 export interface ActivityImage extends ActivityLink {
