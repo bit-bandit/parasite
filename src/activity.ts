@@ -288,11 +288,6 @@ export function genOrderedCollection(
   items: (ActivityObject | ActivityLink)[] = [],
   params: any = {},
 ) {
-    console.log(params)
-    for (let key in params){
-	console.log(`${key}: ${typeof(params[key])}`);
-    }
-    
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": id,

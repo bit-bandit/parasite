@@ -298,7 +298,8 @@ admin.post("/a/delete", async function (ctx: Context) {
   const targetURL = new URL(requestJSON.id);
 
   if (
-    targetURL.origin !== settings.siteURL
+    targetURL.origin !== settings.siteURL &&
+    targetURL.origin !== settings.frontendURL
   ) {
     return throwAPIError(
       ctx,
