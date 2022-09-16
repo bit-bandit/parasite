@@ -545,7 +545,7 @@ export async function search(url) {
     ],
   };
 
-  let foundObjs: any[] = [];
+  let foundObjs: unknown[] = [];
 
   const users = searchParams.get("u");
   const tags = searchParams.get("i");

@@ -202,7 +202,7 @@ host: ${params.host}
 date: ${params.date}`);
 }
 
-export async function simpleSign(msg: string, privateKey: any) {
+export async function simpleSign(msg: string, privateKey: unknown) {
   const enc = new TextEncoder();
   const encoded = enc.encode(msg);
 
@@ -217,9 +217,9 @@ export async function simpleSign(msg: string, privateKey: any) {
 }
 
 export async function simpleVerify(
-  publicKey: any,
+  publicKey: unknown,
   msg: string,
-  signature: any,
+  signature: unknown,
 ) {
   const enc = new TextEncoder();
   const encoded = enc.encode(msg);
