@@ -13,7 +13,6 @@ import {
   deleteTorrent,
   getTorrentJSON,
   getUActivity,
-  getUMetaInfo,
 } from "./db.ts";
 import {
   extractKey,
@@ -435,7 +434,12 @@ torrents.post("/t/:id", async function (ctx) {
     // Updating
     case "Update": {
       const data = await authData(ctx);
-      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userInfo = [
+        await getUActivity(data.decoded.name, "id"),
+        await getUActivity(data.decoded.name, "logins"),
+        await getUActivity(data.decoded.name, "roles"),
+      ];
+
       const userRole = userInfo[2];
 
       if (
@@ -495,7 +499,11 @@ torrents.post("/t/:id", async function (ctx) {
     case "Remove":
     case "Delete": {
       const data = await authData(ctx);
-      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userInfo = [
+        await getUActivity(data.decoded.name, "id"),
+        await getUActivity(data.decoded.name, "logins"),
+        await getUActivity(data.decoded.name, "roles"),
+      ];
       const userRole = userInfo[2];
       // Ensure that the user is either the original poster, or has total deletion privs.
       // Also made sure that the user has the proper role to delete.
@@ -589,7 +597,11 @@ torrents.post("/t/:id", async function (ctx) {
 
     case "Flag": {
       const data = await authData(ctx);
-      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userInfo = [
+        await getUActivity(data.decoded.name, "id"),
+        await getUActivity(data.decoded.name, "logins"),
+        await getUActivity(data.decoded.name, "roles"),
+      ];
       const userActivity = await getUActivity(data.decoded.name, "info");
 
       if (!userInfo[2].flag) {

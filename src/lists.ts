@@ -19,7 +19,6 @@ import {
   deleteList,
   getListJSON,
   getUActivity,
-  getUMetaInfo,
 } from "./db.ts";
 import {
   authData,
@@ -421,7 +420,11 @@ lists.post("/l/:id", async function (ctx) {
 
     case "Update": {
       const data = await authData(ctx);
-      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userInfo = [
+        await getUActivity(data.decoded.name, "id"),
+        await getUActivity(data.decoded.name, "logins"),
+        await getUActivity(data.decoded.name, "roles"),
+      ];
       const userRole = userInfo[2];
 
       if (
@@ -480,7 +483,11 @@ lists.post("/l/:id", async function (ctx) {
     case "Remove":
     case "Delete": {
       const data = await authData(ctx);
-      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userInfo = [
+        await getUActivity(data.decoded.name, "id"),
+        await getUActivity(data.decoded.name, "logins"),
+        await getUActivity(data.decoded.name, "roles"),
+      ];
       const userRole = userInfo[2];
 
       if (!userRole.deleteOwnLists || uploader !== data.decoded.name) {
@@ -573,7 +580,11 @@ lists.post("/l/:id", async function (ctx) {
 
     case "Flag": {
       const data = await authData(ctx);
-      const userInfo = await getUMetaInfo(data.decoded.name);
+      const userInfo = [
+        await getUActivity(data.decoded.name, "id"),
+        await getUActivity(data.decoded.name, "logins"),
+        await getUActivity(data.decoded.name, "roles"),
+      ];
 
       if (!userInfo[2].flag) {
         return throwAPIError(ctx, "Flagging not allowed", 400);

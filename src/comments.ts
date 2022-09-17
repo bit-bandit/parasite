@@ -9,7 +9,7 @@ import {
   basicObjectUpdate,
   deleteComment,
   getCommentJSON,
-  getUMetaInfo,
+  getUActivity,
 } from "./db.ts";
 import { authData, checkInstanceBlocked, throwAPIError } from "./utils.ts";
 import { wrapperUpdate } from "./activity.ts";
@@ -285,8 +285,8 @@ comments.post("/c/:id", async function (ctx) {
     case "Remove":
     case "Delete": {
       const data = await authData(ctx);
-      const userInfo = await getUMetaInfo(data.decoded.name);
-      const userRole = userInfo[2];
+
+      const userRole = await getUActivity(data.decoded.name, "roles");
 
       if (!userRole.deleteOwnComments || uploader !== data.decoded.name) {
         return throwAPIError(

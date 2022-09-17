@@ -6,7 +6,7 @@ import {
 } from "https://deno.land/x/djwt/mod.ts";
 import { Algorithm } from "https://deno.land/x/djwt/algorithm.ts";
 import * as scrypt from "https://deno.land/x/scrypt@v4.0.0/mod.ts";
-import { getUActivity, getULoginInfo, UCheck, UInit, ULogin } from "./db.ts";
+import { getUActivity, UCheck, UInit, ULogin } from "./db.ts";
 import { throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import { actorObj, genOrderedCollection } from "./activity.ts";
@@ -50,7 +50,7 @@ auth.post("/login", async function (ctx) {
     return throwAPIError(ctx, "Not permitted to login.", 400);
   }
 
-  const pass = await getULoginInfo(requestJSON.username);
+  const pass = await getUActivity(requestJSON.username, "pass");
 
   if (pass.err) {
     ctx.response.body = info;

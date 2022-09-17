@@ -644,7 +644,7 @@ actions.post("/x/comment", async function (ctx: Context) {
   }
 
   ctx.response.body = {
-      "msg": `Comment ${id} added to Torrent ${requestJSON.inReplyTo} ${errNo}`,
+    "msg": `Comment ${id} added to Torrent ${requestJSON.inReplyTo} ${errNo}`,
   };
   ctx.response.status = 201;
   ctx.response.type =

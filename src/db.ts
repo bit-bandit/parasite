@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS actions (
 
 await client.connect();
 
-// Create tables if they are not already present. 
+// Create tables if they are not already present.
 await client.queryArray(`
   ${userTableInit}
   ${torrentTableInit}
@@ -106,7 +106,7 @@ await client.end();
 
 /**
  * Get total number of items present on a table.
- * @param {string} name - Name of table. 
+ * @param {string} name - Name of table.
  * @returns {number} Total number of items on a table.
  */
 export async function tableCount(name: string) {
@@ -224,45 +224,17 @@ export async function getJSONfromTags(t: string): Promise<> {
 }
 
 /**
- * Get basic information from a user.
- * @param {string} id - User ID.
- * @returns values present on the database.
- */
-export function getUMetaInfo(id: string): Promise<> {
-  return basicDataQuery(
-    "User ${id} not found",
-    "SELECT id, logins, roles FROM users WHERE id = $1",
-    id,
-  );
-}
-
-/**
- * Get hashed password of a user.
- * @param {string} id - User ID.
- * @returns values present on the database.
- */
-export async function getULoginInfo(id: string): Promise<> {
-  const res = await basicDataQuery(
-    `User ${id} not found`,
-    "SELECT pass FROM users WHERE id = $1",
-    id,
-  );
-
-  if (!res.err) {
-    return res[0];
-  } else {
-    return res;
-  }
-}
-
-/**
  * Register user as having logged in.
  * @param {string} id - User ID.
  * @param {number} time - Unix timestamp of when user logged in.
  */
 export async function ULogin(id: string, time: number) {
   // screw it, not dealing with type shenanigans on this
-  const raw = await getUMetaInfo(id);
+  const raw = [
+    await getUActivity(id, "id"),
+    await getUActivity(id, "logins"),
+    await getUActivity(id, "roles"),
+  ];
   const logins: number[] = raw[1];
 
   if (logins.length >= settings.limits.loginsPerUser) {
@@ -338,7 +310,7 @@ export async function getUActivity(id: string, objType: string): Promise<> {
   // See examples in `src/users.ts` to an example on how to use it.
   const res = await basicDataQuery(
     `User ${id} not found`,
-    `SELECT ${objType ?? "json"} FROM users WHERE id = $1`,
+    `SELECT ${objType ?? "info"} FROM users WHERE id = $1`,
     id,
   );
   if (!res.err) {
