@@ -53,7 +53,7 @@ Deno.test("Upload Torrent", async () => {
 
 Deno.test("Get torrent", async () => {
   const r = await fetch(torrentURL);
-  const j = await r.json();
+  await r.json();
 
   assertEquals(r.status, 200);
 });

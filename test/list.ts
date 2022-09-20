@@ -79,7 +79,7 @@ Deno.test("Upload List", async () => {
 Deno.test("Get List", async () => {
   const r = await fetch(listURL);
   // Have to declare this to prevent resource leaking
-  const j = await r.json();
+  await r.json();
 
   assertEquals(r.status, 200);
 });
