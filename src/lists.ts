@@ -40,7 +40,7 @@ function boilerplateDeleteStatement(ctx: Context) {
 
 function boilerplateListGet(ctx: Context, res) {
   if (!res.err) {
-    ctx.response.body = res[0]; // Have to do this because `basicDataQuery` is designed to return arrays.
+    ctx.response.body = res[0];
     ctx.response.status = 200;
     ctx.response.type =
       'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
@@ -94,8 +94,6 @@ lists.post("/l", async function (ctx) {
     return throwAPIError(ctx, "Invalid items.", 400);
   }
 
-  // TODO: Check if magnet link is actually valid.
-  // TODO: Make more spec compliant.
   const info = await getUActivity(data.decoded.name, "info");
   const role = await getUActivity(data.decoded.name, "roles");
 
@@ -107,7 +105,7 @@ lists.post("/l", async function (ctx) {
 
   const id: string = genUUID(12);
   const url = `${settings.siteURL}/l/${id}`;
-  // TODO: Tag checking/creation if not exists.
+
   const tag: string[] = [];
   if (requestJSON.tags) {
     requestJSON.tags.split(",").filter((x) => properCharRange(x)).map(
@@ -122,7 +120,7 @@ lists.post("/l", async function (ctx) {
   const d = new Date();
 
   const obj = genOrderedCollection(url, requestJSON.orderedItems, {
-    "published": d.toISOString(), // TODO: Set this from locale time to UTC
+    "published": d.toISOString(),
     "actor": info.id,
     "name": requestJSON.name,
     "summary": parsed,
@@ -408,7 +406,7 @@ lists.post("/l/:id", async function (ctx) {
       ctx.response.body = {
         "msg": `List ${ctx.params.id} added to dislikes collection`,
       };
-      // TODO: Actually add federation support.
+
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
@@ -417,7 +415,6 @@ lists.post("/l/:id", async function (ctx) {
     }
 
     // Updating
-
     case "Update": {
       const data = await authData(ctx);
       const userInfo = [
@@ -607,7 +604,6 @@ lists.post("/l/:id", async function (ctx) {
       ctx.response.body = {
         "msg": `List ${ctx.params.id} flagged`,
       };
-      // TODO: Actually add federation support.
       ctx.response.status = 201;
       ctx.response.type =
         'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';

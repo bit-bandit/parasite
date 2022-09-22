@@ -52,8 +52,10 @@ function boilerplateTorrentGet(ctx: Context, res) {
   }
 }
 
-function invalidMagnet(magnet) {
-  return /magnet:\?xt=urn:[a-z0-9]+:[a-z0-9]{32}/i.test(magnet);
+function validMagnet(magnet) {
+  return /^magnet:\?xt=urn:[a-z0-9]+:[a-z0-9]{32,40}&dn=.+&tr=.+$/i.test(
+    magnet,
+  );
 }
 
 // Routes
@@ -97,12 +99,12 @@ torrents.post("/t", async function (ctx) {
     return throwAPIError(ctx, "Invalid activity type", 400);
   }
 
-  if (invalidMagnet(requestJSON)) {
+  console.log(validMagnet);
+
+  if (!validMagnet(requestJSON.href)) {
     return throwAPIError(ctx, "Bad magnet link.", 400);
   }
 
-  // TODO: Check if magnet link is actually valid.
-  // TODO: Make more spec compliant.
   const info = await getUActivity(data.decoded.name, "info");
   const role = await getUActivity(data.decoded.name, "roles");
 
@@ -133,7 +135,7 @@ torrents.post("/t", async function (ctx) {
   const obj = genObj({
     "id": url,
     "type": "Note",
-    "published": d.toISOString(), // TODO: Set this from locale time to UTC
+    "published": d.toISOString(),
     "actor": info.id,
     "name": requestJSON.name,
     "content": parsed,
@@ -447,7 +449,7 @@ torrents.post("/t/:id", async function (ctx) {
         !userRole.editUploads
       ) {
         return throwAPIError(ctx, "Not allowed to edit torrent", 400);
-      } else if (invalidMagnet(requestJSON)) {
+      } else if (!validMagnet(requestJSON.href)) {
         return throwAPIError(ctx, "Bad magnet link.", 400);
       }
       const tag: string[] = [];

@@ -1,3 +1,7 @@
+// ActivityStreams/ActivityPub helper stuff.
+
+// Before we get into the code, read this wall of text:
+
 // Resources (You're gonna need them):
 //   ActivityStreams spec: https://www.w3.org/TR/activitystreams-core/
 //   ActivityStreams vocab: https://www.w3.org/TR/activitystreams-vocabulary/
@@ -52,7 +56,6 @@
 // Types for ActivityStreams.
 // A LOT of this came from a different, seperate file I wrote a while back.
 // Be aware this might be buggy as shit/noncomplaint.
-
 export interface ActivityCrypto {
   id: string;
   owner: string;
@@ -164,7 +167,7 @@ export function genObj(params: unknown = {}): ActivityObject {
     "@context": "https://www.w3.org/ns/activitystreams",
     "id": params.id,
     "type": params.type ?? "Note", // In case we can't be shitted to write this down, keep note in.
-    "published": params.published, // TODO: Figure out how the fuck ActivityStreams does dates
+    "published": params.published,
     "attributedTo": params.actor,
     "name": params.name,
     "content": params.content,
@@ -204,9 +207,6 @@ export function genInvitationReply(params: unknown = {}) {
   };
 }
 
-// Voting. Type should be either `like` or `dislike`, since we're going by the standard.
-// We're doing some other shit with this too (See `doc/voting.md`), but we can get away
-// with it.
 export function genVote(params: unknown = {}) {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
@@ -268,7 +268,7 @@ export function wrapperUpdate(params: unknown = {}): ActivityWrapper {
   return {
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": "Update",
-    // NOTE: ID is NOT the object ID; it's a seperate URL that indicates an object is created. (6.2)
+    // NOTE: ID is NOT the object ID; it's a seperate URL that indicates an object is updated. (6.2)
     "id": params.id,
     "actor": params.actor,
     "object": params.object,
@@ -277,12 +277,8 @@ export function wrapperUpdate(params: unknown = {}): ActivityWrapper {
   };
 }
 
-// TODO: Do the same shit as above but for deletes, comments, collections, actor objects, et. all.
-// And that's not even getting started on the wrappers!
-// I'm gonna die.
-
-// With some exceptions - Namely for inboxes/outboxes - We only store items via. their
-// URLs.
+// With some exceptions - Namely for inboxes/outboxes, and search results
+// - We only store items via. their URLs.
 export function genOrderedCollection(
   id: string,
   items: (ActivityObject | ActivityLink)[] = [],
