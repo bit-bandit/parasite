@@ -276,7 +276,7 @@ torrents.post("/t/:id", async function (ctx) {
       const externalActorURL = new URL(requestJSON.actor);
       const reqURL = new URL(ctx.request.url);
 
-      checkInstanceBlocked(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${reqURL.pathname}`,
@@ -326,7 +326,7 @@ torrents.post("/t/:id", async function (ctx) {
 
     case "Dislike": {
       const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host, ctx);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(
@@ -384,7 +384,7 @@ torrents.post("/t/:id", async function (ctx) {
     // Adding a comment.
     case "Create": {
       const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host);
+      checkInstanceBlocked(externalActorURL.host, ctx);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
       const foreignKey = await extractKey(

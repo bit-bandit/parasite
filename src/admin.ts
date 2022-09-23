@@ -64,6 +64,8 @@ admin.post("/a/federate", async function (ctx: Context) {
   const data = await authData(ctx);
   const requestJSON = data.request;
 
+  console.log(requestJSON);
+
   if (
     requestJSON.range === undefined ||
     requestJSON.id === undefined
@@ -95,7 +97,7 @@ admin.post("/a/federate", async function (ctx: Context) {
       if (requestJSON.range === "User") {
         instances.blocked.push(u.href);
       } else {
-        instances.blocked.push(u.origin);
+        instances.blocked.push(u.host);
       }
 
       // We don't need the formatting, but we'll do it anyways.
