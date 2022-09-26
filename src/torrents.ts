@@ -99,8 +99,6 @@ torrents.post("/t", async function (ctx) {
     return throwAPIError(ctx, "Invalid activity type", 400);
   }
 
-  console.log(validMagnet);
-
   if (!validMagnet(requestJSON.href)) {
     return throwAPIError(ctx, "Bad magnet link.", 400);
   }

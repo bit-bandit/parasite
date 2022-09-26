@@ -64,8 +64,6 @@ admin.post("/a/federate", async function (ctx: Context) {
   const data = await authData(ctx);
   const requestJSON = data.request;
 
-  console.log(requestJSON);
-
   if (
     requestJSON.range === undefined ||
     requestJSON.id === undefined
