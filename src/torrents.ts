@@ -447,9 +447,12 @@ torrents.post("/t/:id", async function (ctx) {
         !userRole.editUploads
       ) {
         return throwAPIError(ctx, "Not allowed to edit torrent", 400);
-      } else if (!validMagnet(requestJSON.href)) {
+      }
+
+      if (requestJSON.href && !validMagnet(requestJSON.href)) {
         return throwAPIError(ctx, "Bad magnet link.", 400);
       }
+
       const tag: string[] = [];
 
       if (requestJSON.tags) {

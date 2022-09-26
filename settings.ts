@@ -2,7 +2,7 @@
 import instances from "./federation.json" assert { type: "json" };
 
 export const settings = {
-  "siteURL": "http://localhost:8080",
+  "siteURL": "http://localhost:8000",
   "sitePort": 8080,
   "frontendURL": "http://localhost:8000",
   "defaultRole": "User",
