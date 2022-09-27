@@ -115,7 +115,10 @@ users.post("/u/:id/outbox", async function (ctx) {
   const follows = await getUActivity(ctx.params.id, "followers");
   const req = await raw.value;
 
-  const foreignActorInfo = await (await fetch(req.actor)).json();
+  const foreignActorInfo = await (await fetch(req.actor, {
+    headers: { "Accept": "application/activity+json" },
+  })).json();
+
   const foreignKey = await extractKey(
     "public",
     foreignActorInfo.publicKey.publicKeyPem,
