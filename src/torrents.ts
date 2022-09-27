@@ -210,7 +210,6 @@ torrents.post("/t", async function (ctx) {
       const actInfo = await fetch(follower, {
         headers: {
           "Accept": "application/activity+json",
-          "Content-Type": "application/activity+json",
         },
         method: "GET",
       });
@@ -265,7 +264,9 @@ torrents.post("/t/:id", async function (ctx) {
   switch (requestJSON.type) {
     // Voting
     case "Like": {
-      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignActorInfo = await (await fetch(requestJSON.actor, {
+        headers: { "Accept": "application/activity+json" },
+      })).json();
       const foreignKey = await extractKey(
         "public",
         foreignActorInfo.publicKey.publicKeyPem,
@@ -326,7 +327,9 @@ torrents.post("/t/:id", async function (ctx) {
       const externalActorURL = new URL(requestJSON.actor);
       checkInstanceBlocked(externalActorURL.host, ctx);
 
-      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignActorInfo = await (await fetch(requestJSON.actor, {
+        headers: { "Accept": "application/activity+json" },
+      })).json();
       const foreignKey = await extractKey(
         "public",
         foreignActorInfo.publicKey.publicKeyPem,
@@ -384,7 +387,9 @@ torrents.post("/t/:id", async function (ctx) {
       const externalActorURL = new URL(requestJSON.actor);
       checkInstanceBlocked(externalActorURL.host, ctx);
 
-      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignActorInfo = await (await fetch(requestJSON.actor, {
+        headers: { "Accept": "application/activity+json" },
+      })).json();
       const foreignKey = await extractKey(
         "public",
         foreignActorInfo.publicKey.publicKeyPem,
@@ -524,7 +529,9 @@ torrents.post("/t/:id", async function (ctx) {
       break;
     }
     case "Undo": {
-      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignActorInfo = await (await fetch(requestJSON.actor, {
+        headers: { "Accept": "application/activity+json" },
+      })).json();
       const foreignKey = await extractKey(
         "public",
         foreignActorInfo.publicKey.publicKeyPem,

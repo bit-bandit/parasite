@@ -205,12 +205,10 @@ actions.post("/x/undo", async function (ctx) {
   }
 
   // Send to object
-
   const d = new Date();
-
   const u = new URL(requestJSON.object);
   const time = d.toUTCString();
-  // Send to object in question
+
   const msg = genHTTPSigBoilerplate({
     "target": `post ${u.pathname}`,
     "host": u.host,
@@ -317,7 +315,6 @@ actions.post("/x/like", async function (ctx: Context) {
   userLikes.totalItems = userLikes.orderedItems.length;
 
   const d = new Date();
-
   const u = new URL(requestJSON.object);
   const time = d.toUTCString();
 
@@ -352,7 +349,11 @@ actions.post("/x/like", async function (ctx: Context) {
   const res = await sendToObject.json();
 
   if (res.err) {
-    return throwAPIError(ctx, res.msg, 400);
+    return throwAPIError(
+      ctx,
+      res.msg,
+      sendToObject.status,
+    );
   }
 
   await basicObjectUpdate("users", {

@@ -83,13 +83,17 @@ comments.post("/c/:id", async function (ctx) {
       const externalActorURL = new URL(requestJSON.actor);
       checkInstanceBlocked(externalActorURL.host, ctx);
 
-      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignActorInfo = await (await fetch(requestJSON.actor, {
+        headers: {
+          "Accept": "application/activity+json",
+        },
+      })).json();
       const foreignKey = await extractKey(
         "public",
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
+      const reqURL = new URL(requestJSON.object.inReplyTo);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${reqURL.pathname}`,
@@ -134,13 +138,17 @@ comments.post("/c/:id", async function (ctx) {
       const externalActorURL = new URL(requestJSON.actor);
       checkInstanceBlocked(externalActorURL.host, ctx);
 
-      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignActorInfo = await (await fetch(requestJSON.actor, {
+        headers: {
+          "Accept": "application/activity+json",
+        },
+      })).json();
       const foreignKey = await extractKey(
         "public",
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
+      const reqURL = new URL(requestJSON.object);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${reqURL.pathname}`,
@@ -193,13 +201,17 @@ comments.post("/c/:id", async function (ctx) {
       const externalActorURL = new URL(requestJSON.actor);
       checkInstanceBlocked(externalActorURL.host, ctx);
 
-      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignActorInfo = await (await fetch(requestJSON.actor, {
+        headers: {
+          "Accept": "application/activity+json",
+        },
+      })).json();
       const foreignKey = await extractKey(
         "public",
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
+      const reqURL = new URL(requestJSON.object);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${reqURL.pathname}`,
@@ -309,13 +321,17 @@ comments.post("/c/:id", async function (ctx) {
       const externalActorURL = new URL(requestJSON.actor);
       checkInstanceBlocked(externalActorURL.host, ctx);
 
-      const foreignActorInfo = await (await fetch(requestJSON.actor)).json();
+      const foreignActorInfo = await (await fetch(requestJSON.actor, {
+        headers: {
+          "Accept": "application/activity+json",
+        },
+      })).json();
       const foreignKey = await extractKey(
         "public",
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
+      const reqURL = new URL(requestJSON.object);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${reqURL.pathname}`,
