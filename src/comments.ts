@@ -270,7 +270,7 @@ comments.post("/c/:id", async function (ctx) {
         return throwAPIError(ctx, "Not allowed to edit comment", 400);
       }
 
-      if (requestJSON.content) {
+      if (requestJSON.content && requestJSON.content.length < 250) {
         json.content = marked.parse(requestJSON.content);
       }
 

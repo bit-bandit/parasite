@@ -94,6 +94,14 @@ lists.post("/l", async function (ctx) {
     return throwAPIError(ctx, "Invalid items.", 400);
   }
 
+  if (requestJSON.name.length > 21) {
+    return throwAPIError(ctx, "Title too long.", 400);
+  }
+
+  if (requestJSON.summary.length > 2500) {
+    return throwAPIError(ctx, "Summary too long.", 400);
+  }
+
   const info = await getUActivity(data.decoded.name, "info");
   const role = await getUActivity(data.decoded.name, "roles");
 
@@ -452,13 +460,13 @@ lists.post("/l/:id", async function (ctx) {
 
       // Everything here may seem extremely boilerplatey, but it's to prevent
       // people from adding bad values to a list.
-      if (requestJSON.name) {
+      if (requestJSON.name && requestJSON.name.length < 21) {
         json.name = requestJSON.name;
       }
-      if (requestJSON.summary) {
+      if (requestJSON.summary && requestJSON.summary.length < 2500) {
         json.summary = marked.parse(requestJSON.summary);
       }
-      if (requestJSON.orderedItems) {
+      if (requestJSON.orderedItems && Array.isArray(requestJSON.orderedItems)) {
         json.orderedItems = requestJSON.orderedItems;
       }
 

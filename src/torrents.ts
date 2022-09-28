@@ -103,6 +103,14 @@ torrents.post("/t", async function (ctx) {
     return throwAPIError(ctx, "Bad magnet link.", 400);
   }
 
+  if (requestJSON.name.length > 21) {
+    return throwAPIError(ctx, "Title too long.", 400);
+  }
+
+  if (requestJSON.content.length > 2500) {
+    return throwAPIError(ctx, "Description too long.", 400);
+  }
+
   const info = await getUActivity(data.decoded.name, "info");
   const role = await getUActivity(data.decoded.name, "roles");
 
@@ -471,15 +479,13 @@ torrents.post("/t/:id", async function (ctx) {
         json.tag = tag;
       }
 
-      // Everything here may seem extremely boilerplatey, but it's to prevent
-      // people from adding bad values to a torrent.
-      if (requestJSON.name) {
+      if (requestJSON.name && requestJSON.name.length < 21) {
         json.name = requestJSON.name;
       }
-      if (requestJSON.content) {
+      if (requestJSON.content && requestJSON.content < 2500) {
         json.content = marked.parse(requestJSON.content);
       }
-      if (requestJSON.href) {
+      if (requestJSON.href && validMagnet(requestJSON.href)) {
         json.href = requestJSON.href;
       }
 

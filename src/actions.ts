@@ -479,6 +479,14 @@ actions.post("/x/comment", async function (ctx: Context) {
     );
   }
 
+  if (requestJSON.content.length > 250) {
+    return throwAPIError(
+      ctx,
+      "Comment body too long",
+      400,
+    );
+  }
+
   const externalActorURL = new URL(requestJSON.inReplyTo);
   checkInstanceBlocked(externalActorURL.host, ctx);
 
