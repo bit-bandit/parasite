@@ -40,6 +40,7 @@ Deno.test("Upload Torrent", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify(torrentData),
   });
@@ -52,14 +53,22 @@ Deno.test("Upload Torrent", async () => {
 });
 
 Deno.test("Get torrent", async () => {
-  const r = await fetch(torrentURL);
+  const r = await fetch(torrentURL, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   await r.json();
 
   assertEquals(r.status, 200);
 });
 
 Deno.test("Attempt to get nonexistent torrent", async () => {
-  const res = await fetch("http://localhost:8080/t/nonexistent");
+  const res = await fetch("http://localhost:8080/t/nonexistent", {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   const json = await res.json();
   assertEquals(json.err, true);
 });
@@ -70,6 +79,7 @@ Deno.test("Update Torrent", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Update",
@@ -86,6 +96,7 @@ Deno.test("Comment on Torrent", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Create",
@@ -98,11 +109,23 @@ Deno.test("Comment on Torrent", async () => {
 });
 
 Deno.test("Reply to Torrent Comment", async () => {
-  let r = await fetch(torrentURL);
+  let r = await fetch(torrentURL, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   let res = await r.json();
-  r = await fetch(res.replies);
+  r = await fetch(res.replies, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
-  r = await fetch(res.orderedItems[0]);
+  r = await fetch(res.orderedItems[0], {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
 
   const req = await fetch("http://localhost:8080/x/comment", {
@@ -110,6 +133,7 @@ Deno.test("Reply to Torrent Comment", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Create",
@@ -119,17 +143,33 @@ Deno.test("Reply to Torrent Comment", async () => {
   });
   await req.json();
 
-  r = await fetch(res.replies);
+  r = await fetch(res.replies, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
   assertNotEquals(res.totalItems, 0);
 });
 
 Deno.test("Like Comment", async () => {
-  let r = await fetch(torrentURL);
+  let r = await fetch(torrentURL, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   let res = await r.json();
-  r = await fetch(res.replies);
+  r = await fetch(res.replies, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
-  r = await fetch(res.orderedItems[0]);
+  r = await fetch(res.orderedItems[0], {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
 
   const req = await fetch("http://localhost:8080/x/like", {
@@ -145,7 +185,11 @@ Deno.test("Like Comment", async () => {
   });
   await req.json();
 
-  r = await fetch(res.replies);
+  r = await fetch(res.replies, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
   assertNotEquals(res.totalItems, 0);
 });
@@ -156,6 +200,7 @@ Deno.test("Like Torrent", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Like",
@@ -173,6 +218,7 @@ Deno.test("Flag Torrent", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Flag",
@@ -189,6 +235,7 @@ Deno.test("Try to like Torrent twice", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Like",
@@ -206,6 +253,7 @@ Deno.test("Dislike Torrent", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Dislike",
@@ -222,6 +270,7 @@ Deno.test("Try to dislike Torrent twice", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Dislike",
@@ -239,6 +288,7 @@ Deno.test("Try to undo Torrent activities", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Undo",
@@ -255,6 +305,7 @@ Deno.test("Try to undo nonexistent Torrent activities", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Undo",
@@ -272,6 +323,7 @@ Deno.test("Delete Torrent", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Delete",
@@ -283,7 +335,11 @@ Deno.test("Delete Torrent", async () => {
 });
 
 Deno.test("Try to get deleted torrent", async () => {
-  const r = await fetch(torrentURL);
+  const r = await fetch(torrentURL, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   await r.json();
 
   assertEquals(r.status, 404);

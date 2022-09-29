@@ -77,7 +77,11 @@ Deno.test("Upload List", async () => {
 });
 
 Deno.test("Get List", async () => {
-  const r = await fetch(listURL);
+  const r = await fetch(listURL, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   // Have to declare this to prevent resource leaking
   await r.json();
 
@@ -85,7 +89,11 @@ Deno.test("Get List", async () => {
 });
 
 Deno.test("Attempt to get nonexistent List", async () => {
-  const res = await fetch("http://localhost:8080/l/nonexistent");
+  const res = await fetch("http://localhost:8080/l/nonexistent", {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   const json = await res.json();
   assertEquals(json.err, true);
 });
@@ -96,6 +104,7 @@ Deno.test("Update list", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Update",
@@ -113,6 +122,7 @@ Deno.test("Comment on list", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Create",
@@ -126,11 +136,23 @@ Deno.test("Comment on list", async () => {
 });
 
 Deno.test("Reply to list Comment", async () => {
-  let r = await fetch(listURL);
+  let r = await fetch(listURL, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   let res = await r.json();
-  r = await fetch(res.replies);
+  r = await fetch(res.replies, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
-  r = await fetch(res.orderedItems[0]);
+  r = await fetch(res.orderedItems[0], {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
 
   const req = await fetch("http://localhost:8080/x/comment", {
@@ -138,6 +160,7 @@ Deno.test("Reply to list Comment", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Create",
@@ -153,11 +176,23 @@ Deno.test("Reply to list Comment", async () => {
 });
 
 Deno.test("Like Comment", async () => {
-  let r = await fetch(listURL);
+  let r = await fetch(listURL, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   let res = await r.json();
-  r = await fetch(res.replies);
+  r = await fetch(res.replies, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
-  r = await fetch(res.orderedItems[0]);
+  r = await fetch(res.orderedItems[0], {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
 
   const req = await fetch("http://localhost:8080/x/like", {
@@ -165,6 +200,7 @@ Deno.test("Like Comment", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Like",
@@ -173,7 +209,11 @@ Deno.test("Like Comment", async () => {
   });
   await req.json();
 
-  r = await fetch(res.replies);
+  r = await fetch(res.replies, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   res = await r.json();
   assertNotEquals(res.totalItems, 0);
 });
@@ -184,6 +224,7 @@ Deno.test("Like List", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Like",
@@ -201,6 +242,7 @@ Deno.test("Flag list", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Flag",
@@ -217,6 +259,7 @@ Deno.test("Try to like list twice", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Like",
@@ -234,6 +277,7 @@ Deno.test("Dislike list", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Dislike",
@@ -251,6 +295,7 @@ Deno.test("Try to dislike list twice", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
       "type": "Dislike",
@@ -279,7 +324,11 @@ Deno.test("Delete List", async () => {
 });
 
 Deno.test("Try to get deleted list", async () => {
-  const r = await fetch(listURL);
+  const r = await fetch(listURL, {
+    headers: {
+      "Accept": "application/activity+json",
+    },
+  });
   await r.json();
 
   assertEquals(r.status, 404);
