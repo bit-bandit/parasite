@@ -94,11 +94,11 @@ lists.post("/l", async function (ctx) {
     return throwAPIError(ctx, "Invalid items.", 400);
   }
 
-  if (requestJSON.name.length > 21) {
+  if (requestJSON.name.length > settings.limits.maxTitleLength) {
     return throwAPIError(ctx, "Title too long.", 400);
   }
 
-  if (requestJSON.summary.length > 2500) {
+  if (requestJSON.summary.length > settings.limits.maxContentLength) {
     return throwAPIError(ctx, "Summary too long.", 400);
   }
 
@@ -257,9 +257,6 @@ lists.post("/l/:id", async function (ctx) {
 
   switch (requestJSON.type) {
     case "Like": {
-      const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host, ctx);
-
       const foreignActorInfo = await (await fetch(requestJSON.actor, {
         headers: { "Accept": "application/activity+json" },
       })).json();
@@ -268,11 +265,13 @@ lists.post("/l/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
+      const externalActorURL = new URL(requestJSON.actor);
+
+      checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
-        "target": `post ${reqURL.pathname}`,
-        "host": reqURL.host,
+        "target": `post ${new URL(requestJSON.object).pathname}`,
+        "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
       });
 
@@ -316,9 +315,6 @@ lists.post("/l/:id", async function (ctx) {
       break;
     }
     case "Dislike": {
-      const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host, ctx);
-
       const foreignActorInfo = await (await fetch(requestJSON.actor, {
         headers: { "Accept": "application/activity+json" },
       })).json();
@@ -327,11 +323,13 @@ lists.post("/l/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
+      const externalActorURL = new URL(requestJSON.actor);
+
+      checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
-        "target": `post ${reqURL.pathname}`,
-        "host": reqURL.host,
+        "target": `post ${new URL(requestJSON.object).pathname}`,
+        "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
       });
 
@@ -375,9 +373,6 @@ lists.post("/l/:id", async function (ctx) {
     }
     // Adding a comment.
     case "Create": {
-      const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host, ctx);
-
       const foreignActorInfo = await (await fetch(requestJSON.actor, {
         headers: { "Accept": "application/activity+json" },
       })).json();
@@ -386,11 +381,12 @@ lists.post("/l/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
+      const externalActorURL = new URL(requestJSON.actor);
+      checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
-        "target": `post ${reqURL.pathname}`,
-        "host": reqURL.host,
+        "target": `post ${new URL(requestJSON.object.inReplyTo).pathname}`,
+        "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
       });
 
@@ -460,10 +456,16 @@ lists.post("/l/:id", async function (ctx) {
 
       // Everything here may seem extremely boilerplatey, but it's to prevent
       // people from adding bad values to a list.
-      if (requestJSON.name && requestJSON.name.length < 21) {
+      if (
+        requestJSON.name &&
+        requestJSON.name.length <= settings.limits.maxTitleLength
+      ) {
         json.name = requestJSON.name;
       }
-      if (requestJSON.summary && requestJSON.summary.length < 2500) {
+      if (
+        requestJSON.summary &&
+        requestJSON.summary.length <= settings.limits.maxContentLength
+      ) {
         json.summary = marked.parse(requestJSON.summary);
       }
       if (requestJSON.orderedItems && Array.isArray(requestJSON.orderedItems)) {
@@ -524,11 +526,13 @@ lists.post("/l/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
+      const externalActorURL = new URL(requestJSON.actor);
+
+      checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
-        "target": `post ${reqURL.pathname}`,
-        "host": reqURL.host,
+        "target": `post ${new URL(requestJSON.object).pathname}`,
+        "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
       });
 

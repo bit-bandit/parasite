@@ -479,7 +479,7 @@ actions.post("/x/comment", async function (ctx: Context) {
     );
   }
 
-  if (requestJSON.content.length > 250) {
+  if (requestJSON.content.length > settings.limits.maxCommentLength) {
     return throwAPIError(
       ctx,
       "Comment body too long",

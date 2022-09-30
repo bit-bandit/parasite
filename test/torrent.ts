@@ -58,8 +58,7 @@ Deno.test("Get torrent", async () => {
       "Accept": "application/activity+json",
     },
   });
-  await r.json();
-
+  const k = await r.json();
   assertEquals(r.status, 200);
 });
 

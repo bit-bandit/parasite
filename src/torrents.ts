@@ -103,11 +103,11 @@ torrents.post("/t", async function (ctx) {
     return throwAPIError(ctx, "Bad magnet link.", 400);
   }
 
-  if (requestJSON.name.length > 21) {
+  if (requestJSON.name.length > settings.limits.maxTitleLength) {
     return throwAPIError(ctx, "Title too long.", 400);
   }
 
-  if (requestJSON.content.length > 2500) {
+  if (requestJSON.content.length > settings.limits.maxContentLength) {
     return throwAPIError(ctx, "Description too long.", 400);
   }
 
@@ -281,13 +281,12 @@ torrents.post("/t/:id", async function (ctx) {
       );
 
       const externalActorURL = new URL(requestJSON.actor);
-      const reqURL = new URL(ctx.request.url);
 
       checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
-        "target": `post ${reqURL.pathname}`,
-        "host": reqURL.host,
+        "target": `post ${new URL(requestJSON.object).pathname}`,
+        "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
       });
 
@@ -332,9 +331,6 @@ torrents.post("/t/:id", async function (ctx) {
     }
 
     case "Dislike": {
-      const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host, ctx);
-
       const foreignActorInfo = await (await fetch(requestJSON.actor, {
         headers: { "Accept": "application/activity+json" },
       })).json();
@@ -343,11 +339,13 @@ torrents.post("/t/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
+      const externalActorURL = new URL(requestJSON.actor);
+
+      checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
-        "target": `post ${reqURL.pathname}`,
-        "host": reqURL.host,
+        "target": `post ${new URL(requestJSON.object).pathname}`,
+        "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
       });
 
@@ -398,16 +396,15 @@ torrents.post("/t/:id", async function (ctx) {
       const foreignActorInfo = await (await fetch(requestJSON.actor, {
         headers: { "Accept": "application/activity+json" },
       })).json();
+
       const foreignKey = await extractKey(
         "public",
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
-
       const msg = genHTTPSigBoilerplate({
-        "target": `post ${reqURL.pathname}`,
-        "host": reqURL.host,
+        "target": `post ${new URL(requestJSON.object.inReplyTo).pathname}`,
+        "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
       });
 
@@ -479,10 +476,16 @@ torrents.post("/t/:id", async function (ctx) {
         json.tag = tag;
       }
 
-      if (requestJSON.name && requestJSON.name.length < 21) {
+      if (
+        requestJSON.name &&
+        requestJSON.name.length <= settings.limits.maxTitleLength
+      ) {
         json.name = requestJSON.name;
       }
-      if (requestJSON.content && requestJSON.content < 2500) {
+      if (
+        requestJSON.content &&
+        requestJSON.content <= settings.limits.maxContentLength
+      ) {
         json.content = marked.parse(requestJSON.content);
       }
       if (requestJSON.href && validMagnet(requestJSON.href)) {
@@ -543,11 +546,13 @@ torrents.post("/t/:id", async function (ctx) {
         foreignActorInfo.publicKey.publicKeyPem,
       );
 
-      const reqURL = new URL(ctx.request.url);
+      const externalActorURL = new URL(requestJSON.actor);
+
+      checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
-        "target": `post ${reqURL.pathname}`,
-        "host": reqURL.host,
+        "target": `post ${new URL(requestJSON.object).pathname}`,
+        "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
       });
 

@@ -168,11 +168,9 @@ Deno.test("Reply to list Comment", async () => {
       "inReplyTo": res.id,
     }),
   });
-  await req.json();
 
-  r = await fetch(res.replies);
-  res = await r.json();
-  assertNotEquals(res.totalItems, 0);
+  res = await req.json();
+  assertNotEquals(res.err, true);
 });
 
 Deno.test("Like Comment", async () => {
@@ -313,9 +311,10 @@ Deno.test("Delete List", async () => {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
+      "Accept": "application/activity+json",
     },
     body: JSON.stringify({
-      "type": "Delete",
+      "type": "Remove",
     }),
   });
 
@@ -329,7 +328,6 @@ Deno.test("Try to get deleted list", async () => {
       "Accept": "application/activity+json",
     },
   });
-  await r.json();
-
+  const k = await r.json();
   assertEquals(r.status, 404);
 });
