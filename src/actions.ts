@@ -211,7 +211,7 @@ actions.post("/x/undo", async function (ctx) {
 
   const msg = genHTTPSigBoilerplate({
     "target": `post ${u.pathname}`,
-    "host": u.host,
+    "host": new URL(userActivity.id).host,
     "date": time,
   });
 
@@ -320,7 +320,7 @@ actions.post("/x/like", async function (ctx: Context) {
 
   const msg = genHTTPSigBoilerplate({
     "target": `post ${u.pathname}`,
-    "host": u.host,
+    "host": new URL(userActivity.id).host,
     "date": time,
   });
 
@@ -423,7 +423,7 @@ actions.post("/x/dislike", async function (ctx: Context) {
 
   const msg = genHTTPSigBoilerplate({
     "target": `post ${u.pathname}`,
-    "host": u.host,
+    "host": new URL(userActivity.id).host,
     "date": time,
   });
 
@@ -616,7 +616,7 @@ actions.post("/x/comment", async function (ctx: Context) {
 
   const msg = genHTTPSigBoilerplate({
     "target": `post ${u.pathname}`,
-    "host": u.host,
+    "host": new URL(userActivity.id).host,
     "date": time,
   });
 
