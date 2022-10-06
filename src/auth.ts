@@ -17,6 +17,11 @@ import { genKeyPair, getJWTKey } from "./crypto.ts";
 // 1. Functions used to validate users within the system.
 // 2. Routing for letting users register, or log into accounts.
 
+/**
+ * Validate user provided is same as in token.
+ * @param user Provided username.
+ * @param token JWT Token provided by request.
+ */
 export async function isValid(user: string, token: string) {
   try {
     const payload = await verify(token, await getJWTKey());
@@ -81,12 +86,6 @@ auth.post("/login", async function (ctx) {
 
 auth.post("/register", async function (ctx) {
   // Create new user.
-  // When creating, use the resources in `static/defs/`.
-  // Make subdirectory in `static/u/` named after the user ID, with the the
-  // following files:
-  // - avatar.png
-  // - banner.png
-  // These can be updated in the future. (See POST /u/:id)
   if (!ctx.request.hasBody) {
     return throwAPIError(ctx, "No body provided", 404);
   }
