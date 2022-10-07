@@ -12,9 +12,9 @@ export interface SearchQuery {
 }
 
 function parseRange(s: string) {
-  let d = Date.now();
-  let n = parseInt(s.split(/[a-z]/)[0]);
-  let t = s.split("").pop();
+  const d = Date.now();
+  const n = parseInt(s.split(/[a-z]/)[0]);
+  const t = s.split("").pop();
 
   // Time units
   const timeU = {
@@ -132,6 +132,16 @@ search.get("/s", async function (ctx) {
     const r = searchParams.get("r");
     const range = parseRange(r);
     ordColl.orderedItems.filter((x) => new Date(x.published).getTime() > range);
+  }
+
+  if (searchParams.has("s")) {
+    const s = searchParams.get("s");
+    if (s === "new") {
+      ordColl.orderedItems.sort((a, b) =>
+        new Date(b.published).getTime() - new Date(a.published).getTime()
+      );
+    }
+    // TODO: Impliment `top` option
   }
 
   ctx.response.body = ordColl;

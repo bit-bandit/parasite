@@ -1,4 +1,4 @@
-// Database queries and related functions.
+1; // Database queries and related functions.
 
 import { Client } from "https://deno.land/x/postgres@v0.16.1/mod.ts";
 import Fuse from "https://deno.land/x/fuse@v6.4.1/dist/fuse.esm.min.js";
@@ -611,7 +611,7 @@ export async function search(url) {
     }
   }
   // Filter strings and sort
-  if (query && query.length !== 0) {
+  if (query && query.length) {
     const fuse = new Fuse(foundObjs, fuseOptions);
     foundObjs = fuse.search(query);
   }
