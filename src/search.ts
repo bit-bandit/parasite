@@ -36,6 +36,7 @@ function searchTokenize(packet): SearchQuery {
   const text: string[] = [];
   const users: string[] = [];
   const tags: string[] = [];
+  let range = "";
 
   for (const token of packet.split(" ")) {
     switch (token[0]) {
@@ -49,6 +50,11 @@ function searchTokenize(packet): SearchQuery {
         tags.push(token.slice(1));
         break;
       }
+      case "^":
+      case "r:": {
+        range = token.slice(1);
+        break;
+      }
       default: {
         text.push(token);
         break;
@@ -59,6 +65,7 @@ function searchTokenize(packet): SearchQuery {
     "tags": tags,
     "text": text,
     "users": users,
+    "range": range,
   };
 }
 
@@ -73,12 +80,15 @@ search.get("/s", async function (ctx) {
   // Tokenize the query if it exists. (Empty string produces empty tokens obj)
   const tokens = searchTokenize(searchParams.get("q") ?? "");
 
-  // Add existing tags and users
+  // Add existing tags, users, and range.
   if (searchParams.has("i")) {
     tokens.tags.unshift(...searchParams.get("i").split(" "));
   }
   if (searchParams.has("u")) {
     tokens.users.unshift(...searchParams.get("u").split(" "));
+  }
+  if (searchParams.has("r")) {
+    tokens.range = searchParams.get("r");
   }
 
   const parsedURL = new URL("/s", settings.siteURL);
@@ -91,6 +101,9 @@ search.get("/s", async function (ctx) {
   }
   if (tokens.users) {
     parsedURL.searchParams.append("u", tokens.users.join("+"));
+  }
+  if (tokens.range) {
+    parsedURL.searchParams.append("r", tokens.range);
   }
 
   const res = await searchDB(parsedURL);
@@ -110,7 +123,9 @@ search.get("/s", async function (ctx) {
   }
 
   for (let i = 0; i < ordColl.orderedItems.length; i++) {
-    ordColl.orderedItems[i] = ordColl.orderedItems[i].item;
+    if (ordColl.orderedItems[i].item) {
+      ordColl.orderedItems[i] = ordColl.orderedItems[i].item;
+    }
   }
 
   if (searchParams.has("r")) {

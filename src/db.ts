@@ -522,11 +522,13 @@ export async function search(url) {
   const users = searchParams.get("u");
   const tags = searchParams.get("i");
   const query = searchParams.get("q");
+  const range = searchParams.get("r");
 
   if (
     (!users || !users.length) &&
     (!tags || !tags.length) &&
-    (!query || !query.length)
+    (!query || !query.length) &&
+    !range
   ) {
     return [];
   }
@@ -609,7 +611,7 @@ export async function search(url) {
     }
   }
   // Filter strings and sort
-  if (query && query.length) {
+  if (query && query.length !== 0) {
     const fuse = new Fuse(foundObjs, fuseOptions);
     foundObjs = fuse.search(query);
   }
