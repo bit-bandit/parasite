@@ -11,6 +11,26 @@ export interface SearchQuery {
   users: string[];
 }
 
+function parseRange(s: string) {
+  let d = Date.now();
+  let n = parseInt(s.split(/[a-z]/)[0]);
+  let t = s.split("").pop();
+
+  // Time units
+  const timeU = {
+    "d": 86400000, // Days
+    "w": 604800000, // Weeks
+    "m": 2628002000, // Months
+    "y": 31536024000, // Yeats
+  };
+
+  if (!timeU[t]) {
+    return 0;
+  }
+
+  return d - n * timeU[t];
+}
+
 function searchTokenize(packet): SearchQuery {
   // Variables
   const text: string[] = [];
@@ -86,7 +106,17 @@ search.get("/s", async function (ctx) {
       },
     });
     f = await f.json();
-    ordColl.push(...f.orderedItems);
+    ordColl.orderedItems.push(...f.orderedItems);
+  }
+
+  for (let i = 0; i < ordColl.orderedItems.length; i++) {
+    ordColl.orderedItems[i] = ordColl.orderedItems[i].item;
+  }
+
+  if (searchParams.has("r")) {
+    const r = searchParams.get("r");
+    const range = parseRange(r);
+    ordColl.orderedItems.filter((x) => new Date(x.published).getTime() > range);
   }
 
   ctx.response.body = ordColl;
