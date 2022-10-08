@@ -11,6 +11,44 @@ export interface SearchQuery {
   users: string[];
 }
 
+// Primary algorithm for likes/dislikes results.
+async function voteRank(arr: unknown[]) {
+  // TODO: Tidying.
+
+  for (let i = 0; i < arr.length; i++) {
+    const likes = await fetch(`${arr[i].id}/likes`, {
+      headers: {
+        "Accept": "application/activity+json",
+      },
+    });
+
+    arr[i].likes = (await likes.json()).orderedItems.length;
+
+    const dislikes = await fetch(`${arr[i].id}/dislikes`, {
+      headers: {
+        "Accept": "application/activity+json",
+      },
+    });
+
+    arr[i].dislikes = (await dislikes.json()).orderedItems.length;
+  }
+
+  arr.sort((a, b) =>
+    (b.likes ** 2 - b.dislikes ** 2) - (a.likes ** 2 - a.dislikes ** 2)
+  );
+
+  for (let i = 0; i < arr.length; i++) {
+    delete arr[i].likes;
+    delete arr[i].dislikes;
+  }
+
+  return arr;
+}
+
+/**
+ * Parse a date range.
+ * @param s range string: `/\d[dmwy]/`
+ */
 function parseRange(s: string) {
   const d = Date.now();
   const n = parseInt(s.split(/[a-z]/)[0]);
@@ -37,6 +75,7 @@ function searchTokenize(packet): SearchQuery {
   const users: string[] = [];
   const tags: string[] = [];
   let range = "";
+  let sort = "";
 
   for (const token of packet.split(" ")) {
     switch (token[0]) {
@@ -55,6 +94,10 @@ function searchTokenize(packet): SearchQuery {
         range = token.slice(1);
         break;
       }
+      case "!": {
+        sort = token.slice(1);
+        break;
+      }
       default: {
         text.push(token);
         break;
@@ -66,6 +109,7 @@ function searchTokenize(packet): SearchQuery {
     "text": text,
     "users": users,
     "range": range,
+    "sort": sort,
   };
 }
 
@@ -80,7 +124,7 @@ search.get("/s", async function (ctx) {
   // Tokenize the query if it exists. (Empty string produces empty tokens obj)
   const tokens = searchTokenize(searchParams.get("q") ?? "");
 
-  // Add existing tags, users, and range.
+  // Add existing tags, users, ranges, and sorting type.
   if (searchParams.has("i")) {
     tokens.tags.unshift(...searchParams.get("i").split(" "));
   }
@@ -89,6 +133,9 @@ search.get("/s", async function (ctx) {
   }
   if (searchParams.has("r")) {
     tokens.range = searchParams.get("r");
+  }
+  if (searchParams.has("s")) {
+    tokens.sort = searchParams.get("s");
   }
 
   const parsedURL = new URL("/s", settings.siteURL);
@@ -104,6 +151,9 @@ search.get("/s", async function (ctx) {
   }
   if (tokens.range) {
     parsedURL.searchParams.append("r", tokens.range);
+  }
+  if (tokens.sort) {
+    parsedURL.searchParams.append("s", tokens.sort);
   }
 
   const res = await searchDB(parsedURL);
@@ -141,7 +191,9 @@ search.get("/s", async function (ctx) {
         new Date(b.published).getTime() - new Date(a.published).getTime()
       );
     }
-    // TODO: Impliment `top` option
+    if (s === "top") {
+      ordColl.orderedItems = await voteRank(ordColl.orderedItems);
+    }
   }
 
   ctx.response.body = ordColl;
