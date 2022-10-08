@@ -178,14 +178,14 @@ search.get("/s", async function (ctx) {
     }
   }
 
-  if (searchParams.has("r")) {
-    const r = searchParams.get("r");
+  if (searchParams.has("r") || tokens.range) {
+    const r = searchParams.get("r") ?? tokens.range;
     const range = parseRange(r);
     ordColl.orderedItems.filter((x) => new Date(x.published).getTime() > range);
   }
 
-  if (searchParams.has("s")) {
-    const s = searchParams.get("s");
+  if (searchParams.has("s") || tokens.sort) {
+    const s = searchParams.get("s") ?? tokens.sort;
     if (s === "new") {
       ordColl.orderedItems.sort((a, b) =>
         new Date(b.published).getTime() - new Date(a.published).getTime()
