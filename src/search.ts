@@ -9,6 +9,9 @@ export interface SearchQuery {
   tags: string[];
   text: string[];
   users: string[];
+  range: string;
+  sort: string;
+  misc: string[];
 }
 
 // Primary algorithm for likes/dislikes results.
@@ -47,12 +50,10 @@ async function voteRank(arr: unknown[]) {
 
 /**
  * Parse a date range.
- * @param s range string: `/\d[dmwy]/`
+s * @param s range string: `/^\d*[dmwy]$/m`, or: `/^\d*[dmwy]-\d*[dmwy]$/m`
  */
 function parseRange(s: string) {
   const d = Date.now();
-  const n = parseInt(s.split(/[a-z]/)[0]);
-  const t = s.split("").pop();
 
   // Time units
   const timeU = {
@@ -62,6 +63,33 @@ function parseRange(s: string) {
     "y": 31536024000, // Yeats
   };
 
+  if (/^\d*[dmwy]-\d*[dmwy]$/m.test(s)) {
+    let [range1, range2] = s.split("-");
+    // Formats
+    const r1f = /(\d*)([dwmy])/.exec([range1])[2];
+    const r2f = /(\d*)([dwmy])/.exec([range2])[2];
+    // Numbers
+    const r1n = parseInt(/(\d*)([dwmy])/.exec([range1])[1]);
+    const r2n = parseInt(/(\d*)([dwmy])/.exec([range2])[1]);
+
+    if (!timeU[r1f] || !timeU[r2f]) {
+      return 0;
+    }
+
+    range1 = d - (r1n * timeU[r1f]);
+    range2 = d - (r2n * timeU[r2f]);
+
+    // Ensure that the larger value will always be [0]
+    if (range2 > range1) {
+      return [range2, range1];
+    }
+    return [range1, range2];
+  }
+
+  const n = parseInt(s.split(/[a-z]/)[0]);
+  const t = s.split("").pop();
+
+  // Time units
   if (!timeU[t]) {
     return 0;
   }
@@ -76,6 +104,7 @@ function searchTokenize(packet): SearchQuery {
   const tags: string[] = [];
   let range = "";
   let sort = "";
+  const misc: string[] = [];
 
   for (const token of packet.split(" ")) {
     switch (token[0]) {
@@ -98,6 +127,10 @@ function searchTokenize(packet): SearchQuery {
         sort = token.slice(1);
         break;
       }
+      case "&": {
+        misc.push(token.slice(1));
+        break;
+      }
       default: {
         text.push(token);
         break;
@@ -110,6 +143,7 @@ function searchTokenize(packet): SearchQuery {
     "users": users,
     "range": range,
     "sort": sort,
+    "misc": misc,
   };
 }
 
@@ -137,6 +171,9 @@ search.get("/s", async function (ctx) {
   if (searchParams.has("s")) {
     tokens.sort = searchParams.get("s");
   }
+  if (searchParams.has("m")) {
+    tokens.misc.unshift(...searchParams.get("m").split(" "));
+  }
 
   const parsedURL = new URL("/s", settings.siteURL);
 
@@ -155,6 +192,9 @@ search.get("/s", async function (ctx) {
   if (tokens.sort) {
     parsedURL.searchParams.append("s", tokens.sort);
   }
+  if (tokens.misc) {
+    parsedURL.searchParams.append("m", tokens.misc.join("+"));
+  }
 
   const res = await searchDB(parsedURL);
 
@@ -162,14 +202,16 @@ search.get("/s", async function (ctx) {
     summary: "Search results",
   });
 
-  for (const pooled of settings.federationParams.pooled) {
-    let f = await fetch(pooled, {
-      headers: {
-        "Accept": "application/activity+json",
-      },
-    });
-    f = await f.json();
-    ordColl.orderedItems.push(...f.orderedItems);
+  if (tokens.misc.has("local")) {
+    for (const pooled of settings.federationParams.pooled) {
+      let f = await fetch(pooled, {
+        headers: {
+          "Accept": "application/activity+json",
+        },
+      });
+      f = await f.json();
+      ordColl.orderedItems.push(...f.orderedItems);
+    }
   }
 
   for (let i = 0; i < ordColl.orderedItems.length; i++) {
@@ -181,7 +223,16 @@ search.get("/s", async function (ctx) {
   if (searchParams.has("r") || tokens.range) {
     const r = searchParams.get("r") ?? tokens.range;
     const range = parseRange(r);
-    ordColl.orderedItems.filter((x) => new Date(x.published).getTime() > range);
+    if (Array.isArray(range)) {
+      ordColl.orderedItems.filter((x) =>
+        new Date(x.published).getTime() > range[1] &&
+        new Date(x.published).getTime() < range[0]
+      );
+    } else {
+      ordColl.orderedItems.filter((x) =>
+        new Date(x.published).getTime() > range
+      );
+    }
   }
 
   if (searchParams.has("s") || tokens.sort) {
@@ -194,6 +245,10 @@ search.get("/s", async function (ctx) {
     if (s === "top") {
       ordColl.orderedItems = await voteRank(ordColl.orderedItems);
     }
+  }
+
+  if (tokens.misc.has("reverse")) {
+    ordColl.orderedItems.reverse();
   }
 
   ctx.response.body = ordColl;
