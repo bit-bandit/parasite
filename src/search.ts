@@ -202,7 +202,7 @@ search.get("/s", async function (ctx) {
     summary: "Search results",
   });
 
-  if (tokens.misc.has("local")) {
+  if (!tokens.misc.has("local")) {
     for (const pooled of settings.federationParams.pooled) {
       let f = await fetch(pooled, {
         headers: {
