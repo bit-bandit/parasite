@@ -202,7 +202,7 @@ search.get("/s", async function (ctx) {
     summary: "Search results",
   });
 
-  if (!tokens.misc.has("local")) {
+  if (!tokens.misc.includes("local")) {
     for (const pooled of settings.federationParams.pooled) {
       let f = await fetch(pooled, {
         headers: {
@@ -247,7 +247,7 @@ search.get("/s", async function (ctx) {
     }
   }
 
-  if (tokens.misc.has("reverse")) {
+  if (tokens.misc.includes("reverse")) {
     ordColl.orderedItems.reverse();
   }
 
