@@ -21,9 +21,10 @@ docker run \
 
 If your distribution is anal about licensing, replace `docker` with `podman`.
 
-You MUST have a running Parasite server to do these tests. See the `readme` in
-the root directory to see how to do that. Once you have one up and accepting
-connections, it's as easy as:
+You MUST have a running Parasite server, and frontend to do these tests. See the
+`readme` in the root directory to see how to start up the API server - You can
+run `deno task start-dummy-frontend` for a basic frontend for testing. Once you
+have both running and accepting connections, it's as easy as:
 
 ```
 deno test --allow-net user.ts torrent.ts
