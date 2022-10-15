@@ -25,7 +25,7 @@ export const settings = {
     "maxLists": Infinity,
     "maxUsers": Infinity,
     "loginsPerUser": 5,
-    "maxTitleLength": 50,
+    "maxTitleLength": 75,
     "maxContentLength": 2500,
     "maxCommentLength": 250,
   },
