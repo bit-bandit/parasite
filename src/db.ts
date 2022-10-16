@@ -536,8 +536,8 @@ export async function search(url) {
   // Connect
   await client.connect();
 
-  let torrentResults, listResults;
-  let torrentUploads = [], listUploads = [];
+  let torrentResults, listResults, userResults;
+  let torrentUploads = [], listUploads = [], usersDB = [];
 
   // Okay here's the deal:
   // if a user is specified - Only query the DB for posts by
@@ -570,6 +570,7 @@ export async function search(url) {
     // We should probably fix this.
     torrentResults = await client.queryArray("SELECT json FROM torrents;");
     listResults = await client.queryArray("SELECT json FROM lists;");
+    userResults = await client.queryArray("SELECT info FROM users;");
 
     if (torrentResults.rows.length) {
       torrentUploads = torrentResults.rows;
@@ -578,18 +579,24 @@ export async function search(url) {
     if (listResults.rows.length) {
       listUploads = listResults.rows;
     }
+
+    if (userResults.rows.length) {
+      usersDB = userResults.rows;
+    }
   }
 
   await client.end();
 
   torrentUploads = torrentUploads.map((x) => x = x[0]);
   listUploads = listUploads.map((x) => x = x[0]);
+  usersDB = usersDB.map((x) => x = x[0]);
 
-  foundObjs = [...torrentUploads, ...listUploads];
+  foundObjs = [...torrentUploads, ...listUploads, ...usersDB];
 
   // Make sure we don't waste memory here
   torrentUploads = undefined;
   listUploads = undefined;
+  usersDB = undefined;
 
   // Filter tags
   if (tags && tags.length) {
