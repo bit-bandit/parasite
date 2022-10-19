@@ -17,23 +17,35 @@ export interface SearchQuery {
 // Primary algorithm for likes/dislikes results.
 async function voteRank(arr: unknown[]) {
   // TODO: Tidying.
-
   for (let i = 0; i < arr.length; i++) {
-    const likes = await fetch(`${arr[i].id}/likes`, {
-      headers: {
-        "Accept": "application/activity+json",
-      },
-    });
+    if (arr[i].type === "Person") {
+      // This is a buggy solution. Fix this in the future.
+      const followers = await fetch(arr[i].followers, {
+        headers: {
+          "Accept": "application/activity+json",
+        },
+      });
+      arr[i].oldLikes = arr[i].likes;
+      arr[i].oldDislikes = arr[i].dislikes;
+      arr[i].likes = followers;
+      arr[i].dislikes = 0;
+    } else {
+      const likes = await fetch(`${arr[i].id}/likes`, {
+        headers: {
+          "Accept": "application/activity+json",
+        },
+      });
 
-    arr[i].likes = (await likes.json()).orderedItems.length;
+      arr[i].likes = (await likes.json()).orderedItems.length;
 
-    const dislikes = await fetch(`${arr[i].id}/dislikes`, {
-      headers: {
-        "Accept": "application/activity+json",
-      },
-    });
+      const dislikes = await fetch(`${arr[i].id}/dislikes`, {
+        headers: {
+          "Accept": "application/activity+json",
+        },
+      });
 
-    arr[i].dislikes = (await dislikes.json()).orderedItems.length;
+      arr[i].dislikes = (await dislikes.json()).orderedItems.length;
+    }
   }
 
   arr.sort((a, b) =>
@@ -43,6 +55,12 @@ async function voteRank(arr: unknown[]) {
   for (let i = 0; i < arr.length; i++) {
     delete arr[i].likes;
     delete arr[i].dislikes;
+    if (arr[i].oldLikes && arr[i].oldDislikes) {
+      arr[i].likes = arr[i].oldLikes;
+      arr[i].dislikes = arr[i].oldDislikes;
+      delete arr[i].oldDislikes;
+      delete arr[i].oldLikes;
+    }
   }
 
   return arr;
