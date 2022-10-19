@@ -18,8 +18,8 @@ import { users } from "./users.ts";
 const parasite = new Application();
 
 // Hack to deal with CORS
-const cors = new Router();
-cors.options("(.*)", function (ctx) {
+parasite.use((ctx, next) => {
+  ctx.response.headers.set("Access-Control-Allow-Origin", "*");
   ctx.response.headers.set("Connection", "keep-alive");
   ctx.response.headers.set("Access-Control-Allow-Origin", "*");
   ctx.response.headers.set(
@@ -27,14 +27,6 @@ cors.options("(.*)", function (ctx) {
     "POST, GET, OPTIONS",
   );
   ctx.response.headers.set("Access-Control-Allow-Headers", "*,Authorization");
-  ctx.response.status = 204;
-});
-
-parasite.use(cors.routes());
-parasite.use(cors.allowedMethods());
-
-parasite.use((ctx, next) => {
-  ctx.response.headers.set("Access-Control-Allow-Origin", "*");
   return next();
 });
 
