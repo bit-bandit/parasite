@@ -27,7 +27,7 @@ async function voteRank(arr: unknown[]) {
       });
       arr[i].oldLikes = arr[i].likes;
       arr[i].oldDislikes = arr[i].dislikes;
-      arr[i].likes = followers;
+      arr[i].likes = (await followers.json()).totalItems;
       arr[i].dislikes = 0;
     } else {
       const likes = await fetch(`${arr[i].id}/likes`, {
