@@ -82,55 +82,65 @@ actions.post("/x/follow", async function (ctx: Context) {
   const actorKeys = await getUActivity(data.decoded.name, "keys");
   const priv = await extractKey("private", actorKeys[1]);
 
-  const fActor = await (await fetch(requestJSON.object, {
-    headers: { "Accept": "application/activity+json" },
-  })).json();
+  try {
+    const fActor = await (await fetch(requestJSON.object, {
+      headers: { "Accept": "application/activity+json" },
+    })).json();
 
-  const outboxURL = new URL(fActor.outbox);
-  const d = new Date();
-  const time = d.toUTCString();
+    const outboxURL = new URL(fActor.outbox);
+    const d = new Date();
+    const time = d.toUTCString();
 
-  const msg = genHTTPSigBoilerplate({
-    "target": `post ${outboxURL.pathname}`,
-    "host": outboxURL.host,
-    "date": time,
-  });
+    const msg = genHTTPSigBoilerplate({
+      "target": `post ${outboxURL.pathname}`,
+      "host": outboxURL.host,
+      "date": time,
+    });
 
-  const signed = await simpleSign(msg, priv);
+    const signed = await simpleSign(msg, priv);
 
-  const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
-  const header =
-    `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+    const b64sig = btoa(
+      String.fromCharCode.apply(null, new Uint8Array(signed)),
+    );
+    const header =
+      `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
 
-  const followAttempt = await fetch(fActor.outbox, {
-    method: "POST",
-    headers: {
-      "Accept": "application/activity+json",
-      "Content-Type": "application/json",
-      "Signature": header,
-      "Date": time,
-      "Host": outboxURL.host,
-    },
-    body: JSON.stringify(followJSON),
-  });
+    const followAttempt = await fetch(fActor.outbox, {
+      method: "POST",
+      headers: {
+        "Accept": "application/activity+json",
+        "Content-Type": "application/json",
+        "Signature": header,
+        "Date": time,
+        "Host": outboxURL.host,
+      },
+      body: JSON.stringify(followJSON),
+    });
 
-  const res = await followAttempt.json();
+    const res = await followAttempt.json();
 
-  if (res.type === "Accept") {
-    const userFollowers = await getUActivity(data.decoded.name, "following");
+    if (res.type === "Accept") {
+      const userFollowers = await getUActivity(data.decoded.name, "following");
 
-    userFollowers.orderedItems.push(requestJSON.object);
-    userFollowers.totalItems = userFollowers.orderedItems.length;
+      userFollowers.orderedItems.push(requestJSON.object);
+      userFollowers.totalItems = userFollowers.orderedItems.length;
 
-    ctx.response.body = res;
+      ctx.response.body = res;
 
-    await basicObjectUpdate("users", {
-      "following": userFollowers,
-    }, data.decoded.name);
-  } else {
-    ctx.response.body = res;
-    ctx.response.status = 400;
-    ctx.response.type = "application/json";
+      await basicObjectUpdate("users", {
+        "following": userFollowers,
+      }, data.decoded.name);
+    } else {
+      ctx.response.body = res;
+      ctx.response.status = 400;
+      ctx.response.type = "application/json";
+    }
+  } catch {
+    return throwAPIError(
+      ctx,
+      "User not found",
+      404,
+    );
   }
 });
 
@@ -224,48 +234,56 @@ actions.post("/x/undo", async function (ctx) {
   const header =
     `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
 
-  const sendToObject = await fetch(requestJSON.object, {
-    method: "POST",
-    headers: {
-      "Accept": "application/activity+json",
-      "Content-Type": "application/json",
-      "Signature": header,
-      "Date": time,
-      "Host": u.host,
-      "Authorization": await ctx.request.headers.get("Authorization"),
-    },
-    body: JSON.stringify(obj),
-  });
+  try {
+    const sendToObject = await fetch(requestJSON.object, {
+      method: "POST",
+      headers: {
+        "Accept": "application/activity+json",
+        "Content-Type": "application/json",
+        "Signature": header,
+        "Date": time,
+        "Host": u.host,
+        "Authorization": await ctx.request.headers.get("Authorization"),
+      },
+      body: JSON.stringify(obj),
+    });
 
-  const res = await sendToObject.json();
+    const res = await sendToObject.json();
 
-  if (res.err) {
-    return throwAPIError(ctx, res.msg, 400);
+    if (res.err) {
+      return throwAPIError(ctx, res.msg, 400);
+    }
+
+    if (likesIndex !== -1) {
+      await basicObjectUpdate("users", {
+        "likes": userLikes,
+      }, data.decoded.name);
+    }
+
+    if (dislikesIndex !== -1) {
+      await basicObjectUpdate("users", {
+        "dislikes": userDislikes,
+      }, data.decoded.name);
+    }
+
+    if (followingIndex !== -1) {
+      await basicObjectUpdate("users", {
+        "following": userFollowing,
+      }, data.decoded.name);
+    }
+
+    ctx.response.body = res;
+    ctx.response.status = 201;
+    ctx.response.type =
+      'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+    ctx.response.headers.set("Location", url);
+  } catch {
+    return throwAPIError(
+      ctx,
+      "Item not found",
+      404,
+    );
   }
-
-  if (likesIndex !== -1) {
-    await basicObjectUpdate("users", {
-      "likes": userLikes,
-    }, data.decoded.name);
-  }
-
-  if (dislikesIndex !== -1) {
-    await basicObjectUpdate("users", {
-      "dislikes": userDislikes,
-    }, data.decoded.name);
-  }
-
-  if (followingIndex !== -1) {
-    await basicObjectUpdate("users", {
-      "following": userFollowing,
-    }, data.decoded.name);
-  }
-
-  ctx.response.body = res;
-  ctx.response.status = 201;
-  ctx.response.type =
-    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-  ctx.response.headers.set("Location", url);
 });
 
 actions.post("/x/like", async function (ctx: Context) {
@@ -333,38 +351,46 @@ actions.post("/x/like", async function (ctx: Context) {
   const header =
     `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
 
-  const sendToObject = await fetch(requestJSON.object, {
-    method: "POST",
-    headers: {
-      "Accept": "application/activity+json",
-      "Content-Type": "application/json",
-      "Signature": header,
-      "Date": time,
-      "Host": u.host,
-      "Authorization": await ctx.request.headers.get("Authorization"),
-    },
-    body: JSON.stringify(obj),
-  });
+  try {
+    const sendToObject = await fetch(requestJSON.object, {
+      method: "POST",
+      headers: {
+        "Accept": "application/activity+json",
+        "Content-Type": "application/json",
+        "Signature": header,
+        "Date": time,
+        "Host": u.host,
+        "Authorization": await ctx.request.headers.get("Authorization"),
+      },
+      body: JSON.stringify(obj),
+    });
 
-  const res = await sendToObject.json();
+    const res = await sendToObject.json();
 
-  if (res.err) {
+    if (res.err) {
+      return throwAPIError(
+        ctx,
+        res.msg,
+        sendToObject.status,
+      );
+    }
+
+    await basicObjectUpdate("users", {
+      "likes": userLikes,
+    }, data.decoded.name);
+
+    ctx.response.body = res;
+    ctx.response.status = 201;
+    ctx.response.type =
+      'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+    ctx.response.headers.set("Location", url);
+  } catch {
     return throwAPIError(
       ctx,
-      res.msg,
-      sendToObject.status,
+      "Item not found",
+      404,
     );
   }
-
-  await basicObjectUpdate("users", {
-    "likes": userLikes,
-  }, data.decoded.name);
-
-  ctx.response.body = res;
-  ctx.response.status = 201;
-  ctx.response.type =
-    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-  ctx.response.headers.set("Location", url);
 });
 
 actions.post("/x/dislike", async function (ctx: Context) {
@@ -435,35 +461,42 @@ actions.post("/x/dislike", async function (ctx: Context) {
   const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
   const header =
     `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+  try {
+    const sendToObject = await fetch(requestJSON.object, {
+      method: "POST",
+      headers: {
+        "Accept": "application/activity+json",
+        "Content-Type": "application/json",
+        "Signature": header,
+        "Date": time,
+        "Host": u.host,
+        "Authorization": await ctx.request.headers.get("Authorization"),
+      },
+      body: JSON.stringify(obj),
+    });
 
-  const sendToObject = await fetch(requestJSON.object, {
-    method: "POST",
-    headers: {
-      "Accept": "application/activity+json",
-      "Content-Type": "application/json",
-      "Signature": header,
-      "Date": time,
-      "Host": u.host,
-      "Authorization": await ctx.request.headers.get("Authorization"),
-    },
-    body: JSON.stringify(obj),
-  });
+    const res = await sendToObject.json();
 
-  const res = await sendToObject.json();
+    if (res.err) {
+      return throwAPIError(ctx, res.msg, 400);
+    }
 
-  if (res.err) {
-    return throwAPIError(ctx, res.msg, 400);
+    await basicObjectUpdate("users", {
+      "dislikes": userDislikes,
+    }, data.decoded.name);
+
+    ctx.response.body = res;
+    ctx.response.status = 201;
+    ctx.response.type =
+      'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+    ctx.response.headers.set("Location", url);
+  } catch {
+    return throwAPIError(
+      ctx,
+      "Item not found",
+      404,
+    );
   }
-
-  await basicObjectUpdate("users", {
-    "dislikes": userDislikes,
-  }, data.decoded.name);
-
-  ctx.response.body = res;
-  ctx.response.status = 201;
-  ctx.response.type =
-    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-  ctx.response.headers.set("Location", url);
 });
 
 // Send a comment.
@@ -487,176 +520,190 @@ actions.post("/x/comment", async function (ctx: Context) {
     );
   }
 
-  const externalActorURL = new URL(requestJSON.inReplyTo);
-  checkInstanceBlocked(externalActorURL.host, ctx);
+  try {
+    const externalActorURL = new URL(requestJSON.inReplyTo);
+    checkInstanceBlocked(externalActorURL.host, ctx);
 
-  const userActivity = await getUActivity(data.decoded.name, "info");
-  const role = await getUActivity(data.decoded.name, "roles");
+    const userActivity = await getUActivity(data.decoded.name, "info");
+    const role = await getUActivity(data.decoded.name, "roles");
 
-  if (!role.createComments) {
-    return throwAPIError(ctx, "Action not permitted.", 400);
-  }
+    if (!role.createComments) {
+      return throwAPIError(ctx, "Action not permitted.", 400);
+    }
 
-  const id: string = await genUUID(14);
-  const url = `${settings.siteURL}/c/${id}`;
-  const d = new Date();
+    const id: string = await genUUID(14);
+    const url = `${settings.siteURL}/c/${id}`;
+    const d = new Date();
 
-  const comment = genReply({
-    "id": url,
-    "actor": userActivity.id,
-    "published": d.toISOString(),
-    "content": marked.parse(requestJSON.content),
-    "inReplyTo": requestJSON.inReplyTo,
-  });
+    const comment = genReply({
+      "id": url,
+      "actor": userActivity.id,
+      "published": d.toISOString(),
+      "content": marked.parse(requestJSON.content),
+      "inReplyTo": requestJSON.inReplyTo,
+    });
 
-  const activity = wrapperCreate({
-    "id": `${url}/activity`,
-    "actor": comment.attributedTo,
-    "object": comment,
-    "to": userActivity.followers,
-  });
+    const activity = wrapperCreate({
+      "id": `${url}/activity`,
+      "actor": comment.attributedTo,
+      "object": comment,
+      "to": userActivity.followers,
+    });
 
-  await addToDB("comments", {
-    "id": id,
-    "json": comment,
-    "activity": activity,
-    "uploader": data.decoded.name,
-    "likes": genOrderedCollection(`${url}/likes`),
-    "dislikes": genOrderedCollection(`${url}/dislikes`),
-    "replies": genOrderedCollection(`${url}/r`),
-    "flags": genOrderedCollection(`${url}/flags`),
-  });
+    await addToDB("comments", {
+      "id": id,
+      "json": comment,
+      "activity": activity,
+      "uploader": data.decoded.name,
+      "likes": genOrderedCollection(`${url}/likes`),
+      "dislikes": genOrderedCollection(`${url}/dislikes`),
+      "replies": genOrderedCollection(`${url}/r`),
+      "flags": genOrderedCollection(`${url}/flags`),
+    });
 
-  const userOutbox = await getUActivity(data.decoded.name, "outbox");
+    const userOutbox = await getUActivity(data.decoded.name, "outbox");
 
-  userOutbox.orderedItems.push(activity);
-  userOutbox.totalItems = userOutbox.orderedItems.length;
+    userOutbox.orderedItems.push(activity);
+    userOutbox.totalItems = userOutbox.orderedItems.length;
 
-  await basicObjectUpdate("users", {
-    "outbox": userOutbox,
-  }, data.decoded.name);
+    await basicObjectUpdate("users", {
+      "outbox": userOutbox,
+    }, data.decoded.name);
 
-  // Send to followers
-  const followers = await getUActivity(data.decoded.name, "followers");
+    // Send to followers
+    const followers = await getUActivity(data.decoded.name, "followers");
 
-  let i = 0;
+    let i = 0;
 
-  for (const follower of followers.orderedItems) {
-    const u = new URL(follower);
+    for (const follower of followers.orderedItems) {
+      const u = new URL(follower);
 
-    if (u.origin === settings.siteURL) {
-      // Deliver locally, and nothing more.
-      const username = u.pathname.split("/").pop();
-      // Add to inbox of local user.
-      const inbox = await getUActivity(username, "inbox");
+      if (u.origin === settings.siteURL) {
+        // Deliver locally, and nothing more.
+        const username = u.pathname.split("/").pop();
+        // Add to inbox of local user.
+        const inbox = await getUActivity(username, "inbox");
 
-      inbox.orderedItems.push(activity.id);
-      inbox.totalItems = inbox.orderedItems.length;
+        inbox.orderedItems.push(activity.id);
+        inbox.totalItems = inbox.orderedItems.length;
 
-      await basicObjectUpdate("users", {
-        "inbox": inbox,
-      }, username);
-    } else {
-      const actorKeys = await getUActivity(data.decoded.name, "keys");
-      const priv = await extractKey("private", actorKeys[1]);
+        await basicObjectUpdate("users", {
+          "inbox": inbox,
+        }, username);
+      } else {
+        const actorKeys = await getUActivity(data.decoded.name, "keys");
+        const priv = await extractKey("private", actorKeys[1]);
 
-      const time = d.toUTCString();
+        const time = d.toUTCString();
 
-      const msgToFollowers = genHTTPSigBoilerplate({
-        "target": `post ${u.pathname}`,
-        "host": u.host,
-        "date": time,
-      });
+        const msgToFollowers = genHTTPSigBoilerplate({
+          "target": `post ${u.pathname}`,
+          "host": u.host,
+          "date": time,
+        });
 
-      const signedFollowers = await simpleSign(msgToFollowers, priv);
+        const signedFollowers = await simpleSign(msgToFollowers, priv);
 
-      const b64sigFollowers = btoa(
-        String.fromCharCode.apply(null, new Uint8Array(signedFollowers)),
-      );
-      const header =
-        `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sigFollowers}"`;
+        const b64sigFollowers = btoa(
+          String.fromCharCode.apply(null, new Uint8Array(signedFollowers)),
+        );
+        const header =
+          `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sigFollowers}"`;
 
-      const actInfo = await fetch(follower, {
-        headers: {
-          "Accept": "application/activity+json",
-          "Content-Type": "application/activity+json",
-        },
-        method: "GET",
-      });
-      actInfo = await actInfo.json();
+        try {
+          const actInfo = await fetch(follower, {
+            headers: {
+              "Accept": "application/activity+json",
+              "Content-Type": "application/activity+json",
+            },
+            method: "GET",
+          });
+          actInfo = await actInfo.json();
 
-      let r = await fetch(actInfo.inbox, {
-        method: "POST",
-        headers: {
-          "Accept": "application/activity+json",
-          "Content-Type": "application/json",
-          "Signature": header,
-          "Date": time,
-          "Host": u.host,
-        },
-        body: JSON.stringify(activity),
-      });
+          let r = await fetch(actInfo.inbox, {
+            method: "POST",
+            headers: {
+              "Accept": "application/activity+json",
+              "Content-Type": "application/json",
+              "Signature": header,
+              "Date": time,
+              "Host": u.host,
+            },
+            body: JSON.stringify(activity),
+          });
 
-      r = await r.json();
+          r = await r.json();
 
-      if (r.err) {
-        i++;
+          if (r.err) {
+            i++;
+          }
+        } catch {
+          continue;
+        }
       }
     }
-  }
 
-  let errNo = "";
+    let errNo = "";
 
-  if (0 < i) {
-    errNo = ` with ${i} followers failing to recieve it`; // Keep the space at the start.
-  }
+    if (0 < i) {
+      errNo = ` with ${i} followers failing to recieve it`; // Keep the space at the start.
+    }
 
-  const u = new URL(requestJSON.inReplyTo);
-  const time = d.toUTCString();
+    const u = new URL(requestJSON.inReplyTo);
+    const time = d.toUTCString();
 
-  const msg = genHTTPSigBoilerplate({
-    "target": `post ${u.pathname}`,
-    "host": new URL(userActivity.id).host,
-    "date": time,
-  });
+    const msg = genHTTPSigBoilerplate({
+      "target": `post ${u.pathname}`,
+      "host": new URL(userActivity.id).host,
+      "date": time,
+    });
 
-  const actorKeys = await getUActivity(data.decoded.name, "keys");
-  const priv = await extractKey("private", actorKeys[1]);
+    const actorKeys = await getUActivity(data.decoded.name, "keys");
+    const priv = await extractKey("private", actorKeys[1]);
 
-  const signed = await simpleSign(msg, priv);
+    const signed = await simpleSign(msg, priv);
 
-  const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
-  const header =
-    `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+    const b64sig = btoa(
+      String.fromCharCode.apply(null, new Uint8Array(signed)),
+    );
+    const header =
+      `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
 
-  const sendToObject = await fetch(requestJSON.inReplyTo, {
-    method: "POST",
-    headers: {
-      "Accept": "application/activity+json",
-      "Content-Type": "application/json",
-      "Signature": header,
-      "Date": time,
-      "Host": u.host,
-      "Authorization": await ctx.request.headers.get("Authorization"),
-    },
-    body: JSON.stringify(activity),
-  });
+    const sendToObject = await fetch(requestJSON.inReplyTo, {
+      method: "POST",
+      headers: {
+        "Accept": "application/activity+json",
+        "Content-Type": "application/json",
+        "Signature": header,
+        "Date": time,
+        "Host": u.host,
+        "Authorization": await ctx.request.headers.get("Authorization"),
+      },
+      body: JSON.stringify(activity),
+    });
 
-  const res = await sendToObject.json();
+    const res = await sendToObject.json();
 
-  if (res.err) {
+    if (res.err) {
+      return throwAPIError(
+        ctx,
+        res.msg,
+        sendToObject.status,
+      );
+    }
+
+    ctx.response.body = {
+      "msg": `Comment ${id} added to Torrent ${requestJSON.inReplyTo} ${errNo}`,
+    };
+    ctx.response.status = 201;
+    ctx.response.type =
+      'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+    ctx.response.headers.set("Location", url);
+  } catch {
     return throwAPIError(
       ctx,
-      res.msg,
-      sendToObject.status,
+      "Item not found",
+      404,
     );
   }
-
-  ctx.response.body = {
-    "msg": `Comment ${id} added to Torrent ${requestJSON.inReplyTo} ${errNo}`,
-  };
-  ctx.response.status = 201;
-  ctx.response.type =
-    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-  ctx.response.headers.set("Location", url);
 });

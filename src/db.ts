@@ -201,29 +201,6 @@ export function getCommentJSON(id: string, t?: string): Promise<> {
 }
 
 /**
- * Get data from the `comments` table
- * @param {string} t - Name of tag.
- * @returns {Object[]} Items that contain the tag.
- */
-export async function getJSONfromTags(t: string): Promise<> {
-  await client.connect();
-  const res = await client.queryArray(
-    `SELECT json FROM torrents WHERE json ->> 'tag' LIKE '[%${t}%';`,
-  );
-
-  const list = await client.queryArray(
-    `SELECT json FROM lists WHERE json ->> 'tag' LIKE '[%${t}%';`,
-  );
-
-  if (list.rows.length > 0) {
-    res.rows.push(list.rows[0]);
-  }
-
-  await client.end();
-  return res.rows;
-}
-
-/**
  * Register user as having logged in.
  * @param {string} id - User ID.
  * @param {number} time - Unix timestamp of when user logged in.
@@ -603,6 +580,9 @@ export async function search(url) {
     // Use space because + is automatically replaced with space
     for (const tag of tags.split("+")) {
       const tagURL = new URL(`/i/${tag}`, settings.siteURL);
+
+      // People don't have tags. Let's fix that.
+      foundObjs = foundObjs.filter((obj) => obj.type !== "Person");
 
       // Filter out objects that don't include the tag
       foundObjs = foundObjs.filter((obj) => {

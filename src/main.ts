@@ -1,4 +1,4 @@
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "https://deno.land/x/oak/mod.ts";
 import "https://cdn.jsdelivr.net/npm/marked@latest/marked.min.js";
 
 import { settings } from "../settings.ts";

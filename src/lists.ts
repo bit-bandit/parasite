@@ -200,31 +200,35 @@ lists.post("/l", async function (ctx) {
       const header =
         `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
 
-      const actInfo = await fetch(follower, {
-        headers: {
-          "Accept": "application/activity+json",
-          "Content-Type": "application/activity+json",
-        },
-        method: "GET",
-      });
-      actInfo = await actInfo.json();
+      try {
+        const actInfo = await fetch(follower, {
+          headers: {
+            "Accept": "application/activity+json",
+            "Content-Type": "application/activity+json",
+          },
+          method: "GET",
+        });
+        actInfo = await actInfo.json();
 
-      let r = await fetch(actInfo.inbox, {
-        method: "POST",
-        headers: {
-          "Accept": "application/activity+json",
-          "Content-Type": "application/json",
-          "Signature": header,
-          "Date": time,
-          "Host": u.host,
-        },
-        body: JSON.stringify(activity),
-      });
+        let r = await fetch(actInfo.inbox, {
+          method: "POST",
+          headers: {
+            "Accept": "application/activity+json",
+            "Content-Type": "application/json",
+            "Signature": header,
+            "Date": time,
+            "Host": u.host,
+          },
+          body: JSON.stringify(activity),
+        });
 
-      r = await r.json();
+        r = await r.json();
 
-      if (r.err) {
-        i++;
+        if (r.err) {
+          i++;
+        }
+      } catch {
+        continue;
       }
     }
   }

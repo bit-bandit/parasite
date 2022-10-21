@@ -214,6 +214,8 @@ search.get("/s", async function (ctx) {
     parsedURL.searchParams.append("m", tokens.misc.join("+"));
   }
 
+  console.log(parsedURL);
+
   const res = await searchDB(parsedURL);
 
   const ordColl = genOrderedCollection(parsedURL.href, res, {
@@ -222,13 +224,17 @@ search.get("/s", async function (ctx) {
 
   if (!tokens.misc.includes("local")) {
     for (const pooled of settings.federationParams.pooled) {
-      let f = await fetch(pooled, {
-        headers: {
-          "Accept": "application/activity+json",
-        },
-      });
-      f = await f.json();
-      ordColl.orderedItems.push(...f.orderedItems);
+      try {
+        let f = await fetch(pooled, {
+          headers: {
+            "Accept": "application/activity+json",
+          },
+        });
+        f = await f.json();
+        ordColl.orderedItems.push(...f.orderedItems);
+      } catch {
+        continue;
+      }
     }
   }
 

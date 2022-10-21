@@ -75,7 +75,7 @@ comments.post("/c/:id", async function (ctx) {
   try {
     [json, uploader] = await getCommentJSON(ctx.params.id, "json, uploader");
   } catch {
-    return throwAPIError(ctx, "Torrent doesn't exist.", 400);
+    return throwAPIError(ctx, "Comment doesn't exist.", 400);
   }
 
   switch (requestJSON.type) {
