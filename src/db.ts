@@ -389,6 +389,10 @@ export async function deleteTorrent(id: string) {
   }, user);
 }
 
+/**
+ * Delete an entry from the `comments` table.
+ * @param {string} id - ID of the torrent.
+ */
 export async function deleteComment(id: string) {
   const cData = await getCommentJSON(id, "json, uploader");
   const user = cData[1];
