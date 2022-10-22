@@ -214,8 +214,6 @@ search.get("/s", async function (ctx) {
     parsedURL.searchParams.append("m", tokens.misc.join("+"));
   }
 
-  console.log(parsedURL);
-
   const res = await searchDB(parsedURL);
 
   const ordColl = genOrderedCollection(parsedURL.href, res, {

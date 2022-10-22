@@ -13,7 +13,7 @@ import {
   str2ab,
 } from "./crypto.ts";
 // For icon/banner processing
-import * as imagescript from "https://deno.land/x/imagescript@1.2.9/mod.ts";
+import * as imagescript from "https://deno.land/x/imagescript@v1.2.14/mod.ts";
 
 export const users = new Router();
 

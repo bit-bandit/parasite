@@ -1,7 +1,7 @@
 1; // Database queries and related functions.
 
 import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
-import Fuse from "https://deno.land/x/fuse@v6.4.1/dist/fuse.esm.min.js";
+import Fuse from "https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.esm.js";
 import { settings } from "../settings.ts";
 
 const db_settings = settings.database.settings;
