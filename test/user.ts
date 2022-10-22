@@ -41,7 +41,7 @@ Deno.test("Attempted user registration on preexisting account", async () => {
 });
 
 Deno.test("Follow account", async () => {
-  let c = await fetch("http://0.0.0.0:8080/register", {
+  const c = await fetch("http://0.0.0.0:8080/register", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

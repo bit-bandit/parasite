@@ -111,7 +111,7 @@ export function parseHTTPSig(msg: string) {
 }
 
 /**
- * Ensure that a string (particularly usernames) are within an acceptable character range.
+ * Ensure that a string is within an acceptable character range.
  * @param str Character string.
  */
 export function properCharRange(str: string): boolean {

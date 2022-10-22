@@ -328,6 +328,6 @@ Deno.test("Try to get deleted list", async () => {
       "Accept": "application/activity+json",
     },
   });
-  const k = await r.json();
+  const _k = await r.json();
   assertEquals(r.status, 404);
 });
