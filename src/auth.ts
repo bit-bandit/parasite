@@ -5,7 +5,7 @@ import {
   verify,
 } from "https://deno.land/x/djwt/mod.ts";
 import { Algorithm } from "https://deno.land/x/djwt/algorithm.ts";
-import * as scrypt from "https://deno.land/x/scrypt@v4.0.0/mod.ts";
+import * as scrypt from "https://deno.land/x/scrypt@v4.2.1/mod.ts";
 import { getUActivity, UCheck, UInit, ULogin } from "./db.ts";
 import { throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
