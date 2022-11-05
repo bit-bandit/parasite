@@ -453,14 +453,6 @@ lists.post("/l/:id", async function (ctx) {
         return throwAPIError(ctx, "Not allowed to edit list", 400);
       }
 
-      if (requestJSON.orderedItems.length < settings.limits.minListItems) {
-        return throwAPIError(ctx, "Not enough items.", 400);
-      }
-
-      if (requestJSON.orderedItems.length > settings.limits.maxListItems) {
-        return throwAPIError(ctx, "Too many items.", 400);
-      }
-
       const tag: string[] = [];
 
       if (requestJSON.tags) {
@@ -489,6 +481,14 @@ lists.post("/l/:id", async function (ctx) {
         json.summary = marked.parse(requestJSON.summary);
       }
       if (requestJSON.orderedItems && Array.isArray(requestJSON.orderedItems)) {
+        if (requestJSON.orderedItems.length < settings.limits.minListItems) {
+          return throwAPIError(ctx, "Not enough items.", 400);
+        }
+
+        if (requestJSON.orderedItems.length > settings.limits.maxListItems) {
+          return throwAPIError(ctx, "Too many items.", 400);
+        }
+
         json.orderedItems = requestJSON.orderedItems;
       }
 

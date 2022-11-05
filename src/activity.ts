@@ -174,6 +174,7 @@ export function genObj(params: unknown = {}): ActivityObject {
     "tag": params.tags,
     "attachment": {
       "type": "Link",
+      "mediaType": "application/x-bittorrent;x-scheme-handler/magnet",
       "href": params.link,
     },
     "to": ["https://www.w3.org/ns/activitystreams#Public"], // All posts are public; Sorry!

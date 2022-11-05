@@ -149,10 +149,16 @@ auth.post("/register", async function (ctx) {
     "outbox": `${userAPI}/outbox`,
     "name": requestJSON.username,
     "summary": "",
-    "icon": [
-      avatar,
-    ],
-    "banner": banner,
+    "icon": {
+      "mediaType": "image/png",
+      "type": "Image",
+      "url": avatar,
+    },
+    "banner": {
+      "type": "Image",
+      "mediaType": "image/png",
+      "url": banner,
+    },
     "keyURL": `${userAPI}/main-key`,
     "key": keys[0],
   });
