@@ -1,21 +1,40 @@
 // Roles for Parasite
+
+// Primary role interface
 interface Role {
+  // Allows access to the `/a/` endpoint.
   adminAPI: boolean;
+  // Roles which the user is permitted to assign other users to  
   assignableRoles: string[];
+  // Allows the creation of torrents   
   createTorrents: boolean;
+  // Allows the creation of lists  
   createLists: boolean;
+  // Allows the creation of comments  
   createComments: boolean;
+  // User can delete torrents they have uploaded.  
   deleteOwnTorrents: boolean;
+  // User can delete any torrent uploaded by any user.  
   deleteAnyTorrents: boolean;
+  // User can delete comments they have uploaded.    
   deleteOwnComments: boolean;
+  // User can delete any comment uploaded by any user.
   deleteAnyComments: boolean;
+  // User can delete lists they have uploaded.    
   deleteOwnLists: boolean;
+  // User can delete any list uploaded by any user.
   deleteAnyLists: boolean;
+  // User can remove other users accounts   
   deleteUsers: boolean;
+  // User can edit their own uploads
   editUploads: boolean;
+  // User can flag local items.
   flag: boolean;
+  // User can log in to their account.
   login: boolean;
+  // User can manage federations. (IE: Which instances can be blocked/pooled)   
   manageFederation: boolean;
+  // User can like/dislike content.  
   vote: boolean;
 }
 

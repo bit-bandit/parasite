@@ -19,6 +19,8 @@ export const settings = {
   "staticFileDir": "./static",
   "siteName": "Parasite Instance",
   "limits": {
+    "minListItems": 3,
+    "maxListItems": 120,
     "maxHourlyCreations": Infinity,
     "maxTorrents": Infinity,
     "maxComments": Infinity,
