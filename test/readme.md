@@ -6,7 +6,7 @@ Testing suite for Parasite.
 
 All testing is to be done with an out-of-the-box configuration of Parasite (That
 is, no modifications done to `settings.ts`, or anything else), and PostgreSQL.
-We suggest using containers to make the process of setting it up less of a pain 
+We suggest using containers to make the process of setting it up less of a pain
 in the long run:
 
 ```sh
