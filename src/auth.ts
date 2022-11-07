@@ -86,18 +86,23 @@ auth.post("/login", async function (ctx) {
 
 auth.post("/register", async function (ctx) {
   // Create new user.
+
+  if (!settings.allowRegistrations) {
+    return throwAPIError(ctx, "Registrations not allowed.", 404);
+  }
+    
   if (!ctx.request.hasBody) {
-    return throwAPIError(ctx, "No body provided", 404);
+    return throwAPIError(ctx, "No body provided.", 404);
   }
 
   const raw = await ctx.request.body();
 
   if (raw.type !== "json") {
-    return throwAPIError(ctx, "Invalid content type", 400);
+    return throwAPIError(ctx, "Invalid content type.", 400);
   }
 
   const requestJSON = await raw.value;
-
+    
   if (!requestJSON.password || !requestJSON.username) {
     return throwAPIError(
       ctx,
@@ -108,7 +113,7 @@ auth.post("/register", async function (ctx) {
   // Test if username is safe to use.
   // Should the parameter be in `settings.ts`? Beats me.
   if (!/^[A-Za-z0-9_]{1,24}$/.test(requestJSON.username)) {
-    return throwAPIError(ctx, "Provided username not acceptable.", 400);
+    return throwAPIError(ctx, "Provided username unacceptable.", 400);
   }
   // Check if the username is already taken.
   const notTaken = await UCheck(requestJSON.username);
