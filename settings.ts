@@ -1,7 +1,8 @@
-// Mess with these in their own seperate files.
+// Mess with these in their own separate files.
 import instances from "./federation.json" assert { type: "json" };
 
 export const settings = {
+  // DO NOT end this url with a slash!
   "siteURL": "http://localhost:8000",
   "sitePort": 8080,
   "frontendURL": "http://localhost:8000",
@@ -18,6 +19,7 @@ export const settings = {
   },
   "staticFileDir": "./static",
   "siteName": "Parasite Instance",
+  "allowRegistrations": true,  
   "limits": {
     "minListItems": 3,
     "maxListItems": 120,
