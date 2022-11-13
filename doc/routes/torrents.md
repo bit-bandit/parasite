@@ -52,24 +52,28 @@ Response:
 Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "id": "http://www.example.com/t/484c8038fc11f03753b5",
+  "id": "http://localhost:8000/t/449caa2522fe5c07e404",
   "type": "Note",
-  "attributedTo": "http://www.example.com/u/larvae",
-  "name": "Torrent",
-  "content": "<p>Specifically, it&#39;s from the Blender Project! Cool guys!</p>\n",
+  "published": "2022-11-13T20:44:26.160Z",
+  "attributedTo": "http://localhost:8000/u/bob",
+  "name": "Night of the Living Dead (1968)",
+  "content": "<p>A disparate group of individuals takes refuge in an abandoned house when corpses begin to leave the graveyard in search of fresh human bodies to devour. Will they survive?</p>\n",
   "tag": [
-    "http://www.example.com/i/action",
-    "http://www.example.com/i/adventure",
-    "http://www.example.com/i/fantasy"
+    "http://localhost:8000/i/horror",
+    "http://localhost:8000/i/zombies",
+    "http://localhost:8000/i/george_romero",
+    "http://localhost:8000/i/1968",
+    "http://localhost:8000/i/public_domain"
   ],
   "attachment": {
     "type": "Link",
-    "href": "magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent"
+    "mediaType": "application/x-bittorrent;x-scheme-handler/magnet",
+    "href": "magnet:?xt=urn:btih:bba0e98f114a1414eb808bdd2ce86e852afefdc2&dn=night_of_the_living_dead&tr=http%3A%2F%2Fbt1.archive.org%3A6969%2Fannounce&tr=http%3A%2F%2Fbt2.archive.org%3A6969%2Fannounce&ws=http%3A%2F%2Farchive.org%2Fdownload%2F&ws=http%3A%2F%2Fia600301.us.archive.org%2F22%2Fitems&ws=http%3A%2F%2Fia700301.us.archive.org%2F22%2Fitems"
   },
   "to": [
     "https://www.w3.org/ns/activitystreams#Public"
   ],
-  "replies": "http://www.example.com/t/484c8038fc11f03753b5/r"
+  "replies": "http://localhost:8000/t/449caa2522fe5c07e404/r"
 }
 ```
 
@@ -122,30 +126,35 @@ Content-Type: application/activity+json
 {
   "@context": "https://www.w3.org/ns/activitystreams",
   "type": "Create",
-  "id": "http://www.example.com/t/484c8038fc11f03753b5/activity",
-  "actor": "http://www.example.com/u/bob",
+  "id": "http://localhost:8000/t/449caa2522fe5c07e404/activity",
+  "actor": "http://localhost:8000/u/bob",
   "object": {
     "@context": "https://www.w3.org/ns/activitystreams",
-    "id": "http://www.example.com/t/484c8038fc11f03753b5",
+    "id": "http://localhost:8000/t/449caa2522fe5c07e404",
     "type": "Note",
-    "attributedTo": "http://www.example.com/u/larvae",
-    "name": "Torrent",
-    "content": "<p>Specifically, it&#39;s from the Blender Project! Cool guys!</p>\n",
+    "published": "2022-11-13T20:44:26.160Z",
+    "attributedTo": "http://localhost:8000/u/bob",
+    "name": "Night of the Living Dead (1968)",
+    "content": "<p>A disparate group of individuals takes refuge in an abandoned house when corpses begin to leave the graveyard in search of fresh human bodies to devour. Will they survive?</p>\n",
     "tag": [
-      "http://www.example.com/i/action",
-      "http://www.example.com/i/adventure",
-      "http://www.example.com/i/fantasy"
+      "http://localhost:8000/i/horror",
+      "http://localhost:8000/i/zombies",
+      "http://localhost:8000/i/george_romero",
+      "http://localhost:8000/i/1968",
+      "http://localhost:8000/i/public_domain"
     ],
     "attachment": {
       "type": "Link",
-      "href": "magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent"
+      "mediaType": "application/x-bittorrent;x-scheme-handler/magnet",
+      "href": "magnet:?xt=urn:btih:bba0e98f114a1414eb808bdd2ce86e852afefdc2&dn=night_of_the_living_dead&tr=http%3A%2F%2Fbt1.archive.org%3A6969%2Fannounce&tr=http%3A%2F%2Fbt2.archive.org%3A6969%2Fannounce&ws=http%3A%2F%2Farchive.org%2Fdownload%2F&ws=http%3A%2F%2Fia600301.us.archive.org%2F22%2Fitems&ws=http%3A%2F%2Fia700301.us.archive.org%2F22%2Fitems"
     },
     "to": [
       "https://www.w3.org/ns/activitystreams#Public"
     ],
-    "replies": "http://www.example.com/t/484c8038fc11f03753b5/r"
+    "replies": "http://localhost:8000/t/449caa2522fe5c07e404/r"
   },
-  "cc": "http://www.example.com/u/bob/followers"
+  "published": "2022-11-13T20:44:26.160Z",
+  "cc": "http://localhost:8000/u/bob/followers"
 }
 ```
 

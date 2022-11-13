@@ -67,7 +67,7 @@ Authorization: None.
 Sample HTTP Payload:
 
 ```
-GET http://localhost:8080/u/bob
+GET http://localhost:8000/u/bob
 ```
 
 Response:
@@ -81,23 +81,29 @@ Content-Type: application/activity+json
     "https://w3id.org/security/v1"
   ],
   "type": "Person",
-  "id": "http://localhost:8080/u/bob",
-  "following": "http://localhost:8080/u/bob/following",
-  "followers": "http://localhost:8080/u/bob/followers",
-  "liked": "http://localhost:8080/u/bob/likes",
-  "inbox": "http://localhost:8080/u/bob/inbox",
-  "outbox": "http://localhost:8080/u/bob/outbox",
-  "name": "bob",
-  "summary": "",
+  "id": "http://localhost:8000/u/bob",
+  "following": "http://localhost:8000/u/bob/following",
+  "followers": "http://localhost:8000/u/bob/followers",
+  "liked": "http://localhost:8000/u/bob/likes",
+  "inbox": "http://localhost:8000/u/bob/inbox",
+  "outbox": "http://localhost:8000/u/bob/outbox",
+  "name": "\"BOB\"",
+  "summary": "The subgenius must have SLACK!",
   "publicKey": {
-    "id": "http://localhost:8080/u/bob/main-key",
-    "owner": "http://localhost:8080/u/bob",
-    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2lRJx5zw9babXkfEJNrjF4vFFTnXKU0kZ1kltSVWfyRcd44gaU+yhPVitez/YRJvihOdc1NeKzPBwfgJlnU1a6EEh71IlyZdkp+rIIPij5tIcSkyq+u4oDR5xkiXQhcxk2L5eYZlrIr3LKkfehEtwwRIoq14aXBlK9nMT0WdkogOwmDyQRwLaWcUFq7ZcBCw0xCClZpiOWS7+7tj3g2TxwEUPUuQdcXEDMyNOKTuoUq7BxFtKwu14AN1lMO6jVAHhrKOD9gFrgfULNDsIax0BcDDEQYzeASeZdKMsOo47+zAw6nipzUloZAb8huCBRVl1GyE9lYUOG1m/slo+fTd2wIDAQAB\n-----END PUBLIC KEY-----"
+    "id": "http://localhost:8000/u/bob/main-key",
+    "owner": "http://localhost:8000/u/bob",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyoNd+F9RcYYOVi/cvXfF7s4cY7lTv5Y1eM2OG6v87K6PuLmmNGVNdXgtpMmMXuDSWjCdfHIQkeQm+SE3MX/vG62zAnWtfOjbwd+zX0ESOi4/ms4fiBId2BkvprJ7vFZcrK+hcyGbzCo2cQHb7574TJxEU/5POBJsMTu4yqZozjiKkh0WAs5VwASC7cgd0cgTjykH8mnPkEFJRdcCp0xlFKIB0xYBzPJzkAIFeqF0n4KtUQIkQZIvFrNP8+mWtywVxw8wSPX3YxdxhShTd/iYx+8Ilu5iqck9VhZVQWFXfsp6+bxhLwFSs72oowPMnaeo9Rj8LPkHc2i/IA55ARBxAQIDAQAB\n-----END PUBLIC KEY-----"
   },
-  "icon": [
-    "http://localhost:8080/m/u/bob/avatar.png"
-  ],
-  "image": "http://localhost:8080/m/u/bob/banner.png"
+  "icon": {
+    "mediaType": "image/png",
+    "type": "Image",
+    "url": "http://localhost:8000/m/u/bob/avatar.png"
+  },
+  "image": {
+    "type": "Image",
+    "mediaType": "image/png",
+    "url": "http://localhost:8000/m/u/bob/banner.png"
+  }
 }
 ```
 
