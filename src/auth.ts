@@ -90,7 +90,7 @@ auth.post("/register", async function (ctx) {
   if (!settings.allowRegistrations) {
     return throwAPIError(ctx, "Registrations not allowed.", 404);
   }
-    
+
   if (!ctx.request.hasBody) {
     return throwAPIError(ctx, "No body provided.", 404);
   }
@@ -102,7 +102,7 @@ auth.post("/register", async function (ctx) {
   }
 
   const requestJSON = await raw.value;
-    
+
   if (!requestJSON.password || !requestJSON.username) {
     return throwAPIError(
       ctx,

@@ -19,7 +19,7 @@ export const settings = {
   },
   "staticFileDir": "./static",
   "siteName": "Parasite Instance",
-  "allowRegistrations": true,  
+  "allowRegistrations": true,
   "limits": {
     "minListItems": 3,
     "maxListItems": 120,
