@@ -219,9 +219,15 @@ export function extractKey(keyType: string, key: string) {
 // HTTP Boilerplate function.
 // Mainly used for internal sending functions.
 export function genHTTPSigBoilerplate(params: string = {}) {
-  return (`(request-target): ${params.target}
-host: ${params.host}
-date: ${params.date}`);
+  let str = `(request-target): ${params.target}\n`;
+  for (const property in params) {
+     if (property === "target") {
+       continue;
+     }
+     str += `${property}: ${params[property]}\n`
+  }
+  str = str.slice(0, -1); // Remove leading newline
+  return str;
 }
 
 // Basic function to sign a message using a key.
