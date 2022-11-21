@@ -221,10 +221,10 @@ export function extractKey(keyType: string, key: string) {
 export function genHTTPSigBoilerplate(params: string = {}) {
   let str = `(request-target): ${params.target}\n`;
   for (const property in params) {
-     if (property === "target") {
-       continue;
-     }
-     str += `${property}: ${params[property]}\n`
+    if (property === "target") {
+      continue;
+    }
+    str += `${property}: ${params[property]}\n`;
   }
   str = str.slice(0, -1); // Remove leading newline
   return str;
