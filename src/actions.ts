@@ -145,7 +145,7 @@ actions.post("/x/follow", async function (ctx: Context) {
   }
 
   const res = await followAttempt.json();
-    
+
   if (res.type === "Accept") {
     const userFollowers = await getUActivity(data.decoded.name, "following");
 
@@ -388,11 +388,13 @@ actions.post("/x/like", async function (ctx: Context) {
   const d = new Date();
   const u = new URL(requestJSON.object);
   const time = d.toUTCString();
+  const hashedDigest = await hashFromString(requestJSON.object);
 
   const msg = genHTTPSigBoilerplate({
     "target": `post ${u.pathname}`,
     "host": new URL(userActivity.id).host,
     "date": time,
+    "digest": `SHA-256=${hashedDigest}`,
   });
 
   const actorKeys = await getUActivity(data.decoded.name, "keys");
@@ -402,18 +404,19 @@ actions.post("/x/like", async function (ctx: Context) {
 
   const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
   const header =
-    `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+    `keyId="${userActivity.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sig}"`;
 
   try {
     const sendToObject = await fetch(requestJSON.object, {
       method: "POST",
       headers: {
+        "Authorization": await ctx.request.headers.get("Authorization"),
         "Accept": "application/activity+json",
         "Content-Type": "application/json",
         "Signature": header,
         "Date": time,
         "Host": u.host,
-        "Authorization": await ctx.request.headers.get("Authorization"),
+        "Digest": `SHA-256=${hashedDigest}`,
       },
       body: JSON.stringify(obj),
     });
@@ -496,14 +499,15 @@ actions.post("/x/dislike", async function (ctx: Context) {
   userDislikes.totalItems = userDislikes.orderedItems.length;
 
   const d = new Date();
-
   const u = new URL(requestJSON.object);
   const time = d.toUTCString();
+  const hashedDigest = await hashFromString(requestJSON.object);
 
   const msg = genHTTPSigBoilerplate({
     "target": `post ${u.pathname}`,
     "host": new URL(userActivity.id).host,
     "date": time,
+    "digest": `SHA-256=${hashedDigest}`,
   });
 
   const actorKeys = await getUActivity(data.decoded.name, "keys");
@@ -513,17 +517,19 @@ actions.post("/x/dislike", async function (ctx: Context) {
 
   const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
   const header =
-    `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+    `keyId="${userActivity.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sig}"`;
+
   try {
     const sendToObject = await fetch(requestJSON.object, {
       method: "POST",
       headers: {
+        "Authorization": await ctx.request.headers.get("Authorization"),
         "Accept": "application/activity+json",
         "Content-Type": "application/json",
         "Signature": header,
         "Date": time,
         "Host": u.host,
-        "Authorization": await ctx.request.headers.get("Authorization"),
+        "Digest": `SHA-256=${hashedDigest}`,
       },
       body: JSON.stringify(obj),
     });
@@ -573,154 +579,163 @@ actions.post("/x/comment", async function (ctx: Context) {
     );
   }
 
-  try {
-    const externalActorURL = new URL(requestJSON.inReplyTo);
-    checkInstanceBlocked(externalActorURL.host, ctx);
+  const externalActorURL = new URL(requestJSON.inReplyTo);
+  checkInstanceBlocked(externalActorURL.host, ctx);
 
-    const userActivity = await getUActivity(data.decoded.name, "info");
-    const role = await getUActivity(data.decoded.name, "roles");
+  const userActivity = await getUActivity(data.decoded.name, "info");
+  const role = await getUActivity(data.decoded.name, "roles");
 
-    if (!role.createComments) {
-      return throwAPIError(ctx, "Action not permitted.", 400);
-    }
+  if (!role.createComments) {
+    return throwAPIError(ctx, "Action not permitted.", 400);
+  }
 
-    const id: string = await genUUID(14);
-    const url = `${settings.siteURL}/c/${id}`;
-    const d = new Date();
+  const id: string = await genUUID(14);
+  const url = `${settings.siteURL}/c/${id}`;
+  const d = new Date();
 
-    const comment = genReply({
-      "id": url,
-      "actor": userActivity.id,
-      "published": d.toISOString(),
-      "content": marked.parse(requestJSON.content),
-      "inReplyTo": requestJSON.inReplyTo,
-    });
+  const comment = genReply({
+    "id": url,
+    "actor": userActivity.id,
+    "published": d.toISOString(),
+    "content": marked.parse(requestJSON.content),
+    "inReplyTo": requestJSON.inReplyTo,
+  });
 
-    const activity = wrapperCreate({
-      "id": `${url}/activity`,
-      "actor": comment.attributedTo,
-      "object": comment,
-      "to": userActivity.followers,
-    });
+  const activity = wrapperCreate({
+    "id": `${url}/activity`,
+    "actor": comment.attributedTo,
+    "object": comment,
+    "to": userActivity.followers,
+  });
 
-    await addToDB("comments", {
-      "id": id,
-      "json": comment,
-      "activity": activity,
-      "uploader": data.decoded.name,
-      "likes": genOrderedCollection(`${url}/likes`),
-      "dislikes": genOrderedCollection(`${url}/dislikes`),
-      "replies": genOrderedCollection(`${url}/r`),
-      "flags": genOrderedCollection(`${url}/flags`),
-    });
+  await addToDB("comments", {
+    "id": id,
+    "json": comment,
+    "activity": activity,
+    "uploader": data.decoded.name,
+    "likes": genOrderedCollection(`${url}/likes`),
+    "dislikes": genOrderedCollection(`${url}/dislikes`),
+    "replies": genOrderedCollection(`${url}/r`),
+    "flags": genOrderedCollection(`${url}/flags`),
+  });
 
-    const userOutbox = await getUActivity(data.decoded.name, "outbox");
+  const userOutbox = await getUActivity(data.decoded.name, "outbox");
 
-    userOutbox.orderedItems.push(activity);
-    userOutbox.totalItems = userOutbox.orderedItems.length;
+  userOutbox.orderedItems.push(activity);
+  userOutbox.totalItems = userOutbox.orderedItems.length;
 
-    await basicObjectUpdate("users", {
-      "outbox": userOutbox,
-    }, data.decoded.name);
+  await basicObjectUpdate("users", {
+    "outbox": userOutbox,
+  }, data.decoded.name);
 
-    // Send to followers
-    const followers = await getUActivity(data.decoded.name, "followers");
+  // Send to followers
+  const followers = await getUActivity(data.decoded.name, "followers");
 
-    let i = 0;
+  let i = 0;
 
-    for (const follower of followers.orderedItems) {
-      const u = new URL(follower);
+  for (const follower of followers.orderedItems) {
+    const u = new URL(follower);
 
-      if (u.origin === settings.siteURL) {
-        // Deliver locally, and nothing more.
-        const username = u.pathname.split("/").pop();
-        // Add to inbox of local user.
-        const inbox = await getUActivity(username, "inbox");
+    if (u.origin === settings.siteURL) {
+      // Deliver locally, and nothing more.
+      const username = u.pathname.split("/").pop();
+      // Add to inbox of local user.
+      const inbox = await getUActivity(username, "inbox");
 
-        inbox.orderedItems.push(activity.id);
-        inbox.totalItems = inbox.orderedItems.length;
+      inbox.orderedItems.push(activity.id);
+      inbox.totalItems = inbox.orderedItems.length;
 
-        await basicObjectUpdate("users", {
-          "inbox": inbox,
-        }, username);
-      } else {
-        const actorKeys = await getUActivity(data.decoded.name, "keys");
-        const priv = await extractKey("private", actorKeys[1]);
+      await basicObjectUpdate("users", {
+        "inbox": inbox,
+      }, username);
+    } else {
+      const actorKeys = await getUActivity(data.decoded.name, "keys");
+      const priv = await extractKey("private", actorKeys[1]);
 
-        const time = d.toUTCString();
+      const hashedDigest = await hashFromString(
+        marked.parse(requestJSON.content),
+      );
+      const time = d.toUTCString();
 
-        const msgToFollowers = genHTTPSigBoilerplate({
-          "target": `post ${u.pathname}`,
-          "host": u.host,
-          "date": time,
+      const msgToFollowers = genHTTPSigBoilerplate({
+        "target": `post ${u.pathname}`,
+        "host": u.host,
+        "date": time,
+        "digest": `SHA-256=${hashedDigest}`,
+      });
+
+      const signedFollowers = await simpleSign(msgToFollowers, priv);
+
+      const b64sigFollowers = btoa(
+        String.fromCharCode.apply(null, new Uint8Array(signedFollowers)),
+      );
+      const header =
+        `keyId="${userActivity.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sig}"`;
+
+      try {
+        const actInfo = await fetch(follower, {
+          headers: {
+            "Accept": "application/activity+json",
+            "Content-Type": "application/activity+json",
+          },
+          method: "GET",
+        });
+        actInfo = await actInfo.json();
+
+        let r = await fetch(actInfo.inbox, {
+          method: "POST",
+          headers: {
+            "Accept": "application/activity+json",
+            "Content-Type": "application/json",
+            "Signature": header,
+            "Date": time,
+            "Host": u.host,
+            "Digest": `SHA-256=${hashedDigest}`,
+          },
+          body: JSON.stringify(activity),
         });
 
-        const signedFollowers = await simpleSign(msgToFollowers, priv);
+        r = await r.json();
 
-        const b64sigFollowers = btoa(
-          String.fromCharCode.apply(null, new Uint8Array(signedFollowers)),
-        );
-        const header =
-          `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sigFollowers}"`;
-
-        try {
-          const actInfo = await fetch(follower, {
-            headers: {
-              "Accept": "application/activity+json",
-              "Content-Type": "application/activity+json",
-            },
-            method: "GET",
-          });
-          actInfo = await actInfo.json();
-
-          let r = await fetch(actInfo.inbox, {
-            method: "POST",
-            headers: {
-              "Accept": "application/activity+json",
-              "Content-Type": "application/json",
-              "Signature": header,
-              "Date": time,
-              "Host": u.host,
-            },
-            body: JSON.stringify(activity),
-          });
-
-          r = await r.json();
-
-          if (r.err) {
-            i++;
-          }
-        } catch {
-          continue;
+        if (r.err) {
+          i++;
         }
+      } catch {
+        continue;
       }
     }
+  }
 
-    let errNo = "";
+  let errNo = "";
 
-    if (0 < i) {
-      errNo = ` with ${i} followers failing to recieve it`; // Keep the space at the start.
-    }
+  if (0 < i) {
+    errNo = ` with ${i} followers failing to recieve it`; // Keep the space at the start.
+  }
 
+  try {
     const u = new URL(requestJSON.inReplyTo);
     const time = d.toUTCString();
+    const hashedDigest = await hashFromString(
+      marked.parse(requestJSON.content),
+    );
 
-    const msg = genHTTPSigBoilerplate({
+    const msgToFollowers = genHTTPSigBoilerplate({
       "target": `post ${u.pathname}`,
       "host": new URL(userActivity.id).host,
       "date": time,
+      "digest": `SHA-256=${hashedDigest}`,
     });
 
     const actorKeys = await getUActivity(data.decoded.name, "keys");
     const priv = await extractKey("private", actorKeys[1]);
 
-    const signed = await simpleSign(msg, priv);
+    const signed = await simpleSign(msgToFollowers, priv);
 
     const b64sig = btoa(
       String.fromCharCode.apply(null, new Uint8Array(signed)),
     );
     const header =
-      `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+      `keyId="${userActivity.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sig}"`;
 
     const sendToObject = await fetch(requestJSON.inReplyTo, {
       method: "POST",
@@ -731,6 +746,7 @@ actions.post("/x/comment", async function (ctx: Context) {
         "Date": time,
         "Host": u.host,
         "Authorization": await ctx.request.headers.get("Authorization"),
+        "Digest": `SHA-256=${hashedDigest}`,
       },
       body: JSON.stringify(activity),
     });

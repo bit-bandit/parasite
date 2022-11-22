@@ -9,6 +9,7 @@ import {
 import {
   extractKey,
   genHTTPSigBoilerplate,
+  hashFromString,
   simpleSign,
   simpleVerify,
   str2ab,
@@ -193,11 +194,13 @@ lists.post("/l", async function (ctx) {
       const actorKeys = await getUActivity(data.decoded.name, "keys");
       const priv = await extractKey("private", actorKeys[1]);
       const time = d.toUTCString();
+      const hashedDigest = await hashFromString(parsed);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${u.pathname}`,
         "host": u.host,
         "date": time,
+        "digest": `SHA-256=${hashedDigest}`,
       });
 
       const signed = await simpleSign(msg, priv);
@@ -206,7 +209,7 @@ lists.post("/l", async function (ctx) {
         String.fromCharCode.apply(null, new Uint8Array(signed)),
       );
       const header =
-        `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+        `keyId="${userActivity.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sig}"`;
 
       try {
         const actInfo = await fetch(follower, {
@@ -226,6 +229,7 @@ lists.post("/l", async function (ctx) {
             "Signature": header,
             "Date": time,
             "Host": u.host,
+            "Digest": `SHA-256=${hashedDigest}`,
           },
           body: JSON.stringify(activity),
         });
@@ -285,6 +289,7 @@ lists.post("/l/:id", async function (ctx) {
         "target": `post ${new URL(requestJSON.object).pathname}`,
         "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
+        "digest": await ctx.request.headers.get("digest"),
       });
 
       const parsedSig =
@@ -343,6 +348,7 @@ lists.post("/l/:id", async function (ctx) {
         "target": `post ${new URL(requestJSON.object).pathname}`,
         "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
+        "digest": await ctx.request.headers.get("digest"),
       });
 
       const parsedSig =
@@ -400,6 +406,7 @@ lists.post("/l/:id", async function (ctx) {
         "target": `post ${new URL(requestJSON.object.inReplyTo).pathname}`,
         "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
+        "digest": await ctx.request.headers.get("digest"),
       });
 
       const parsedSig =
@@ -554,6 +561,7 @@ lists.post("/l/:id", async function (ctx) {
         "target": `post ${new URL(requestJSON.object).pathname}`,
         "host": externalActorURL.host,
         "date": await ctx.request.headers.get("date"),
+        "digest": await ctx.request.headers.get("digest"),
       });
 
       const parsedSig =

@@ -99,6 +99,7 @@ comments.post("/c/:id", async function (ctx) {
         "target": `post ${reqURL.pathname}`,
         "host": reqURL.host,
         "date": await ctx.request.headers.get("date"),
+        "digest": await ctx.request.headers.get("digest"),
       });
 
       const parsedSig =
@@ -154,6 +155,7 @@ comments.post("/c/:id", async function (ctx) {
         "target": `post ${reqURL.pathname}`,
         "host": reqURL.host,
         "date": await ctx.request.headers.get("date"),
+        "digest": await ctx.request.headers.get("digest"),
       });
 
       const parsedSig =
@@ -217,6 +219,7 @@ comments.post("/c/:id", async function (ctx) {
         "target": `post ${reqURL.pathname}`,
         "host": reqURL.host,
         "date": await ctx.request.headers.get("date"),
+        "digest": await ctx.request.headers.get("digest"),
       });
 
       const parsedSig =
@@ -340,6 +343,7 @@ comments.post("/c/:id", async function (ctx) {
         "target": `post ${reqURL.pathname}`,
         "host": reqURL.host,
         "date": await ctx.request.headers.get("date"),
+        "digest": await ctx.request.headers.get("digest"),
       });
 
       const parsedSig =
