@@ -131,7 +131,9 @@ users.post("/u/:id/outbox", async function (ctx) {
     "target": `post ${reqURL.pathname}`,
     "host": settingsURL.host,
     "date": await ctx.request.headers.get("date"),
+    "digest": await ctx.request.headers.get("digest"),
   });
+
   const parsedSig = /(.*)=\"(.*)\",?/mg.exec(reqSig)[2];
 
   const postSignature = str2ab(atob(parsedSig));
@@ -204,6 +206,8 @@ users.post("/u/:id/inbox", async function (ctx) {
       400,
     );
   }
+
+  const actor = await getUActivity(ctx.params.id, "info");
   const follows = await getUActivity(ctx.params.id, "followers");
   const inbox = await getUActivity(ctx.params.id, "inbox");
   const req = await raw.value;
@@ -213,6 +217,7 @@ users.post("/u/:id/inbox", async function (ctx) {
       "Accept": "application/activity+json",
     },
   })).json();
+
   const foreignKey = await extractKey(
     "public",
     foreignActorInfo.publicKey.publicKeyPem,
@@ -225,6 +230,7 @@ users.post("/u/:id/inbox", async function (ctx) {
     "target": `post ${reqURL.pathname}`,
     "host": settingsURL.host,
     "date": await ctx.request.headers.get("date"),
+    "digest": await ctx.request.headers.get("digest"),
   });
 
   const parsedSig = /(.*)=\"(.*)\",?/mg.exec(reqSig)[2];
@@ -241,6 +247,7 @@ users.post("/u/:id/inbox", async function (ctx) {
     return throwAPIError(ctx, "Invalid HTTP Signature", 400);
   }
 
+  // Create
   if (
     req.type === "Create" ||
     req.type === "Update"
@@ -257,6 +264,74 @@ users.post("/u/:id/inbox", async function (ctx) {
     }, ctx.params.id);
     // Look into what response should be if it's
     // successful.
+  } else if (req.type === "Follow") {
+    if (!req.actor) {
+      return throwAPIError(ctx, "'actor' parameter not present", 400);
+    }
+
+    if (follows.orderedItems.includes(req.actor)) {
+      return throwAPIError(ctx, "Already following actor.", 400);
+    }
+
+    follows.orderedItems.push(req.actor);
+    follows.totalItems = follows.orderedItems.length;
+
+    await basicObjectUpdate("users", {
+      "followers": follows,
+    }, ctx.params.id);
+
+    const id: string = await genUUID(19);
+    const url = `${settings.siteURL}/x/${id}`;
+
+    const acceptJSON = genInvitationReply({
+      "id": url,
+      "actor": actor.id,
+      "type": "Accept",
+      "summary": `${req.actor} following ${ctx.params.id}`,
+      "object": req,
+    });
+
+    await addToDB(
+      "actions",
+      {
+        "id": id,
+        "json": acceptJSON,
+        "activity": {},
+        "uploader": ctx.params.id,
+        "likes": {},
+        "dislikes": {},
+        "replies": {},
+        "flags": {},
+      },
+    );
+
+    ctx.response.body = acceptJSON;
+    ctx.response.status = 201;
+    ctx.response.type = "application/activity+json";
+  } else if (req.type === "Undo") {
+    const follows = await getUActivity(ctx.params.id, "followers");
+
+    if (!follows.orderedItems.includes(req.actor)) {
+      return throwAPIError(ctx, "Already not following actor", 400);
+    }
+
+    const followsIndex = follows.orderedItems.indexOf(req.actor);
+
+    follows.orderedItems.splice(followsIndex, 1);
+
+    await basicObjectUpdate("users", {
+      "followers": follows,
+    }, ctx.params.id);
+
+    ctx.response.body = genInvitationReply({
+      "id": `${actor.id}#accept`,
+      "actor": actor.id,
+      "type": "Accept",
+      "summary": `${req.actor} not following ${ctx.params.id} anymore.`,
+      "object": req,
+    });
+    ctx.response.status = 200;
+    return ctx.response.type = "application/json";
   } else {
     return throwAPIError(ctx, "Invalid activity type", 400);
   }
@@ -265,32 +340,6 @@ users.post("/u/:id/inbox", async function (ctx) {
 users.post("/u/:id", async function (ctx: Context) {
   const data = await authData(ctx);
   const requestJSON = data.request;
-  // We can get away with this, because Tokens are
-  // issued server side, and therefore, require
-  // an existing user to issue
-  // ...right?
-
-  if (requestJSON.type && requestJSON.type === "Undo") {
-    const follows = await getUActivity(ctx.params.id, "followers");
-
-    if (!follows.orderedItems.includes(requestJSON.actor)) {
-      return throwAPIError(ctx, "Already not following actor", 400);
-    }
-
-    const followsIndex = follows.orderedItems.indexOf(requestJSON.actor);
-
-    follows.orderedItems.splice(followsIndex, 1);
-
-    await basicObjectUpdate("users", {
-      "followers": follows,
-    }, ctx.params.id);
-
-    ctx.response.body = {
-      "msg": `${requestJSON.actor} not following ${ctx.params.id} anymore.`,
-    };
-    ctx.response.status = 200;
-    return ctx.response.type = "application/json";
-  }
 
   if (data.decoded.name !== ctx.params.id) {
     return throwAPIError(

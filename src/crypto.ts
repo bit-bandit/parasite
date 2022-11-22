@@ -230,6 +230,18 @@ export function genHTTPSigBoilerplate(params: string = {}) {
   return str;
 }
 
+/**
+ * Return Base64 encoded string.
+ * @param string String to hash.
+ */
+export async function hashFromString(string) {
+  const hash = await crypto.subtle.digest(
+    "SHA-256",
+    (new TextEncoder()).encode(string),
+  );
+  return btoa(String.fromCharCode(...new Uint8Array(hash)));
+}
+
 // Basic function to sign a message using a key.
 // Returns: Signed message.
 export async function simpleSign(msg: string, privateKey: unknown) {

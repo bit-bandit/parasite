@@ -12,7 +12,12 @@ import {
   genVote,
   wrapperCreate,
 } from "./activity.ts";
-import { extractKey, genHTTPSigBoilerplate, simpleSign } from "./crypto.ts";
+import {
+  extractKey,
+  genHTTPSigBoilerplate,
+  hashFromString,
+  simpleSign,
+} from "./crypto.ts";
 import {
   authData,
   checkInstanceBlocked,
@@ -82,66 +87,88 @@ actions.post("/x/follow", async function (ctx: Context) {
   const actorKeys = await getUActivity(data.decoded.name, "keys");
   const priv = await extractKey("private", actorKeys[1]);
 
+  let fActor: unknown;
+
   try {
-    const fActor = await (await fetch(requestJSON.object, {
+    fActor = await (await fetch(requestJSON.object, {
       headers: { "Accept": "application/activity+json" },
     })).json();
-
-    const outboxURL = new URL(fActor.outbox);
-    const d = new Date();
-    const time = d.toUTCString();
-
-    const msg = genHTTPSigBoilerplate({
-      "target": `post ${outboxURL.pathname}`,
-      "host": outboxURL.host,
-      "date": time,
-    });
-
-    const signed = await simpleSign(msg, priv);
-
-    const b64sig = btoa(
-      String.fromCharCode.apply(null, new Uint8Array(signed)),
+  } catch {
+    return throwAPIError(
+      ctx,
+      "Error in fetching actor information",
+      400,
     );
-    const header =
-      `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+  }
 
-    const followAttempt = await fetch(fActor.outbox, {
+  const inboxURL = new URL(fActor.inbox);
+  const d = new Date();
+  const time = d.toUTCString();
+  const hashedDigest = await hashFromString(followJSON.summary);
+
+  const msg = genHTTPSigBoilerplate({
+    "target": `post ${inboxURL.pathname}`,
+    "host": inboxURL.host,
+    "date": time,
+    "digest": `SHA-256=${hashedDigest}`,
+  });
+
+  const signed = await simpleSign(msg, priv);
+
+  const b64sig = btoa(
+    String.fromCharCode.apply(null, new Uint8Array(signed)),
+  );
+  const header =
+    `keyId="${userActivity.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sig}"`;
+
+  let followAttempt: unknown;
+
+  try {
+    followAttempt = await fetch(fActor.inbox, {
       method: "POST",
       headers: {
         "Accept": "application/activity+json",
         "Content-Type": "application/json",
         "Signature": header,
         "Date": time,
-        "Host": outboxURL.host,
+        "Host": inboxURL.host,
+        "Digest": `SHA-256=${hashedDigest}`,
       },
       body: JSON.stringify(followJSON),
     });
-
-    const res = await followAttempt.json();
-
-    if (res.type === "Accept") {
-      const userFollowers = await getUActivity(data.decoded.name, "following");
-
-      userFollowers.orderedItems.push(requestJSON.object);
-      userFollowers.totalItems = userFollowers.orderedItems.length;
-
-      ctx.response.body = res;
-
-      await basicObjectUpdate("users", {
-        "following": userFollowers,
-      }, data.decoded.name);
-    } else {
-      ctx.response.body = res;
-      ctx.response.status = 400;
-      ctx.response.type = "application/json";
-    }
   } catch {
+    return throwAPIError(
+      ctx,
+      "Error in sending request to Actor inbox",
+      400,
+    );
+  }
+
+  const res = await followAttempt.json();
+    
+  if (res.type === "Accept") {
+    const userFollowers = await getUActivity(data.decoded.name, "following");
+
+    userFollowers.orderedItems.push(requestJSON.object);
+    userFollowers.totalItems = userFollowers.orderedItems.length;
+
+    ctx.response.body = res;
+
+    await basicObjectUpdate("users", {
+      "following": userFollowers,
+    }, data.decoded.name);
+  } else {
+    ctx.response.body = res;
+    ctx.response.status = 400;
+    ctx.response.type = "application/json";
+  }
+  /*
     return throwAPIError(
       ctx,
       "User not found",
       404,
-    );
-  }
+      );
+      */
 });
 
 // Send 'Undo' object type.
@@ -218,72 +245,98 @@ actions.post("/x/undo", async function (ctx) {
   const d = new Date();
   const u = new URL(requestJSON.object);
   const time = d.toUTCString();
-
-  const msg = genHTTPSigBoilerplate({
-    "target": `post ${u.pathname}`,
-    "host": new URL(userActivity.id).host,
-    "date": time,
-  });
+  const hashedDigest = await hashFromString(requestJSON.object);
 
   const actorKeys = await getUActivity(data.decoded.name, "keys");
   const priv = await extractKey("private", actorKeys[1]);
+
+  let o: unknown;
+  let msg: string;
+
+  try {
+    o = await fetch(requestJSON.object, {
+      headers: {
+        "Accept": "application/activity+json",
+      },
+    });
+    o = await o.json();
+  } catch {
+    return throwAPIError(ctx, "Error fetching object data", 400);
+  }
+
+  if (o.type === "Person") {
+    msg = genHTTPSigBoilerplate({
+      "target": `post ${new URL(o.inbox).pathname}`,
+      "host": new URL(userActivity.id).host,
+      "date": time,
+      "digest": `SHA-256=${hashedDigest}`,
+    });
+    requestJSON.object = o.inbox;
+  } else {
+    msg = genHTTPSigBoilerplate({
+      "target": `post ${u.pathname}`,
+      "host": new URL(userActivity.id).host,
+      "date": time,
+      "digest": `SHA-256=${hashedDigest}`,
+    });
+  }
 
   const signed = await simpleSign(msg, priv);
 
   const b64sig = btoa(String.fromCharCode.apply(null, new Uint8Array(signed)));
   const header =
-    `keyId="${userActivity.publicKey.id}",headers="(request-target) host date",signature="${b64sig}"`;
+    `keyId="${userActivity.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sig}"`;
 
-  try {
-    const sendToObject = await fetch(requestJSON.object, {
-      method: "POST",
-      headers: {
-        "Accept": "application/activity+json",
-        "Content-Type": "application/json",
-        "Signature": header,
-        "Date": time,
-        "Host": u.host,
-        "Authorization": await ctx.request.headers.get("Authorization"),
-      },
-      body: JSON.stringify(obj),
-    });
+  const sendToObject = await fetch(requestJSON.object, {
+    method: "POST",
+    headers: {
+      "Accept": "application/activity+json",
+      "Content-Type": "application/json",
+      "Signature": header,
+      "Date": time,
+      "Host": u.host,
+      "Digest": `SHA-256=${hashedDigest}`,
+      "Authorization": await ctx.request.headers.get("Authorization"),
+    },
+    body: JSON.stringify(obj),
+  });
 
-    const res = await sendToObject.json();
+  const res = await sendToObject.json();
 
-    if (res.err) {
-      return throwAPIError(ctx, res.msg, 400);
-    }
+  if (res.err) {
+    return throwAPIError(ctx, res.msg, 400);
+  }
 
-    if (likesIndex !== -1) {
-      await basicObjectUpdate("users", {
-        "likes": userLikes,
-      }, data.decoded.name);
-    }
+  if (likesIndex !== -1) {
+    await basicObjectUpdate("users", {
+      "likes": userLikes,
+    }, data.decoded.name);
+  }
 
-    if (dislikesIndex !== -1) {
-      await basicObjectUpdate("users", {
-        "dislikes": userDislikes,
-      }, data.decoded.name);
-    }
+  if (dislikesIndex !== -1) {
+    await basicObjectUpdate("users", {
+      "dislikes": userDislikes,
+    }, data.decoded.name);
+  }
 
-    if (followingIndex !== -1) {
-      await basicObjectUpdate("users", {
-        "following": userFollowing,
-      }, data.decoded.name);
-    }
+  if (followingIndex !== -1) {
+    await basicObjectUpdate("users", {
+      "following": userFollowing,
+    }, data.decoded.name);
+  }
 
-    ctx.response.body = res;
-    ctx.response.status = 201;
-    ctx.response.type =
-      'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
-    ctx.response.headers.set("Location", url);
-  } catch {
+  ctx.response.body = res;
+  ctx.response.status = 201;
+  ctx.response.type =
+    'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+  ctx.response.headers.set("Location", url);
+  /*
     return throwAPIError(
       ctx,
       "Item not found",
       404,
-    );
-  }
+      );
+      */
 });
 
 actions.post("/x/like", async function (ctx: Context) {
