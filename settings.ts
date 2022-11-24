@@ -63,4 +63,6 @@ export const settings = {
     // but increase how often users have to log in.
     "tokenLifetime": 60 * 60 * 24 * 7, // = 1 week
   },
+  // Ensure Webfinger to be HTTP only
+  "webfingerSecureOnly": true,
 };

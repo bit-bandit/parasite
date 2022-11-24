@@ -444,11 +444,13 @@ users.get("/.well-known/webfinger", function (ctx) {
   const resource: string | null = url.searchParams.get("resource");
   const rel: string | null = url.searchParams.get("rel");
 
-  // The spec only allows WebFinger over HTTPS.
-  if (!ctx.request.secure) {
-    ctx.response.status = 403;
-    ctx.response.body = "";
-    return;
+  // The spec only allows WebFinger over HTTPS - This can optionally be disabled.
+  if (settings.webfingerSecureOnly) {
+    if (!ctx.request.secure) {
+      ctx.response.status = 403;
+      ctx.response.body = "";
+      return;
+    }
   }
 
   if (!resource) {
