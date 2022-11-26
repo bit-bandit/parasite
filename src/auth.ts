@@ -153,6 +153,7 @@ auth.post("/register", async function (ctx) {
     "inbox": `${userAPI}/inbox`,
     "outbox": `${userAPI}/outbox`,
     "name": requestJSON.username,
+    "preferredUsername": requestJSON.username,
     "summary": "",
     "icon": {
       "mediaType": "image/png",

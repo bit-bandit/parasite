@@ -239,6 +239,7 @@ export function actorObj(params: unknown = {}) {
     "inbox": params.inbox,
     "outbox": params.outbox,
     "name": params.name,
+    "preferredUsername": params.preferredUsername,
     "summary": params.summary,
     "publicKey": {
       "id": params.keyURL,
