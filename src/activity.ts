@@ -170,6 +170,7 @@ export function genObj(params: unknown = {}): ActivityObject {
     "published": params.published,
     "attributedTo": params.actor,
     "name": params.name,
+    "mediaType": "text/html",
     "content": params.content,
     "tag": params.tags,
     "attachment": {
@@ -189,6 +190,7 @@ export function genReply(params: unknown = {}): ActivityObject {
     "type": params.type ?? "Note", // In case we can't be shitted to write this down, keep note in.
     "published": params.published, // TODO: Figure out how the fuck ActivityStreams does dates
     "attributedTo": params.actor,
+    "mediaType": "text/html",
     "content": params.content,
     "inReplyTo": params.inReplyTo,
     "to": ["https://www.w3.org/ns/activitystreams#Public"], // All posts are public; Sorry!
@@ -293,6 +295,7 @@ export function genOrderedCollection(
     "name": params.name,
     "attributedTo": params.actor,
     "published": params.published,
+    "mediaType": "text/html",
     "summary": params.summary,
     "totalItems": items.length,
     "replies": params.replies,
