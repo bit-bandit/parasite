@@ -100,99 +100,6 @@ users.get("/u/:id/main-key", async function (ctx) {
 });
 
 users.post("/u/:id/outbox", async function (ctx) {
-  const reqSig = await ctx.request.headers.get("Signature");
-  const raw = await ctx.request.body();
-
-  if (raw.type !== "json") {
-    return throwAPIError(
-      ctx,
-      "Invalid content type (Must be application/json)",
-      400,
-    );
-  }
-
-  const actor = await getUActivity(ctx.params.id, "info");
-  const follows = await getUActivity(ctx.params.id, "followers");
-  const req = await raw.value;
-
-  const foreignActorInfo = await (await fetch(req.actor, {
-    headers: { "Accept": "application/activity+json" },
-  })).json();
-
-  const foreignKey = await extractKey(
-    "public",
-    foreignActorInfo.publicKey.publicKeyPem,
-  );
-
-  const reqURL = new URL(ctx.request.url);
-  const settingsURL = new URL(settings.siteURL);
-
-  const msg = genHTTPSigBoilerplate({
-    "target": `post ${reqURL.pathname}`,
-    "host": settingsURL.host,
-    "date": await ctx.request.headers.get("date"),
-    "digest": await ctx.request.headers.get("digest"),
-  });
-
-  const parsedSig = /(.*)=\"(.*)\",?/mg.exec(reqSig)[2];
-
-  const postSignature = str2ab(atob(parsedSig));
-
-  const validSig = await simpleVerify(
-    foreignKey,
-    msg,
-    postSignature,
-  );
-
-  if (!validSig) {
-    return throwAPIError(ctx, "Invalid HTTP Signature", 400);
-  }
-
-  if (req.type === "Follow") {
-    if (!req.actor) {
-      return throwAPIError(ctx, "'actor' parameter not present", 400);
-    }
-
-    if (follows.orderedItems.includes(req.actor)) {
-      return throwAPIError(ctx, "Already following actor.", 400);
-    }
-
-    follows.orderedItems.push(req.actor);
-    follows.totalItems = follows.orderedItems.length;
-
-    await basicObjectUpdate("users", {
-      "followers": follows,
-    }, ctx.params.id);
-
-    const id: string = await genUUID(19);
-    const url = `${settings.siteURL}/x/${id}`;
-
-    const acceptJSON = genInvitationReply({
-      "id": url,
-      "actor": actor.id,
-      "type": "Accept",
-      "summary": `${req.actor} following ${ctx.params.id}`,
-      "object": req,
-    });
-
-    await addToDB(
-      "actions",
-      {
-        "id": id,
-        "json": acceptJSON,
-        "activity": {},
-        "uploader": ctx.params.id,
-        "likes": {},
-        "dislikes": {},
-        "replies": {},
-        "flags": {},
-      },
-    );
-
-    ctx.response.body = acceptJSON;
-    ctx.response.status = 201;
-    ctx.response.type = "application/activity+json";
-  }
 });
 
 users.post("/u/:id/inbox", async function (ctx) {
@@ -250,13 +157,29 @@ users.post("/u/:id/inbox", async function (ctx) {
   // Create
   if (
     req.type === "Create" ||
-    req.type === "Update"
+    req.type === "Update" ||
+    req.type === "Accept" ||
+    req.type === "Reject"
   ) {
-    if (!follows.orderedItems.includes(req.actor)) {
-      return throwAPIError(ctx, "Recipient is not following user", 400);
+    if (
+      req.type === "Create" ||
+      req.type === "Update"
+    ) {
+      if (!follows.orderedItems.includes(req.actor)) {
+        return throwAPIError(ctx, "Recipient is not following user", 400);
+      }
     }
 
-    inbox.orderedItems.push(req.id);
+    // Don't ask. Why I did this. I don't know why.
+    if (
+      req.type !== "Create" ||
+      req.type !== "Update"
+    ) {
+      inbox.orderedItems.push(req);
+    } else {
+      inbox.orderedItems.push(req.id);
+    }
+
     inbox.totalItems = inbox.orderedItems.length;
 
     await basicObjectUpdate("users", {

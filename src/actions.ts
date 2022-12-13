@@ -146,6 +146,8 @@ actions.post("/x/follow", async function (ctx: Context) {
 
   const res = await followAttempt.json();
 
+  // Quick and dirty method: If response is the "Accept" object itself, treat
+  // as valid.
   if (res.type === "Accept") {
     const userFollowers = await getUActivity(data.decoded.name, "following");
 
@@ -158,6 +160,50 @@ actions.post("/x/follow", async function (ctx: Context) {
       "following": userFollowers,
     }, data.decoded.name);
   } else {
+    // Standard complaint version: Check if the "Accept" type is in the inbox.
+    // This is pretty crappy, but hey, I'm not complaining.
+    let whatDidTheySay = "NA";
+
+    const getInfo = async () => {
+      let userActivity = await getUActivity(data.decoded.name, "inbox");
+
+      userActivity.orderedItems.filter((x) =>
+        x.type === "Accept" || x.type === "Reject"
+      );
+
+      for (const item of userActivity.orderedItems) {
+        if (
+          typeof item.object === "string" && item.object === followJSON.id &&
+          item.type === "Accept"
+        ) {
+          whatDidTheySay = "Accept";
+        } else {
+          whatDidTheySay = "Reject";
+        }
+      }
+
+      // Try 5 times and give up.
+      for (let min = 0; min < 5; min++) {
+        setTimeout(await getInfo(), 3000);
+      }
+
+      if (whatDidTheySay === "Accept") {
+        const userFollowers = await getUActivity(
+          data.decoded.name,
+          "following",
+        );
+
+        userFollowers.orderedItems.push(requestJSON.object);
+        userFollowers.totalItems = userFollowers.orderedItems.length;
+
+        ctx.response.body = res;
+
+        await basicObjectUpdate("users", {
+          "following": userFollowers,
+        }, data.decoded.name);
+      }
+    };
+
     ctx.response.body = res;
     ctx.response.status = 400;
     ctx.response.type = "application/json";
