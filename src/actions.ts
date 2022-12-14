@@ -165,7 +165,7 @@ actions.post("/x/follow", async function (ctx: Context) {
     let whatDidTheySay = "NA";
 
     const getInfo = async () => {
-      let userActivity = await getUActivity(data.decoded.name, "inbox");
+      const userActivity = await getUActivity(data.decoded.name, "inbox");
 
       userActivity.orderedItems.filter((x) =>
         x.type === "Accept" || x.type === "Reject"
@@ -721,7 +721,7 @@ actions.post("/x/comment", async function (ctx: Context) {
         String.fromCharCode.apply(null, new Uint8Array(signedFollowers)),
       );
       const header =
-        `keyId="${userActivity.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sig}"`;
+        `keyId="${userActivity.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sigFollowers}"`;
 
       try {
         const actInfo = await fetch(follower, {

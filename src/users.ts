@@ -101,7 +101,9 @@ users.get("/u/:id/main-key", async function (ctx) {
   ctx.response.type = "application/json";
 });
 
-users.post("/u/:id/outbox", async function (ctx) {
+// We don't even allow POSTing to the outbox, why is
+// this here
+users.post("/u/:id/outbox", async function (/*ctx*/) {
 });
 
 users.post("/u/:id/inbox", async function (ctx) {
