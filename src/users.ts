@@ -3,12 +3,14 @@ import { Context, Router } from "https://deno.land/x/oak/mod.ts";
 import { verify } from "https://deno.land/x/djwt/mod.ts";
 import { addToDB, basicObjectUpdate, getUActivity } from "./db.ts";
 import { genInvitationReply } from "./activity.ts";
-import { getJWTKey } from "./crypto.ts";
 import { authData, genUUID, throwAPIError } from "./utils.ts";
 import { settings } from "../settings.ts";
 import {
   extractKey,
   genHTTPSigBoilerplate,
+  getJWTKey,
+  hashFromString,
+  simpleSign,
   simpleVerify,
   str2ab,
 } from "./crypto.ts";
@@ -227,6 +229,64 @@ users.post("/u/:id/inbox", async function (ctx) {
         "flags": {},
       },
     );
+
+    let fActor: unknown;
+
+    try {
+      fActor = await (await fetch(requestJSON.object, {
+        headers: { "Accept": "application/activity+json" }, // TODO: Add signed header to this.
+      })).json();
+    } catch {
+      return throwAPIError(
+        ctx,
+        "Error in fetching actor information",
+        400,
+      );
+    }
+
+    const actorKeys = await getUActivity(ctx.params.id, "keys");
+    const priv = await extractKey("private", actorKeys[1]);
+
+    const inboxURL = new URL(fActor.inbox);
+    const d = new Date();
+    const time = d.toUTCString();
+    const hashedDigest = await hashFromString(acceptJSON.summary);
+
+    const msg = genHTTPSigBoilerplate({
+      "target": `post ${inboxURL.pathname}`,
+      "host": inboxURL.host,
+      "date": time,
+      "digest": `SHA-256=${hashedDigest}`,
+    });
+
+    const signed = await simpleSign(msg, priv);
+
+    const b64sig = btoa(
+      String.fromCharCode.apply(null, new Uint8Array(signed)),
+    );
+    const header =
+      `keyId="${actor.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sig}"`;
+
+    try {
+      followAttempt = await fetch(fActor.inbox, {
+        method: "POST",
+        headers: {
+          "Accept": "application/activity+json",
+          "Content-Type": "application/json",
+          "Signature": header,
+          "Date": time,
+          "Host": inboxURL.host,
+          "Digest": `SHA-256=${hashedDigest}`,
+        },
+        body: JSON.stringify(acceptJSON),
+      });
+    } catch {
+      return throwAPIError(
+        ctx,
+        "Error in sending request to Actor inbox",
+        400,
+      );
+    }
 
     ctx.response.body = acceptJSON;
     ctx.response.status = 201;

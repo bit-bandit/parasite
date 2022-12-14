@@ -177,8 +177,10 @@ actions.post("/x/follow", async function (ctx: Context) {
           item.type === "Accept"
         ) {
           whatDidTheySay = "Accept";
+          res = item;
         } else {
           whatDidTheySay = "Reject";
+          res = item;
         }
       }
 
@@ -196,11 +198,14 @@ actions.post("/x/follow", async function (ctx: Context) {
         userFollowers.orderedItems.push(requestJSON.object);
         userFollowers.totalItems = userFollowers.orderedItems.length;
 
-        ctx.response.body = res;
-
         await basicObjectUpdate("users", {
           "following": userFollowers,
         }, data.decoded.name);
+
+        ctx.response.body = res;
+        ctx.response.status = 200;
+        ctx.response.type = "application/activity+json";
+        return;
       }
     };
 
