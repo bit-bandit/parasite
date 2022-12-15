@@ -186,7 +186,8 @@ actions.post("/x/follow", async function (ctx: Context) {
 
       // Try 5 times and give up.
       for (let min = 0; min < 5; min++) {
-        setTimeout(await getInfo(), 3000);
+        await new Promise(() => setTimeout(() => {}, 2 ** 64));
+        await getInfo();
       }
 
       if (whatDidTheySay === "Accept") {
