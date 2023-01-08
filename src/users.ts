@@ -451,7 +451,7 @@ users.get("/.well-known/webfinger", function (ctx) {
 
   // Not an acct: URI? We don't have any more info about that.
   if (!match) {
-    console.log("Not matching: " + resource);
+    console.log(`Not matching: ${resource}`);
     ctx.response.status = 404;
     ctx.response.body = "";
     return;
@@ -465,7 +465,7 @@ users.get("/.well-known/webfinger", function (ctx) {
     new URL("https://" + domain + "/");
   } catch {
     // Malformed URL? have fun with your 400 status because ur getting it
-    console.log("Invalid hostname: " + resource);
+    console.log(`Invalid hostname: ${resource}`);
     ctx.response.status = 400;
     ctx.response.body = "";
     return;
