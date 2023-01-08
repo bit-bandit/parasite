@@ -283,7 +283,7 @@ lists.post("/l/:id", async function (ctx) {
 
       const externalActorURL = new URL(requestJSON.actor);
 
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${new URL(requestJSON.object).pathname}`,
@@ -342,7 +342,7 @@ lists.post("/l/:id", async function (ctx) {
 
       const externalActorURL = new URL(requestJSON.actor);
 
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${new URL(requestJSON.object).pathname}`,
@@ -400,7 +400,7 @@ lists.post("/l/:id", async function (ctx) {
       );
 
       const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${new URL(requestJSON.object.inReplyTo).pathname}`,
@@ -555,7 +555,7 @@ lists.post("/l/:id", async function (ctx) {
 
       const externalActorURL = new URL(requestJSON.actor);
 
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${new URL(requestJSON.object).pathname}`,

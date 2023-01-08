@@ -290,7 +290,7 @@ torrents.post("/t/:id", async function (ctx) {
 
       const externalActorURL = new URL(requestJSON.actor);
 
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${new URL(requestJSON.object).pathname}`,
@@ -350,7 +350,7 @@ torrents.post("/t/:id", async function (ctx) {
 
       const externalActorURL = new URL(requestJSON.actor);
 
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${new URL(requestJSON.object).pathname}`,
@@ -401,7 +401,7 @@ torrents.post("/t/:id", async function (ctx) {
     // Adding a comment.
     case "Create": {
       const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor, {
         headers: { "Accept": "application/activity+json" },
@@ -559,7 +559,7 @@ torrents.post("/t/:id", async function (ctx) {
 
       const externalActorURL = new URL(requestJSON.actor);
 
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const msg = genHTTPSigBoilerplate({
         "target": `post ${new URL(requestJSON.object).pathname}`,

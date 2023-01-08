@@ -1,5 +1,6 @@
 // Crytography related functions.
 import { settings } from "../settings.ts";
+import { updateMeta } from "./db.ts";
 
 interface CryptoKeyStorage {
   creationDate: number;
@@ -28,8 +29,7 @@ export async function exportJWTKey() {
 
   // Store in memory for as short a time as possible
   keyStorage.jwk = {};
-
-  await Deno.writeFile(jwt.keyFile, encoder.encode(str), { mode: 0o600 });
+  await updateMeta({ key: str });
 }
 
 // Regenerates a key (just in case you want a new one)
@@ -60,7 +60,7 @@ export async function importJWTKey() {
 
   // Try reading directly -- if that fails, regenerate the key.
   try {
-    data = await Deno.readFile(jwt.keyFile);
+    data = (await getMetaJSON()).key;
     str = decoder.decode(data);
   } catch {
     await regenerateJWTKey();

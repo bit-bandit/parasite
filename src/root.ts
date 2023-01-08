@@ -1,7 +1,7 @@
 // Root page of a Parasite instance
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
 import { settings } from "../settings.ts";
-import { tableCount } from "./db.ts";
+import { getMetaJSON, tableCount } from "./db.ts";
 
 export const root = new Router();
 
@@ -11,6 +11,7 @@ root.get("/", async function (ctx: Context) {
   const torrentCount = await tableCount("torrents");
   const listCount = await tableCount("lists");
   const commentCount = await tableCount("comments");
+  const meta = await getMetaJSON();
 
   ctx.response.body = {
     "name": settings.siteName,
@@ -19,8 +20,8 @@ root.get("/", async function (ctx: Context) {
     "torrents": torrentCount,
     "lists": listCount,
     "comments": commentCount,
-    "pooledInstances": settings.federationParams.pooled,
-    "blockedInstances": settings.federationParams.blocked,
+    "pooledInstances": meta.pooled,
+    "blockedInstances": meta.blocked,
   };
   ctx.response.status = 200;
   ctx.response.type = "application/json";

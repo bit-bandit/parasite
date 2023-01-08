@@ -41,7 +41,7 @@ Deno.test("Attempted user registration on preexisting account", async () => {
 });
 
 Deno.test("Follow account", async () => {
-  const c = await fetch("http://0.0.0.0:8080/register", {
+  const c = await fetch("http://0.0.0.0:8000/register", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -51,7 +51,7 @@ Deno.test("Follow account", async () => {
 
   await c.json();
 
-  const tokenRequest = await fetch("http://0.0.0.0:8080/login", {
+  const tokenRequest = await fetch("http://0.0.0.0:8000/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -61,14 +61,14 @@ Deno.test("Follow account", async () => {
 
   const userJWT = await tokenRequest.text();
 
-  const followAttempt = await fetch("http://localhost:8080/x/follow", {
+  const followAttempt = await fetch("http://localhost:8000/x/follow", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userJWT}`,
     },
     body: JSON.stringify({
-      "object": "http://localhost:8080/u/bob",
+      "object": "http://localhost:8000/u/bob",
     }),
   });
 

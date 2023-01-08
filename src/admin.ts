@@ -10,7 +10,9 @@ import {
   deleteList,
   deleteTorrent,
   deleteUser,
+  getMetaJSON,
   getUActivity,
+  updateMeta,
 } from "./db.ts";
 
 import { authData, throwAPIError } from "./utils.ts";
@@ -81,6 +83,8 @@ admin.post("/a/federate", async function (ctx: Context) {
     );
   }
 
+  let instances = await getMetaJSON();
+
   switch (requestJSON.type) {
     case ("Block"): {
       const u = new URL(requestJSON.id);
@@ -99,10 +103,7 @@ admin.post("/a/federate", async function (ctx: Context) {
       }
 
       // We don't need the formatting, but we'll do it anyways.
-      await Deno.writeTextFile(
-        "../federation.json",
-        JSON.stringify(instances, null, 2),
-      );
+      await updateMeta({ blocked: instances.blocked });
 
       ctx.response.body = {
         "msg": `'${u.href}' blocked.`,
@@ -135,10 +136,7 @@ admin.post("/a/federate", async function (ctx: Context) {
         instances.blocked.splice(hostIndex, 1);
       }
 
-      await Deno.writeTextFile(
-        "../federation.json",
-        JSON.stringify(instances, null, 2),
-      );
+      await updateMeta({ blocked: instances.blocked });
 
       ctx.response.body = {
         "msg": `'${u.href}' unbanned.`,
@@ -159,10 +157,7 @@ admin.post("/a/federate", async function (ctx: Context) {
       }
 
       instances.pooled.push(u.origin);
-      await Deno.writeTextFile(
-        "../federation.json",
-        JSON.stringify(instances, null, 2),
-      );
+      await updateMeta({ pooled: instances.pooled });
 
       ctx.response.body = {
         "msg": `'${u.origin}' pooled.`,
@@ -181,10 +176,7 @@ admin.post("/a/federate", async function (ctx: Context) {
 
       instances.pooled.splice(hrefIndex, 1);
 
-      await Deno.writeTextFile(
-        "../federation.json",
-        JSON.stringify(instances, null, 2),
-      );
+      await updateMeta({ pooled: instances.pooled });
 
       ctx.response.body = {
         "msg": `'${u.origin}' unpooled.`,

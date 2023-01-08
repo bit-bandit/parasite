@@ -2,7 +2,7 @@ import { Context } from "https://deno.land/x/oak/mod.ts";
 import { verify } from "https://deno.land/x/djwt/mod.ts";
 import { settings } from "../settings.ts";
 import { getJWTKey } from "./crypto.ts";
-import { getUActivity } from "./db.ts";
+import { getMetaJSON, getUActivity } from "./db.ts";
 
 /**
  * Generates up to 32 universally-unique hex digits at a time to use as an ID.
@@ -124,8 +124,9 @@ export function properCharRange(str: string): boolean {
  * @param str Instance name.
  * @param {Context} ctx Oak context
  */
-export function checkInstanceBlocked(str: string, ctx: Context) {
-  if (settings.federationParams.blocked.includes(str)) {
+export async function checkInstanceBlocked(str: string, ctx: Context) {
+  const meta = await getMetaJSON();
+  if (meta.blocked.includes(str)) {
     throwAPIError(ctx, "Your instance is banned", 400);
   }
 }

@@ -55,7 +55,7 @@ actions.post("/x/follow", async function (ctx: Context) {
   }
 
   const externalActorURL = new URL(requestJSON.object);
-  checkInstanceBlocked(externalActorURL.host, ctx);
+  await checkInstanceBlocked(externalActorURL.host, ctx);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
 
@@ -93,7 +93,7 @@ actions.post("/x/follow", async function (ctx: Context) {
     fActor = await (await fetch(requestJSON.object, {
       headers: { "Accept": "application/activity+json" },
     })).json();
-  } catch {
+  } catch (err) {
     return throwAPIError(
       ctx,
       "Error in fetching actor information",
@@ -237,7 +237,7 @@ actions.post("/x/undo", async function (ctx) {
   }
 
   const externalActorURL = new URL(requestJSON.object);
-  checkInstanceBlocked(externalActorURL.host, ctx);
+  await checkInstanceBlocked(externalActorURL.host, ctx);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
 
@@ -514,7 +514,7 @@ actions.post("/x/dislike", async function (ctx: Context) {
   }
 
   const externalActorURL = new URL(requestJSON.object);
-  checkInstanceBlocked(externalActorURL.host, ctx);
+  await checkInstanceBlocked(externalActorURL.host, ctx);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
   const userDislikes = await getUActivity(data.decoded.name, "dislikes");
@@ -632,7 +632,7 @@ actions.post("/x/comment", async function (ctx: Context) {
   }
 
   const externalActorURL = new URL(requestJSON.inReplyTo);
-  checkInstanceBlocked(externalActorURL.host, ctx);
+  await checkInstanceBlocked(externalActorURL.host, ctx);
 
   const userActivity = await getUActivity(data.decoded.name, "info");
   const role = await getUActivity(data.decoded.name, "roles");

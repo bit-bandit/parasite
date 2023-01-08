@@ -91,6 +91,15 @@ CREATE TABLE IF NOT EXISTS actions (
 );
 `;
 
+const metaTableInit = `
+CREATE TABLE IF NOT EXISTS meta (
+  id         CHAR(1)  NOT NULL   DEFAULT '0', 
+  blocked     JSON     NOT NULL,
+  key        JSON     NOT NULL,
+  pooled     JSON     NOT NULL 
+);
+`;
+
 await client.connect();
 
 // Create tables if they are not already present.
@@ -100,6 +109,7 @@ await client.queryArray(`
   ${listsTableInit}
   ${commentsTableInit}
   ${actionsTableInit}
+  ${metaTableInit}
 `);
 
 await client.end();
@@ -142,6 +152,48 @@ async function basicDataQuery(
   }
 
   return { "err": true, "msg": msg };
+}
+
+if ((await tableCount("meta")) === 0) {
+  await client.connect();
+  await client.queryArray(
+    "INSERT INTO meta (blocked, key, pooled) VALUES ($1, $2, $3);",
+    [JSON.stringify([]), JSON.stringify({}), JSON.stringify([])],
+  );
+  await client.end();
+}
+
+export async function updateMeta(obj: unknown) {
+  await client.connect();
+
+  if (obj.blocked) {
+    await client.queryArray(
+      "UPDATE meta SET blocked = $1 WHERE id = '0';",
+      [JSON.stringify(obj.blocked)],
+    );
+  }
+  if (obj.key && typeof (obj.key) === "string") {
+    await client.queryArray(
+      "UPDATE meta SET key = $1 WHERE id = '0';",
+      [JSON.stringify(obj.key)],
+    );
+  }
+
+  if (obj.pooled) {
+    await client.queryArray(
+      "UPDATE meta SET pooled = $1 WHERE id = '0';",
+      [JSON.stringify(obj.pooled)],
+    );
+  }
+
+  await client.end();
+}
+
+export async function getMetaJSON(): Promise<> {
+  await client.connect();
+  const res = await client.queryObject("SELECT * FROM meta WHERE id = '0'");
+  await client.end();
+  return res.rows[0];
 }
 
 /**

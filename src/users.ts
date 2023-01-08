@@ -235,7 +235,7 @@ users.post("/u/:id/inbox", async function (ctx) {
     let fActor: unknown;
 
     try {
-      fActor = await (await fetch(requestJSON.object, {
+      fActor = await (await fetch(req.actor, {
         headers: { "Accept": "application/activity+json" }, // TODO: Add signed header to this.
       })).json();
     } catch {
@@ -270,7 +270,7 @@ users.post("/u/:id/inbox", async function (ctx) {
       `keyId="${actor.publicKey.id}",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="${b64sig}"`;
 
     try {
-      followAttempt = await fetch(fActor.inbox, {
+      await fetch(fActor.inbox, {
         method: "POST",
         headers: {
           "Accept": "application/activity+json",
@@ -282,7 +282,7 @@ users.post("/u/:id/inbox", async function (ctx) {
         },
         body: JSON.stringify(acceptJSON),
       });
-    } catch {
+    } catch (err) {
       return throwAPIError(
         ctx,
         "Error in sending request to Actor inbox",

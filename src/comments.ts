@@ -81,7 +81,7 @@ comments.post("/c/:id", async function (ctx) {
   switch (requestJSON.type) {
     case "Create": {
       const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor, {
         headers: {
@@ -137,7 +137,7 @@ comments.post("/c/:id", async function (ctx) {
     }
     case "Like": {
       const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor, {
         headers: {
@@ -201,7 +201,7 @@ comments.post("/c/:id", async function (ctx) {
 
     case "Dislike": {
       const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor, {
         headers: {
@@ -325,7 +325,7 @@ comments.post("/c/:id", async function (ctx) {
     }
     case "Undo": {
       const externalActorURL = new URL(requestJSON.actor);
-      checkInstanceBlocked(externalActorURL.host, ctx);
+      await checkInstanceBlocked(externalActorURL.host, ctx);
 
       const foreignActorInfo = await (await fetch(requestJSON.actor, {
         headers: {
