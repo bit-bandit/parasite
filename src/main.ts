@@ -56,7 +56,7 @@ parasite.use(users.allowedMethods());
 
 // Further checks to see what's going on..
 parasite.addEventListener("listen", (evt) => {
-  const protocol = (evt.secure ? "https" : "http");
+  const protocol = evt.secure ? "https" : "http";
   const hostname = evt.hostname ?? "localhost";
   const port = evt.port;
 

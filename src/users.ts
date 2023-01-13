@@ -3,7 +3,7 @@ import { Context, Router } from "https://deno.land/x/oak/mod.ts";
 import { verify } from "https://deno.land/x/djwt/mod.ts";
 import { addToDB, basicObjectUpdate, getUActivity } from "./db.ts";
 import { genInvitationReply } from "./activity.ts";
-import { authData, genUUID, throwAPIError } from "./utils.ts";
+import { authData, genUUID, throwAPIError, writeFile } from "./utils.ts";
 import { settings } from "../settings.ts";
 import {
   extractKey,
@@ -378,7 +378,7 @@ users.post("/u/:id", async function (ctx: Context) {
 
     pic = await pic.encode(5);
 
-    Deno.writeFile(`./static/u/${ctx.params.id}/avatar.png`, pic);
+    writeFile(`u/${ctx.params.id}/avatar.png`, pic);
   }
 
   if (requestJSON.banner) {
@@ -409,7 +409,7 @@ users.post("/u/:id", async function (ctx: Context) {
 
     pic = await pic.encode(5);
 
-    Deno.writeFile(`./static/u/${ctx.params.id}/banner.png`, pic);
+    writeFile(`u/${ctx.params.id}/banner.png`, pic);
   }
 
   await basicObjectUpdate("users", {

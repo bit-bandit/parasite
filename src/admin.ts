@@ -1,6 +1,4 @@
 import { Context, Router } from "https://deno.land/x/oak/mod.ts";
-import instances from "../federation.json" assert { type: "json" };
-
 import { getJWTKey } from "./crypto.ts";
 import { verify } from "https://deno.land/x/djwt/mod.ts";
 
@@ -83,7 +81,7 @@ admin.post("/a/federate", async function (ctx: Context) {
     );
   }
 
-  let instances = await getMetaJSON();
+  const instances = await getMetaJSON();
 
   switch (requestJSON.type) {
     case ("Block"): {
@@ -360,3 +358,4 @@ admin.post("/a/delete", async function (ctx: Context) {
     }
   }
 });
+

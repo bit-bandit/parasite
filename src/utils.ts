@@ -1,5 +1,7 @@
 import { Context } from "https://deno.land/x/oak/mod.ts";
 import { verify } from "https://deno.land/x/djwt/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 import { settings } from "../settings.ts";
 import { getJWTKey } from "./crypto.ts";
 import { getMetaJSON, getUActivity } from "./db.ts";
@@ -128,5 +130,154 @@ export async function checkInstanceBlocked(str: string, ctx: Context) {
   const meta = await getMetaJSON();
   if (meta.blocked.includes(str)) {
     throwAPIError(ctx, "Your instance is banned", 400);
+  }
+}
+
+// TODO:
+//   - Add readFile function including local and supabase
+//   - Add writeFile function including local and supabase
+//
+// Both of these should be ~56 SLOC.
+// Also change `settings.ts` to something like:
+/*
+  static: {
+    "type": "local" | "supabase",
+    "location": filepath | URL,
+    "name"?: string, // Supabase only
+    "key"?: string, // Supabase only, is like a password
+    "options"?: Whatever Supabase uses for this // Supabase only - Obviously!
+  }
+*/
+
+// Static file content handling.
+// These operations are meant to (largely) be agnostic, in terms
+// of if it's a flat file structure (Like in Supabase/S3, where
+// the '/' are interpreted as being part of the filename), or a
+// proper hierarchical filesystem.
+//
+// For Supabase, we're using the Bucket API. Please read up on the
+// documentation before hacking this:
+// - https://supabase.com/docs/reference/javascript/storage-createbucket
+// - https://supabase.com/docs/guides/storage
+
+/**
+ * @description A platform-agnostic way of writing files.
+ * @param name A string formatted as something like 'u/bob/avatar.png' - IE, no base directory
+ * @param data A Uint8Array containing the data of the file.
+ */
+export async function writeFile(name: string, data: unknown) {
+  if (settings.static.type === "supabase") {
+    // Supabase shit.
+    const supabase = createClient(
+      settings.static.location,
+      settings.static.key,
+    );
+
+    // First, make sure that the DB exists.
+    // We'll automatically create it if it doesn't.
+    let res = await supabase.storage.listBuckets();
+
+    if (res.error !== null) {
+      return 1;
+    }
+
+    // Does the bucket exist?
+    let exists = false;
+
+    res.data.map((x) => {
+      if (x.name === settings.static.name) {
+        exists = true;
+      }
+    });
+
+    if (!exists) {
+      await supabase.storage.createBucket(settings.static.name, {
+        public: true,
+      });
+    }
+
+    // Check if the file already exists. We have to do this,
+    // because Supabase doesn't allow clobbering.
+    exists = true;
+
+    // Deliberately getting an error like a boss
+    res = await supabase.storage.from(settings.static.name).download(name);
+
+    if (res.error) {
+      exists = false;
+    }
+
+    if (exists) {
+      res = await supabase.storage.from(settings.static.name).update(
+        name,
+        data,
+        {
+          cacheControl: "3600",
+          contentType: "image/png",
+          upsert: false,
+        },
+      );
+    } else {
+      res = await supabase.storage.from(settings.static.name).upload(
+        name,
+        data,
+        {
+          cacheControl: "3600",
+          contentType: "image/png",
+          upsert: false,
+        },
+      );
+    }
+  } else {
+    // Check if requested directory exists. If not, create it.
+    name = `${settings.static.location}/${name}`;
+    let dir = name.split("/");
+    dir.pop();
+    dir = dir.join("/");
+
+    try {
+      Deno.lstat(dir);
+    } catch {
+      Deno.mkdir(dir);
+    }
+
+    await Deno.writeFile(name, data);
+  }
+}
+
+/**
+ * A platform-agnostic way of reading files.
+ * @param name A string formatted as something like 'u/bob/avatar.png' - IE, no base directory
+ */
+
+export async function readFile(name: string) {
+    if (settings.static.type === "supabase") {
+	try {
+    const supabase = createClient(
+      settings.static.location,
+      settings.static.key,
+    );
+
+    let { data, err } = await supabase.storage.from(settings.static.name).download(name);
+
+    // TODO: Convert `data` blob to UInt8Array
+    data = new Uint8Array(await data.arrayBuffer());
+	    return data;
+	} catch {
+      return {
+        "err": true,
+        "msg": "File doesn't exist.",
+      };
+    }
+  } else {
+    try {
+      const d = await Deno.readFile(name);
+      return d;
+    } catch {
+      return {
+        "err": true,
+        "msg": "File doesn't exist.",
+      };
+    }
   }
 }

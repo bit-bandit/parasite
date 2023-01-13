@@ -7,7 +7,7 @@ import {
 import { Algorithm } from "https://deno.land/x/djwt/algorithm.ts";
 import * as scrypt from "https://deno.land/x/scrypt@v4.2.1/mod.ts";
 import { getUActivity, UCheck, UInit, ULogin } from "./db.ts";
-import { throwAPIError } from "./utils.ts";
+import { throwAPIError, writeFile } from "./utils.ts";
 import { settings } from "../settings.ts";
 import { actorObj, genOrderedCollection } from "./activity.ts";
 import { roles } from "../roles.ts";
@@ -98,7 +98,7 @@ auth.post("/register", async function (ctx) {
   const raw = await ctx.request.body();
 
   if (raw.type !== "json") {
-    return throwAPIError(ctx, "Invalid content type.", 400);
+    return throwAPIError(ctx, "Invalid content type - Must be JSON.", 400);
   }
 
   const requestJSON = await raw.value;
@@ -126,46 +126,41 @@ auth.post("/register", async function (ctx) {
   // Use default things to put into user account here..
 
   // TODO: Add some error handling here.
-  const destDir = `${settings.staticFileDir}/u/${requestJSON.username}`;
-  await Deno.mkdir(destDir, { recursive: true }); // auto-create `/static/u/`
-  await Deno.copyFile(
-    `${settings.staticFileDir}/defs/avatar.png`,
-    `${destDir}/avatar.png`,
-  );
-  await Deno.copyFile(
-    `${settings.staticFileDir}/defs/banner.png`,
-    `${destDir}/banner.png`,
-  );
+  const dest = `u/${requestJSON.username}`;
+
+    console.log(settings.userDefaults.avatar);
+  const defaultAvatar = await Deno.readFile(settings.userDefaults.avatar);
+  const defaultBanner = await Deno.readFile(settings.userDefaults.banner);
+
+  await writeFile(`${dest}/avatar.png`, defaultAvatar);
+  await writeFile(`${dest}/banner.png`, defaultBanner);
 
   const userStatic = `${settings.siteURL}/m/u/${requestJSON.username}`;
 
-  const avatar = `${userStatic}/avatar.png`;
-  const banner = `${userStatic}/banner.png`;
-
-  const userAPI = `${settings.siteURL}/u/${requestJSON.username}`;
+  const userURL = `${settings.siteURL}/u/${requestJSON.username}`;
   const keys = await genKeyPair();
 
   const actorInfo = actorObj({
-    "actor": userAPI,
-    "following": `${userAPI}/following`,
-    "followers": `${userAPI}/followers`,
-    "liked": `${userAPI}/likes`,
-    "inbox": `${userAPI}/inbox`,
-    "outbox": `${userAPI}/outbox`,
+    "actor": userURL,
+    "following": `${userURL}/following`,
+    "followers": `${userURL}/followers`,
+    "liked": `${userURL}/likes`,
+    "inbox": `${userURL}/inbox`,
+    "outbox": `${userURL}/outbox`,
     "name": requestJSON.username,
     "preferredUsername": requestJSON.username,
-    "summary": "",
+    "summary": settings.userDefaults.bio,
     "icon": {
       "mediaType": "image/png",
       "type": "Image",
-      "url": avatar,
+      "url": `${userStatic}/avatar.png`,
     },
     "banner": {
       "type": "Image",
       "mediaType": "image/png",
-      "url": banner,
+      "url": `${userStatic}/banner.png`,
     },
-    "keyURL": `${userAPI}/main-key`,
+    "keyURL": `${userURL}/main-key`,
     "key": keys[0],
   });
 
@@ -173,13 +168,13 @@ auth.post("/register", async function (ctx) {
     id: requestJSON.username,
     info: actorInfo,
     pass: await scrypt.hash(requestJSON.password),
-    roles: roles[settings.defaultRole],
-    inbox: genOrderedCollection(`${userAPI}/inbox`),
-    outbox: genOrderedCollection(`${userAPI}/outbox`),
-    likes: genOrderedCollection(`${userAPI}/likes`),
-    dislikes: genOrderedCollection(`${userAPI}/dislikes`),
-    following: genOrderedCollection(`${userAPI}/following`),
-    followers: genOrderedCollection(`${userAPI}/followers`),
+    roles: roles[settings.userDefaults.role],
+    inbox: genOrderedCollection(`${userURL}/inbox`),
+    outbox: genOrderedCollection(`${userURL}/outbox`),
+    likes: genOrderedCollection(`${userURL}/likes`),
+    dislikes: genOrderedCollection(`${userURL}/dislikes`),
+    following: genOrderedCollection(`${userURL}/following`),
+    followers: genOrderedCollection(`${userURL}/followers`),
     logins: [], // Tokens will be added next time user logs in. See `/login/`.
     keys: keys,
   });

@@ -14,9 +14,26 @@ export const settings = {
       "port": 5433,
     },
   },
-  "staticFileDir": "./static",
+  // Static file settings - Can either be
+  // local, or with Supabase.
+  // Options:
+  //   - type: 'local' | 'supabase' ()
+  //   - location: File path - if local - or Supabase URL. Don't include a trailing '/', here.
+  //
+  //   - name: string, Bucket name (Supabase only)
+  //   - key: string, API access key (Supabase only)
+  "static": {
+    "type": "local",
+    "location": "./static",
+  },
   "siteName": "Parasite Instance",
   "allowRegistrations": true,
+  "userDefaults": {
+    "avatar": "./static/defs/avatar.png",
+    "banner": "./static/defs/banner.png",
+    "role": "User",
+    "bio": "",
+  },
   "limits": {
     "minListItems": 3,
     "maxListItems": 120,
@@ -40,9 +57,6 @@ export const settings = {
     // EG - example.com, torrents.sickos.social, etc.
   },
   "jwt": {
-    // Persistent key file.
-    "keyFile": "./.keyfile.json",
-
     // You can generally afford to keep this longer-term,
     // but it's still good practice to cycle keys.
     "keyLifetime": 60 * 60 * 24 * 7 * 9, // = 9 weeks, ~3 months
