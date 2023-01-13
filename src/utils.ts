@@ -1,6 +1,6 @@
 import { Context } from "https://deno.land/x/oak/mod.ts";
 import { verify } from "https://deno.land/x/djwt/mod.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.4.0";
 
 import { settings } from "../settings.ts";
 import { getJWTKey } from "./crypto.ts";
