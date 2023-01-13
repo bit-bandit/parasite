@@ -251,19 +251,20 @@ export async function writeFile(name: string, data: unknown) {
  */
 
 export async function readFile(name: string) {
-    if (settings.static.type === "supabase") {
-	try {
-    const supabase = createClient(
-      settings.static.location,
-      settings.static.key,
-    );
+  if (settings.static.type === "supabase") {
+    try {
+      const supabase = createClient(
+        settings.static.location,
+        settings.static.key,
+      );
 
-    let { data, err } = await supabase.storage.from(settings.static.name).download(name);
+      let { data, err } = await supabase.storage.from(settings.static.name)
+        .download(name);
 
-    // TODO: Convert `data` blob to UInt8Array
-    data = new Uint8Array(await data.arrayBuffer());
-	    return data;
-	} catch {
+      // TODO: Convert `data` blob to UInt8Array
+      data = new Uint8Array(await data.arrayBuffer());
+      return data;
+    } catch {
       return {
         "err": true,
         "msg": "File doesn't exist.",

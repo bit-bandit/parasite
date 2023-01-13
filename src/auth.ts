@@ -128,7 +128,7 @@ auth.post("/register", async function (ctx) {
   // TODO: Add some error handling here.
   const dest = `u/${requestJSON.username}`;
 
-    console.log(settings.userDefaults.avatar);
+  console.log(settings.userDefaults.avatar);
   const defaultAvatar = await Deno.readFile(settings.userDefaults.avatar);
   const defaultBanner = await Deno.readFile(settings.userDefaults.banner);
 

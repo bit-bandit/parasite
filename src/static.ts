@@ -1,6 +1,6 @@
 import { Router } from "https://deno.land/x/oak/mod.ts";
 import { settings } from "../settings.ts";
-import { throwAPIError, readFile } from "./utils.ts";
+import { readFile, throwAPIError } from "./utils.ts";
 
 export const media = new Router();
 
